@@ -1,10 +1,21 @@
-import React from "react";
+import React from 'react';
+import MainLayout from './layout/mainlayout';
+import { BrowserRouter} from "react-router-dom";
+import '../styles.css';
 
 
-export function App(){
+export default function App(){
   
   return (
-    <h1>Ola mundo</h1>
+    <BrowserRouter>
+    <div className="flex">
+      <MainLayout />
+      
+      <main className="flex-1 p-6">
+        {/* <AppRoutes /> */}
+      </main>
+    </div>
+    </BrowserRouter>
       );
-    }
-export default App;
+}
+
