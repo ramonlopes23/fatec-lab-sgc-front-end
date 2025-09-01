@@ -8,16 +8,7 @@ font-family:"Inter", sans-serif;
 }`;
 
 
-export const SidebarContainer = styled.div`
-width:16rem;
-height:100vh;
-background-color:#ffffff;
-box-shadow: 0 0 10px rgba(0,0,0,0.1);
-display:flex;
-flex-direction:column;
-border-right: 3px solid #123271ff;
 
-`;
 
 export const LogoContainer = styled.div`
 padding:1.5rem;

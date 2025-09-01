@@ -3,7 +3,7 @@ import {NavLink} from "react-router-dom";
 import {MdDashboard} from "react-icons/md";
 import {GiGraveFlowers} from 'react-icons/gi';
 import { FaMap, FaFileAlt, FaCog } from "react-icons/fa";
-import { SidebarContainer, LogoContainer,LogoImage,NavContainer,NavItem,NavTitle,StyledNavLink, GlobalStyle } from "./styles";
+import {  LogoContainer,LogoImage,NavContainer,NavItem,NavTitle,StyledNavLink, GlobalStyle } from "./styles";
 import sgclogo from "../../assets/sgclogo.png";
 
 
@@ -20,7 +20,6 @@ export default function SidebarMenu(){
     return(
         <>
         <GlobalStyle />
-        <SidebarContainer>
             <LogoContainer>
                 <LogoImage src={sgclogo} alt="Logo Memo"/>
             </LogoContainer>
@@ -37,7 +36,6 @@ export default function SidebarMenu(){
                     ))}
                 </ul>
             </NavContainer>
-        </SidebarContainer>
-        </>
+         </>
     )
 } 

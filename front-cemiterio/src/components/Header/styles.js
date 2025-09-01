@@ -14,7 +14,7 @@ export const HeaderContainer = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0;
 `;
 
 export const MenuButton = styled.button`

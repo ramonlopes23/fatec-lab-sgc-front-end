@@ -1,6 +1,6 @@
 import Header from "../components/Header";
 import SidebarMenu from "../components/SidebarMenu";
-import {Content,LayoutContainer,PageContent} from "./styles"
+import {Content,LayoutContainer,PageContent, SidebarContainer,GlobalStyle} from "./styles"
 import React, {useState} from "react";
 
 export default function MainLayout ({children }){
@@ -13,8 +13,10 @@ export default function MainLayout ({children }){
     return(
 
         <LayoutContainer>
-            {isSidebarOpen && <SidebarMenu />}
-            <Content>
+            <SidebarContainer isOpen={isSidebarOpen}>
+                <SidebarMenu />
+            </SidebarContainer>
+            <Content isSidebarOpen={isSidebarOpen}>
                 <Header userName="Ramon" onMenuClick={toggleSidebarMenu} />
                 <PageContent>{children}</PageContent>
             </Content>
