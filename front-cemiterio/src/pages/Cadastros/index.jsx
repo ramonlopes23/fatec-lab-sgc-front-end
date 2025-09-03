@@ -76,7 +76,7 @@ export default function Cadastros() {
                                 <label>Idade</label>
                                 <Input name="idade" value={form.idade} onChange={handleChange} />
                             </Field>
-                                
+
                             <TwoCols>
                                 <Field>
                                     <label>Data de nascimento</label>
@@ -147,7 +147,7 @@ export default function Cadastros() {
                             </Field>
 
                             <Field>
-                                <label>Nome do doutor</label>
+                                <label>Nome do médico responsável</label>
                                 <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
                             </Field>
 
