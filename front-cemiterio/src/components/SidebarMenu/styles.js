@@ -36,6 +36,7 @@ font-size:0.75rem;
 font-family:"Inter", sans-serif;
 color:#6b7280;
 margin-bottom:0.5rem;
+margin-left:2.5rem;
 `;
 
 
@@ -51,7 +52,7 @@ export const StyledNavLink = styled(NavLink)`
   border-radius: 0.375rem;
   text-decoration: none;
   color: #1f2937;
-  font-weight: 400;
+  font-weight: 800;
 
   &:hover {
     background-color: #f3f4f6;

@@ -1,3 +1,4 @@
+import Dashboard from "../components/Dashboard";
 import Header from "../components/Header";
 import SidebarMenu from "../components/SidebarMenu";
 import {Content,LayoutContainer,PageContent, SidebarContainer,GlobalStyle} from "./styles"
@@ -18,8 +19,10 @@ export default function MainLayout ({children }){
             </SidebarContainer>
             <Content isSidebarOpen={isSidebarOpen}>
                 <Header userName="Ramon" onMenuClick={toggleSidebarMenu} />
-                <PageContent>{children}</PageContent>
+                <PageContent><Dashboard /></PageContent>
+               
             </Content>
+      
         </LayoutContainer>
     );
 }

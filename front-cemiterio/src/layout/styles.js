@@ -25,7 +25,7 @@ export const Content = styled.div`
 export const PageContent = styled.main`
   flex: 1;
   padding: 1rem;
-  background-color: #f9fafb;
+  background-color: #f8f9f9ff;
   overflow: auto;
 `;
 
@@ -42,3 +42,4 @@ export const SidebarContainer = styled.div`
   transition:transform 0.3s ease;
   z-index:1000;
 `;
+
