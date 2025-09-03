@@ -10,11 +10,11 @@ import sgclogo from "../../assets/sgclogo.png";
 export default function SidebarMenu(){
 
     const menuItems = [
-        {name:"DASHBOARD", icon:<MdDashboard/>, path: "/dashboard"},
-        {name:"VER MAPA", icon:<FaMap/>, path: "/mapa"},
-        {name:"CADASTRAR PROCESSO", icon:<GiGraveFlowers />, path: "/cadastro"},
-        {name:"REGISTROS", icon:<FaFileAlt/>, path: "/registros"},
-        {name:"CONFIGURAR", icon:<FaCog/>, path: "/configuracoes"},
+        {name:"DASHBOARD", icon:<MdDashboard/>, path: "/Home"},
+        {name:"VER MAPA", icon:<FaMap/>, path: "/VerMapa"},
+        {name:"CADASTRAR PROCESSO", icon:<GiGraveFlowers />, path: "/Cadastros"},
+        {name:"REGISTROS", icon:<FaFileAlt/>, path: "/Registros"},
+        {name:"CONFIGURAR", icon:<FaCog/>, path: "/Configurar"},
     ];
 
     return(

@@ -4,7 +4,7 @@ import SidebarMenu from "../components/SidebarMenu";
 import {Content,LayoutContainer,PageContent, SidebarContainer,GlobalStyle} from "./styles"
 import React, {useState} from "react";
 
-export default function MainLayout ({children }){
+export default function MainLayout ({children}){
     const [isSidebarOpen, setiIsSidebarOpen] = useState (true);
 
     const toggleSidebarMenu = () => {
@@ -19,7 +19,7 @@ export default function MainLayout ({children }){
             </SidebarContainer>
             <Content isSidebarOpen={isSidebarOpen}>
                 <Header userName="Ramon" onMenuClick={toggleSidebarMenu} />
-                <PageContent><Dashboard /></PageContent>
+                <PageContent>{children}</PageContent>
                
             </Content>
       

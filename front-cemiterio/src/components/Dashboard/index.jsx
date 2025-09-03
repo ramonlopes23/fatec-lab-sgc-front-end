@@ -34,9 +34,9 @@ export default function Dashboard() {
         {
             id: 3,
             nome: "MARIA QUERY",
-            tipo: "Manutenção",
+            tipo: "Exumação",
             velorio: null,
-            local: "",
+            local: "Quadra 12 - Jazigo 3",
             horario: "14h",
         },
 
