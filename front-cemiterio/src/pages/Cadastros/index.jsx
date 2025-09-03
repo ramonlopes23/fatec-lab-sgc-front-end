@@ -55,9 +55,8 @@ export default function Cadastros() {
     return (
         <MainLayout>
             <Container>
-                <Title>CADASTRO DE PROCESSOS</Title>
-
                 <FormStyled onSubmit={handleSubmit}>
+                    <Title>CADASTRO DE PROCESSOS</Title>
                     <FormTop>
                         <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
                         <SelectTop name="processo">
