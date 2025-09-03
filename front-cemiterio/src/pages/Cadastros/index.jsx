@@ -1,5 +1,6 @@
-import React from "react";
 import MainLayout from "../../layout/MainLayout";
+import React, { useState } from "react";
+import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
 export default function Cadastros() {
     const [form, setForm] = useState({
@@ -21,7 +22,7 @@ export default function Cadastros() {
         obs: "",
     });
 
-    const [registros, SetRegistros] = useState([]);
+    const [registros, setRegistros] = useState([]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,7 +31,7 @@ export default function Cadastros() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        SetRegistros([...registros, form]);
+        setRegistros([...registros, form]);
         setForm({
             nome: "",
             idade: "",
@@ -51,73 +52,117 @@ export default function Cadastros() {
         });
     };
 
-    return(
+    return (
         <MainLayout>
-            <h2>Cadastro de Processos</h2>
+            <Container>
+                <Title>CADASTRO DE PROCESSOS</Title>
 
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Nome completo</label>
-                    <input name="nome" value={form.nome} onChange={handleChange} placeholder="Digite o nome do falecido" />
+                <FormStyled onSubmit={handleSubmit}>
+                    <FormTop>
+                        <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
+                        <SelectTop name="processo">
+                            <option>Cadastro de falecido</option>
+                        </SelectTop>
+                    </FormTop>
 
-                    <label>Idade</label>
-                    <input name="idade" value={form.idade} onChange={handleChange}  />
+                    <FormGrid>
+                        <ColumnLeft>
+                            <Field>
+                                <label>Nome completo</label>
+                                <Input name="nome" value={form.nome} onChange={handleChange} placeholder="Digite o nome do falecido" />
+                            </Field>
 
-                    <label>Data de nascimento</label>
-                    <input name="data_nasc" value={form.data_nasc} onChange={handleChange}  />
+                            <Field>    
+                                <label>Idade</label>
+                                <Input name="idade" value={form.idade} onChange={handleChange} />
+                            </Field>
+                                
+                            <TwoCols>
+                                <Field>
+                                    <label>Data de nascimento</label>
+                                    <Input name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
+                                </Field>
+                                <Field>
+                                    <label>Data e hora do falecimento</label>
+                                    <Input name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
+                                </Field>
+                            </TwoCols>
 
-                    <label>Data e hora do falecimento</label>
-                    <input name="dh_falec" value={form.dh_falec} onChange={handleChange} />
+                            <Field>
+                                <label>Filiação pai</label>
+                                <Input name="filiacao_pai" value={form.filiacao_pai} onChange={handleChange} placeholder="Digite o nome do pai" />
+                            </Field>
 
-                    <label>Filiação pai</label>
-                    <input name="filiacao_pai" value={form.filiacao_pai} onChange={handleChange} />
+                            <Field>
+                                <label>Filiação mãe</label>
+                                <Input name="filiacao_mae" value={form.filiacao_mae} onChange={handleChange} placeholder="Digite o nome da mãe" />
+                            </Field>
 
-                    <label>Filiação mãe</label>
-                    <input name="filiacao_mae" value={form.filiacao_mae} onChange={handleChange}  />
+                            <Field>
+                                <label>Sexo</label>
+                                <Select name="sexo" value={form.sexo} onChange={handleChange}>
+                                    <option value="">Selecione</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="feminino">Feminino</option>
+                                </Select>
+                            </Field>
 
-                    <label>Sexo</label>
-                    <select name="sexo" value={form.sexo} onChange={handleChange}>
-                        <option value="">Selecione</option>
-                        <option value="">Masculino</option>
-                        <option value="">Feminino</option>
-                    </select>
+                            <Field>
+                                <label>Profissão</label>
+                                <Input name="profissao" value={form.profissao} onChange={handleChange} placeholder="Digite a profissão do falecido" />
+                            </Field>
+                        </ColumnLeft>
+   
+                        <ColumnRight>
+                            <Field>
+                                <label>Causa mortis</label>
+                                <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
+                            </Field>
 
-                    <label>Profissão</label>
-                    <input name="profissao" value={form.profissao} onChange={handleChange}/>
-                </div>
+                            <Field>
+                                <label>Estado civil</label>
+                                <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
+                                    <option value="">Selecione o estado civil</option>
+                                    <option value="Solteiro(a)">Solteiro(a)</option>
+                                    <option value="Casado(a)">Casado(a)</option>
+                                    <option value="Separado(a)">Separado(a)</option>
+                                    <option value="Divorciado(a)">Divorciado(a)</option>
+                                    <option value="Viúvo(a)">Viúvo(a)</option>
+                                </Select>
+                            </Field>
 
-                <div>
-                    <label>Causa mortis</label>
-                    <input name="causa_mortis" value={form.causa_mortis} onChange={handleChange}/>
+                            <Field>
+                                <label>CPF</label>
+                                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="Digite o CPF" />
+                            </Field>
 
-                    <label>Estado Civil</label>
-                    <select name="estado_civil" value={form.estado_civil} onChange={handleChange}/>
-                        <option value="">Selecione</option>
-                        <option value="Solteiro(a)">Solteiro(a)</option>
-                        <option value="Casado(a)">Casado(a)</option>
-                        <option value="Separado(a)">Separado(a)</option>
-                        <option value="Divorciado(a)">Divorciado(a)</option>
-                        <option value="Viúvo(a">Viúvo(a)</option>
-                    
+                            <Field>
+                                <label>RG</label>
+                                <Input name="rg" value={form.rg} onChange={handleChange} placeholder="Digite o RG" />
+                            </Field>
 
-                    <label>CPF</label>
-                    <input name="cpf" value={form.cpf} onChange={handleChange}/>
+                            <Field>
+                                <label>Certidão de óbito</label>
+                                <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" />
+                            </Field>
 
-                    <label>RG</label>
-                    <input name="rg" value={form.rg} onChange={handleChange}/>
+                            <Field>
+                                <label>Nome do doutor</label>
+                                <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
+                            </Field>
 
-                    <label>Certidão de óbito</label>
-                    <input name="certidao_obito" value={form.certidao_obito} onChange={handleChange}/>
+                            <Field>
+                                <label>Observações</label>
+                                <Textarea name="obs" value={form.obs} onChange={handleChange} placeholder="Observações..." />
+                            </Field>
 
-                    <label>Nome do doutor</label>
-                    <input name="nome_doutor" value={form.nome_doutor} onChange={handleChange}/>
-
-                    <label>Observações</label>
-                    <textarea name="obs" value={form.obs} onChange={handleChange}/>
-
-                    <button type="submit">Salvar</button>
-                </div> 
-            </form>
+                            <FormActions>
+                                <BtnPrimary type="submit">Salvar</BtnPrimary>
+                            </FormActions>
+                        </ColumnRight>
+                    </FormGrid>
+                </FormStyled>
+            </Container>
         </MainLayout>
-    )
+                )
 }
