@@ -6,14 +6,6 @@ export const Container = styled.div`
   padding: 20px;
 `;
 
-export const Title = styled.h2`
-  text-align: center;
-  font-size: 20px;
-  letter-spacing: 2px;
-  margin-bottom: 18px;
-  color: #191970;
-`;
-
 export const FormStyled = styled.form`
   background: #fff;
   padding: 18px;
@@ -22,26 +14,13 @@ export const FormStyled = styled.form`
   border: 1px solid #eee;
 `;
 
-export const FormTop = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-`;
 
-export const SmallLabel = styled.label`
-  font-size: 13px;
-  color: #6b6f85;
-  min-width: 260px;
-`;
-
-export const SelectTop = styled.select`
-  flex: 1;
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid #d6d9e6;
-  background: #fff;
-  color: #222;
+export const Title = styled.h2`
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 2px;
+  margin-bottom: 18px;
+  color: #191970;
 `;
 
 export const FormGrid = styled.div`
@@ -73,12 +52,6 @@ export const ColumnRight = styled.div`
   }
 `;
 
-export const TwoCols = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-`;
-
 
 export const Field = styled.div`
   margin-bottom: 14px;
@@ -90,6 +63,9 @@ export const Field = styled.div`
     margin-bottom: 6px;
   }
 `;
+
+
+
 
 const baseInput = `
   width: 100%;
@@ -120,19 +96,6 @@ export const Select = styled.select`
   }
 `;
 
-
-export const Textarea = styled.textarea`
-  ${baseInput}
-  min-height: 82px;
-  border-radius: 12px;
-  resize: vertical;
-  padding-top: 10px;
-  &:focus {
-    border-color: #7b63ff;
-    box-shadow: 0 2px 8px rgba(123,99,255,0.08);
-  }
-`;
-
 export const FormActions = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -154,4 +117,13 @@ export const BtnPrimary = styled.button`
   box-shadow: 0 6px 16px rgba(15,13,58,0.18);
 
   &:hover { opacity: 0.95; }
+`;
+
+export const Avatar = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-top: 8px;
+  object-fit: cover;
+  border: 1px solid #e6e8f2;
 `;

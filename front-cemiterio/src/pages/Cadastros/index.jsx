@@ -3,6 +3,35 @@ import React, { useState } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
 export default function Cadastros() {
+
+
+    const cpfMask = value => {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+            .replace(/(-\d{2})\d+?$/, '$1')
+    };
+
+    const rgMask = value => {
+        const cleaned = value.replace(/[^0-9A-Za-z]/g, '');
+        let letter = '';
+        let core = cleaned;
+        if (/[A-Za-z]$/.test(core)) {
+            letter = core.slice(-1).toUpperCase();
+            core = core.slice(0, -1);
+        }
+        const digits = core.replace(/\D/g, '').slice(0, 9);
+        let out = digits
+            .replace(/(\d{2})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})/, '$1-$2');
+        return letter ? out + letter : out;
+    };
+
+
+
     const [form, setForm] = useState({
         nome: "",
         idade: "",
@@ -26,6 +55,15 @@ export default function Cadastros() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        if (name === "cpf") {
+            const digitsOnly = value.replace(/\D/g,'').slice(0,11);
+            setForm(prev => ({ ...prev, cpf: digitsOnly }));
+            return;
+        } else if (name === "rg") {
+            const masked = rgMask(value);
+            setForm(prev => ({ ...prev, rg: masked }));
+            return;
+        }
         setForm({ ...form, [name]: value });
     };
 
@@ -61,6 +99,9 @@ export default function Cadastros() {
                         <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
                         <SelectTop name="processo">
                             <option>Cadastro de falecido</option>
+                            <option>Cadastro de velório</option>
+                            <option>Cadastro de exumação</option>
+                            <option>Cadastro de sepultamento</option>
                         </SelectTop>
                     </FormTop>
 
@@ -71,7 +112,7 @@ export default function Cadastros() {
                                 <Input name="nome" value={form.nome} onChange={handleChange} placeholder="Digite o nome do falecido" />
                             </Field>
 
-                            <Field>    
+                            <Field>
                                 <label>Idade</label>
                                 <Input name="idade" value={form.idade} onChange={handleChange} />
                             </Field>
@@ -79,11 +120,11 @@ export default function Cadastros() {
                             <TwoCols>
                                 <Field>
                                     <label>Data de nascimento</label>
-                                    <Input name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
+                                    <Input type="date" name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
                                 </Field>
                                 <Field>
                                     <label>Data e hora do falecimento</label>
-                                    <Input name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
+                                    <Input type="datetime-local" name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
                                 </Field>
                             </TwoCols>
 
@@ -111,7 +152,7 @@ export default function Cadastros() {
                                 <Input name="profissao" value={form.profissao} onChange={handleChange} placeholder="Digite a profissão do falecido" />
                             </Field>
                         </ColumnLeft>
-   
+
                         <ColumnRight>
                             <Field>
                                 <label>Causa mortis</label>
@@ -122,27 +163,27 @@ export default function Cadastros() {
                                 <label>Estado civil</label>
                                 <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
                                     <option value="">Selecione o estado civil</option>
-                                    <option value="Solteiro(a)">Solteiro(a)</option>
-                                    <option value="Casado(a)">Casado(a)</option>
-                                    <option value="Separado(a)">Separado(a)</option>
-                                    <option value="Divorciado(a)">Divorciado(a)</option>
-                                    <option value="Viúvo(a)">Viúvo(a)</option>
+                                    <option value="Solteiro">Solteiro(a)</option>
+                                    <option value="Casado">Casado(a)</option>
+                                    <option value="Separado">Separado(a)</option>
+                                    <option value="Divorciado">Divorciado(a)</option>
+                                    <option value="Viúvo">Viúvo(a)</option>
                                 </Select>
                             </Field>
 
                             <Field>
                                 <label>CPF</label>
-                                <Input name="cpf" value={form.cpf} onChange={handleChange} placeholder="Digite o CPF" />
+                                <Input name="cpf" value={cpfMask(form.cpf)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
                             </Field>
 
                             <Field>
                                 <label>RG</label>
-                                <Input name="rg" value={form.rg} onChange={handleChange} placeholder="Digite o RG" />
+                                <Input name="rg" value={form.rg} onChange={handleChange} placeholder="00.000.000-0" maxLength={12} />
                             </Field>
 
                             <Field>
                                 <label>Certidão de óbito</label>
-                                <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" />
+                                <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" maxlength={32} />
                             </Field>
 
                             <Field>
@@ -163,5 +204,5 @@ export default function Cadastros() {
                 </FormStyled>
             </Container>
         </MainLayout>
-                )
+    )
 }

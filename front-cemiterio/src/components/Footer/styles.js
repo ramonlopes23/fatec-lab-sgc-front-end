@@ -19,7 +19,7 @@ export const FooterContainer = styled.ul`
     color: #1f2937;
 
     &:hover {
-      color: #2563eb;
+      color: #191970;
     }
   }
 `;

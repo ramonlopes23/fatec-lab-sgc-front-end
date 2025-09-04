@@ -10,7 +10,7 @@ export const HeaderContainer = styled.header`
   width: 100%;
   height: 60px;
   background-color: #ffffff;
-  border-bottom: 1px solid #123271ff;
+  border-bottom: 1px solid #00008B;
   display: flex;
   align-items: center;
   justify-content: space-between;

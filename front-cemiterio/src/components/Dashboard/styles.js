@@ -7,7 +7,7 @@ export const DashboardWrapper = styled.div`
 `;
 
 export const Card = styled.div`
-  background-color: #f9fafb;
+  background-color: #fff;
   border: 1px solid #d1d5db;
   border-radius: 12px;
   padding: 1rem;
@@ -21,7 +21,8 @@ export const CardHeader = styled.h2`
   font-weight: 600;
   text-align: center;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  color:#191970;
+  border-bottom: 1px solid #191970;
   padding-bottom: 0.5rem;
 `;
 
@@ -48,16 +49,16 @@ export const ProcessInfo = styled.div`
 
   strong {
     font-size: 1rem;
-    color: #111827;
+    color: #191970;
   }
 
   span {
     font-size: 0.875rem;
-    color: #374151;
+    color: #191970;
   }
 `;
 
 export const ProcessAction = styled.div`
   font-weight: bold;
-  color: #1f2937;
+  color: #191970
 `;

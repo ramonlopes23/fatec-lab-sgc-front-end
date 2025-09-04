@@ -36,7 +36,7 @@ export const SidebarContainer = styled.div`
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display:flex;
   flex-direction:column;
-  border-right: 3px solid #031029ff;
+  border-right: 3px solid #191970;
   position:fixed;
   transform:${({isOpen})=> (isOpen ?"translate(0)":"translate(-100%)")};
   transition:transform 0.3s ease;
