@@ -120,10 +120,19 @@ export const BtnPrimary = styled.button`
 `;
 
 export const Avatar = styled.img`
-  width: 80px;
-  height: 80px;
+  width: 250px;
+  height: 250px;
   border-radius: 50%;
+  display:block;
+  margin:8px auto 0;
   margin-top: 8px;
+  margin-bottom:10px;
   object-fit: cover;
   border: 1px solid #e6e8f2;
+
+  @media (max-width: 880px) {
+    width: 140px;
+    height: 140px;
+  }
+
 `;

@@ -96,6 +96,17 @@ export default function Configurar() {
                                     <option value="ctrl/sec">Controladoria/Secretaria</option>
                                 </Select>
                             </Field>
+
+                               <Field>
+                                <label>Senha</label>
+                                <Input type="password" name="senha" value={form.senha} onChange={handleChange} placeholder="Digite a senha atual" />
+                            </Field>
+
+                            <Field>
+                                <label>Nova Senha</label>
+                                <Input type="password" name="novasenha" value={form.novasenha} onChange={handleChange} placeholder="Digite a nova senha" />
+                            </Field>
+                            
                         </ColumnLeft>
 
                         <ColumnRight>
@@ -112,15 +123,7 @@ export default function Configurar() {
 
                             </Field>
 
-                            <Field>
-                                <label>Senha</label>
-                                <Input type="password" name="senha" value={form.senha} onChange={handleChange} placeholder="Digite a senha atual" />
-                            </Field>
-
-                            <Field>
-                                <label>Nova Senha</label>
-                                <Input type="password" name="novasenha" value={form.novasenha} onChange={handleChange} placeholder="Digite a nova senha" />
-                            </Field>
+                         
 
                             <FormActions>
                                 <BtnPrimary type="submit">Salvar</BtnPrimary>

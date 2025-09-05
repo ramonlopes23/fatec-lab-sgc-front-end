@@ -9,7 +9,6 @@ font-family:"Inter", sans-serif;
 
 
 
-
 export const LogoContainer = styled.div`
 padding:1.5rem;
 display:flex;
@@ -19,7 +18,8 @@ border-bottom:1px solid #e5e7eb;
 `;
 
 export const LogoImage = styled.img`
-width:150px; 
+width:400px; 
+margin-bottom:-60px;
 height:auto;
 object-fit:contain;
 `;

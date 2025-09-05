@@ -21,6 +21,7 @@ export const MenuButton = styled.button`
   background: none;
   border: none;
   font-size: 1.5rem;
+  color:#191970;
   cursor: pointer;
   display: flex;
   align-items: center;
