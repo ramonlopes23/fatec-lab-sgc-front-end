@@ -22,7 +22,6 @@ export const CardHeader = styled.h2`
   text-align: center;
   margin-bottom: 1rem;
   color:#191970;
-  border-bottom: 1px solid #191970;
   padding-bottom: 0.5rem;
 `;
 

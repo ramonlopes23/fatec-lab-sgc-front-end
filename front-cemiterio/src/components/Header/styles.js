@@ -36,7 +36,7 @@ export const UserContainer = styled.div`
 export const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
-  border: 2px solid #000000;
+  border: 2px solid #191970;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -51,5 +51,5 @@ export const UserName = styled.span`
   font-size: 0.875rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: #000000;
+  color: #191970;
 `;

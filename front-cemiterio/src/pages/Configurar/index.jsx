@@ -1,5 +1,6 @@
 
 import MainLayout from "../../layout/MainLayout";
+import Footer from "../../components/Footer";
 import React, { useState } from "react";
 import { Avatar, BtnPrimary,ColumnLeft,ColumnRight,Container,Field,FormActions,FormGrid,FormStyled,Input,Select,Title} from "../Configurar/styles";
 
@@ -39,10 +40,19 @@ export default function Configurar() {
 
     const handleFileChange = (e) =>{
         const file = e.target.files && e.target.files[0];
-        if(!file) return;
+        if(!file){
+            setForm(prev => ({ ...prev, foto: "" }));
+            localStorage.removeItem("userPhoto");
+            window.dispatchEvent(new Event("userPhotoUpdated"));
+        return; 
+        }
         const reader = new FileReader();
         reader.onload = () =>{
+            const dataUrl = reader.result;
             setForm(prev=>({...prev, foto:reader.result}));
+            try{localStorage.setItem("userPhoto", dataUrl); } 
+            catch (err) {/* ignore storage errors */}
+            window.dispatchEvent(new Event("userPhotoUpdated"));
         }
         reader.readAsDataURL(file);
     };
@@ -64,6 +74,7 @@ export default function Configurar() {
   
 
     return (
+        <div>
         <MainLayout>
             <Container>
                 <FormStyled onSubmit={handleSubmit}>
@@ -106,7 +117,7 @@ export default function Configurar() {
                                 <label>Nova Senha</label>
                                 <Input type="password" name="novasenha" value={form.novasenha} onChange={handleChange} placeholder="Digite a nova senha" />
                             </Field>
-                            
+
                         </ColumnLeft>
 
                         <ColumnRight>
@@ -133,5 +144,8 @@ export default function Configurar() {
                 </FormStyled>
             </Container>
         </MainLayout>
+        <Footer />
+    </div>
+        
     )
 }
