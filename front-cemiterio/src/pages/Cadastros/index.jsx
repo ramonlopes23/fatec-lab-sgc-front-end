@@ -29,6 +29,7 @@ export default function Cadastros() {
         filiacao_pai: "",
         filiacao_mae: "",
         sexo: "",
+        cor: "",
         cpf: "",
         rg: "",
         profissao: "",
@@ -40,6 +41,10 @@ export default function Cadastros() {
         obs_fal: "",
         residencia: "",
         residenciaPreview: "",
+        nome_resp: "",
+        doc_resp: "",
+        tel_resp: "",
+        endereco_resp: "",
     };
 
     const exumacao = {
@@ -139,10 +144,10 @@ export default function Cadastros() {
         e.preventDefault();
         setRegistros(prev => ([...prev, { processType, data: form }]));
         try {
-            if (processType === "Cadastro de falecidos") {
+            if (processType === "Cadastro de falecido") {
 
                 await api.post("/falecidos", form);
-                
+
                 alert("Falecido cadastrado");
                 setForm(falecido);
 
@@ -174,7 +179,7 @@ export default function Cadastros() {
         }
         catch (err) {
             console.error(err);
-            alert(`Erro ao cadastrar processo ${processType()}`);
+            alert(`Erro ao cadastrar processo ${processType}`);
         }
 
     };
@@ -375,7 +380,7 @@ export default function Cadastros() {
                                             </Field>
                                             <Field>
                                                 <label>Data e hora de sepultamento</label>
-                                                <Input type="datetime" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" />
+                                                <Input type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" />
                                             </Field>
                                         </TwoCols>
 
@@ -459,6 +464,31 @@ export default function Cadastros() {
 
                                         <TwoCols>
                                             <Field>
+                                                <label>Estado civil</label>
+                                                <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
+                                                    <option value="">Selecione o estado civil</option>
+                                                    <option value="Solteiro">Solteiro(a)</option>
+                                                    <option value="Casado">Casado(a)</option>
+                                                    <option value="Separado">Separado(a)</option>
+                                                    <option value="Divorciado">Divorciado(a)</option>
+                                                    <option value="Viúvo">Viúvo(a)</option>
+                                                </Select>
+                                            </Field>
+                                            <Field>
+                                                <label>Cor</label>
+                                                <Select name="cor" value={form.cor} onChange={handleChange}>
+                                                    <option value="">Selecione a cor</option>
+                                                    <option value="Branca">Branca</option>
+                                                    <option value="Preta">Preta</option>
+                                                    <option value="Parda">Parda</option>
+                                                    <option value="Amarela">Amarela</option>
+                                                    <option value="Indígena">Indígena</option>
+                                                </Select>
+                                            </Field>
+                                        </TwoCols>
+
+                                        <TwoCols>
+                                            <Field>
                                                 <label>Data de nascimento</label>
                                                 <Input type="date" name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
                                             </Field>
@@ -484,6 +514,11 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
+                                            <label>Nacionalidade</label>
+                                            <Input name="nacionalidade" value={form.nacionalidade} onChange={handleChange} placeholder="Digite a nacionalidade do falecido" />
+                                        </Field>
+                                        
+                                        <Field>
                                             <label>Comprovante de residencia</label>
                                         </Field>
                                         <Field>
@@ -492,33 +527,23 @@ export default function Cadastros() {
                                                 <img src={form.residenciaPreview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
                                             )}
                                         </Field>
+
                                     </ColumnLeft>
 
                                     <ColumnRight>
+
                                         <Field>
                                             <label>Causa mortis</label>
                                             <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
                                         </Field>
 
                                         <Field>
-                                            <label>Estado civil</label>
-                                            <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
-                                                <option value="">Selecione o estado civil</option>
-                                                <option value="Solteiro">Solteiro(a)</option>
-                                                <option value="Casado">Casado(a)</option>
-                                                <option value="Separado">Separado(a)</option>
-                                                <option value="Divorciado">Divorciado(a)</option>
-                                                <option value="Viúvo">Viúvo(a)</option>
-                                            </Select>
-                                        </Field>
-
-                                        <Field>
-                                            <label>CPF</label>
+                                            <label>CPF do falecido</label>
                                             <Input name="cpf" value={cpfMask(form.cpf)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
                                         </Field>
 
                                         <Field>
-                                            <label>RG</label>
+                                            <label>RG do falecido</label>
                                             <Input name="rg" value={form.rg} onChange={handleChange} placeholder="00.000.000-0" maxLength={12} />
                                         </Field>
 
@@ -531,6 +556,27 @@ export default function Cadastros() {
                                             <label>Nome do médico responsável</label>
                                             <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
                                         </Field>
+
+                                        <Field>
+                                            <label>Nome do familiar ou responsável</label>
+                                            <Input name="nome_resp" value={form.nome_resp} onChange={handleChange} placeholder="Digite o nome do responsável" />
+                                        </Field>
+
+                                        <Field>
+                                            <label>CPF do responsável</label>
+                                            <Input name="doc_resp" value={cpfMask(form.doc_resp)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
+                                        </Field>
+
+                                        <Field>
+                                            <label>Contato do responsável</label>
+                                            <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" maxLength={14} />
+                                        </Field>
+
+                                        <Field>
+                                            <label>Endereço do responsável</label>
+                                            <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Digite o endereço do responsável" />
+                                        </Field>
+
 
                                         <Field>
                                             <label>Observações</label>
