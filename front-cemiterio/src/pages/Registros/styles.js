@@ -92,11 +92,41 @@ export const BtnPrimary = styled.button`
   border: none;
   padding: 12px 28px;
   border-radius: 24px;
+  margin-right:10px;
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(15,13,58,0.18);
 
-  &:hover { opacity: 0.95; }
+  &:hover { opacity: 0.7; }
+`;
+
+export const BtnPrimaryClose = styled.button`
+  background: #e6e6f1ff;
+  color: #191970;
+  border-color:#191970;
+  border: 2px;
+  padding: 12px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.7; }
+`;
+
+export const BtnPrimarySave = styled.button`
+  background: #e6e6f1ff;
+  color: #fff;
+  background-color:#008000;
+  border: 2px;
+  margin-right:10px;
+  padding: 12px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.7; }
 `;
 
 export const TwoCols = styled.div`
@@ -150,10 +180,10 @@ export const ModalOverlay = styled.div`
 export const ModalContent = styled.div`
   background: #fff;
   padding: 20px;
-  max-height: 180vh;
+  height:90vh;
   overflow-y: auto;
   border-radius: 8px;
-  width: 1250px;
+  width: 1200px;
 `;
 
 export const ModalGrid = styled.div`
@@ -189,6 +219,7 @@ export const Table = styled.table`
   border-collapse: collapse;
   min-width: 720px;
   font-size: 14px;
+  table-layout:fixed;
 `;
 
 export const THead = styled.thead`
@@ -257,4 +288,24 @@ export const IconBtn = styled.button`
 export const TableScroller = styled.div`
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+`;
+
+const baseInput = `
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid #d6d9e6;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+  color: #222;
+`;
+
+export const Input = styled.input`
+  ${baseInput}
+  &:focus {
+    border-color: #7b63ff;
+    box-shadow: 0 2px 8px rgba(123,99,255,0.08);
+  }
 `;

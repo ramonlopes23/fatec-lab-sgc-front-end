@@ -1,7 +1,7 @@
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
 export default function Cadastros() {
@@ -52,7 +52,6 @@ export default function Cadastros() {
         data_obito: "",
         data_sepultamento: "",
         quadra: "",
-        rua: "",
         num_sepultura: "",
         tipo: "",
         dh_exu: "",
@@ -67,7 +66,6 @@ export default function Cadastros() {
         data_obito_sep: "",
         dh_sep: "",
         quadra_sep: "",
-        rua_sep: "",
         num_sepultura_sep: "",
         tipo_sep: "",
         coveiro_sep: "",
@@ -142,7 +140,25 @@ export default function Cadastros() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setRegistros(prev => ([...prev, { processType, data: form }]));
+
+        const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+        let requiredTemplate = {};
+        if (processType === "Cadastro de falecido") requiredTemplate = falecido;
+        else if (processType === "Cadastro de velório") requiredTemplate = velorio;
+        else if (processType === "Cadastro de exumação") requiredTemplate = exumacao;
+        else if (processType === "Cadastro de sepultamento") requiredTemplate = sepultamento;
+
+        const requiredKeys = Object.keys(requiredTemplate);
+        const missing = requiredKeys.filter((k) => {
+            if (typeof requiredTemplate[k] === "boolean") return false;
+            return isEmpty(form[k])
+        });
+
+        if (missing.length) {
+            alert("Preencha todos os campos obrigatórios antes de salvar");
+            return;
+        }
+
         try {
             if (processType === "Cadastro de falecido") {
 
@@ -176,6 +192,8 @@ export default function Cadastros() {
             else {
                 alert("Tipo de processo inválido")
             }
+
+            setRegistros(prev => ([...prev, { processType, data: form }]));
         }
         catch (err) {
             console.error(err);
@@ -319,11 +337,6 @@ export default function Cadastros() {
                                     </Field>
 
                                     <Field>
-                                        <label>Rua</label>
-                                        <Input name="rua" value={form.rua} onChange={handleChange} placeholder="Rua" />
-                                    </Field>
-
-                                    <Field>
                                         <label>Nº da sepultura</label>
                                         <Input name="num_sepultura" value={form.num_sepultura} onChange={handleChange} placeholder="Número da sepultura" />
                                     </Field>
@@ -384,16 +397,13 @@ export default function Cadastros() {
                                             </Field>
                                         </TwoCols>
 
-                                        <TwoCols>
-                                            <Field>
-                                                <label>Quadra</label>
-                                                <Input name="quadra_sep" value={form.quadra_sep} onChange={handleChange} />
-                                            </Field>
-                                            <Field>
-                                                <label>Rua</label>
-                                                <Input name="rua_sep" value={form.rua_sep} onChange={handleChange} />
-                                            </Field>
-                                        </TwoCols>
+
+                                        <Field>
+                                            <label>Quadra</label>
+                                            <Input name="quadra_sep" value={form.quadra_sep} onChange={handleChange} />
+                                        </Field>
+
+
 
                                         <TwoCols>
                                             <Field>
@@ -517,7 +527,7 @@ export default function Cadastros() {
                                             <label>Nacionalidade</label>
                                             <Input name="nacionalidade" value={form.nacionalidade} onChange={handleChange} placeholder="Digite a nacionalidade do falecido" />
                                         </Field>
-                                        
+
                                         <Field>
                                             <label>Comprovante de residencia</label>
                                         </Field>

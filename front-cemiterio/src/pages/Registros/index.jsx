@@ -4,27 +4,29 @@ import Footer from "../../components/Footer";
 import { FaSearch, FaEye, FaPen, FaTrash } from "react-icons/fa";
 import {
   Card, TableWrapper, Table, THead, Th, TBody, Tr, Td, Actions, IconBtn, TableScroller, FormStyled, Container, Title, SearchBar, SearchInput, SmallSelect,
-  BtnPrimary, SmallInput, TwoCols, Field, SearchWrapper, SearchIcon, Label, ModalContent, ModalGrid, ModalOverlay
+  BtnPrimary,Input, BtnPrimarySave, SmallInput, TwoCols, Field, SearchWrapper, SearchIcon, Label, ModalContent, ModalGrid, ModalOverlay, BtnPrimaryClose
 } from "./styles";
 import api from "../../services/api";
-/* import Pagination from '@mui/material/Pagination';
-import Stack from '@mui/material/Stack'; */
+
 
 export default function Registros() {
   const [modalOpen, setModalOpen] = useState(false);
   const [registroSelecionado, setRegistroSelecionado] = useState(null);
+  const [modalForm, setModalForm] = useState({});
+  const [isEditing, setIsEditing] = useState(false);
   const [falecidos, setFalecidos] = useState([]);
   const [exumacoes, setExumacoes] = useState([]);
   const [registros, setRegistros] = useState([]);
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState({
+  const [query, setQuery] = useState("");
+   const [filters, setFilters] = useState({
     tipo: "",
     status: "",
     quadra: "",
-    rua: "",
     sepultura: ""
   });
-
+  const [pendingFilters, setPendingFilters] = useState(()=>({...filters}));
+ 
   const loadAll = async () => {
     try {
       const [resFalecidos, resExumacoes, resSepultamentos] = await Promise.all([
@@ -65,6 +67,7 @@ export default function Registros() {
           dh_falec: fal.dh_falec || "",
           filiacao_pai: fal.filiacao_pai || "",
           filiacao_mae: fal.filiacao_mae || "",
+          sexo: fal.sexo || "",
           profissao: fal.profissao || "",
           estado_civil: fal.estado_civil || "",
           nacionalidade: fal.nacionalidade || "",
@@ -88,38 +91,110 @@ export default function Registros() {
       setExumacoes(exumacoesData);
       setRegistros(enriched);
 
+      return enriched;
+
     } catch (error) {
       console.error("Erro ao carregar registros", error);
+      return [];
     }
   };
 
-  useEffect(() => {
+  useEffect(()=>{
     loadAll();
-
-  }, []);
+  },[]);
 
   const filteredRegistros = registros.filter((item) => {
     const searchNormalized = String(search || "").trim().toLowerCase();
     const nomeField = String(item?.nome_fal || item?.nome_sep || "");
     const searchMatch = !searchNormalized || nomeField.toLowerCase().includes(searchNormalized);
 
-    const tipoMatch = filters.tipo ? item.tipo === filters.tipo : true;
-    const quadraMatch = filters.quadra ? item.quadra?.toString() === filters.quadra : true;
-    const ruaMatch = filters.rua ? item.rua?.toString() === filters.rua : true;
-    const sepulturaMatch = filters.sepultura ? item.sepultura?.toString() === filters.sepultura : true;
+    const itemTipo = String(item?.tipo || item?.tipo_sep || "").toLowerCase(); 
+    const tipoMatch = filters.tipo ? itemTipo === String(filters.tipo).toLowerCase() : true;
 
-    return searchMatch && tipoMatch && quadraMatch && ruaMatch && sepulturaMatch;
+    const itemQuadra = String(item?.quadra_sep ?? item?.quadra ?? "").trim();
+    const quadraMatch = filters.quadra ? itemQuadra === String(filters.quadra).trim() : true;
+
+    const itemSepultura = String (item?.num_sepultura_sep ?? item?.num_sepultura ?? item?.sepultura ?? "").trim();
+    const sepulturaMatch = filters.sepultura ? itemSepultura === String(filters.sepultura).trim() : true;
+
+    return searchMatch && tipoMatch && quadraMatch && sepulturaMatch;
   });
 
   const handleVisualizar = (registro) => {
 
     setRegistroSelecionado(registro)
+    setModalForm(registro || {});
+    setIsEditing(false);
     setModalOpen(true);
+    
+    
+    
   };
 
-  const handleEditar = (id) => {
-    window.location.href = `/editar/${id}`;
+  const handleChangeModal = (key, value) =>{
+    setModalForm(prev=>({...prev, [key]:value}));
   };
+
+  const handleSave = async () =>{
+    if(!modalForm) return;
+    try{
+      const sepId = modalForm.id;
+      const falId = modalForm.falecidoId ?? modalForm.falecido_id ?? modalForm.falecido;
+
+      const sepPayload = {};
+      if(modalForm.tipo_sep !== undefined)sepPayload.tipo_sep = modalForm.tipo_sep;
+      if(modalForm.quadra_sep !== undefined)sepPayload.quadra_sep = modalForm.quadra_sep;
+      if(modalForm.num_sepultura_sep !== undefined)sepPayload.num_sepultura_sep = modalForm.num_sepultura_sep;
+      if(modalForm.dh_sep !== undefined) sepPayload.dh_sep = modalForm.dh_sep;
+      if(modalForm.nome_fal !== undefined) sepPayload.nome_sep = modalForm.nome_fal;
+      
+
+      const falPayload = {};
+      if(modalForm.nome_fal != undefined){
+        falPayload.nome_fal = modalForm.nome_fal;
+}
+    
+      if(modalForm.idade != undefined) falPayload.idade = modalForm.idade;
+      if(modalForm.sexo != undefined) falPayload.sexo = modalForm.sexo;
+      if(modalForm.cpf != undefined) falPayload.cpf = modalForm.cpf;
+      if(modalForm.data_nasc != undefined) falPayload.data_nasc = modalForm.data_nasc;
+      if(modalForm.profissao != undefined) falPayload.profissao = modalForm.profissao;
+      if(modalForm.dh_falec != undefined)falPayload.dh_falec = modalForm.dh_falec;
+      if(modalForm.filiacao_pai != undefined)falPayload.filiacao_pai = modalForm.filiacao_pai;
+      if(modalForm.filiacao_mae != undefined)falPayload.filiacao_mae = modalForm.filiacao_mae;
+      if(modalForm.cor != undefined)falPayload.cor = modalForm.cor;
+      if(modalForm.rg != undefined)falPayload.rg = modalForm.rg;
+      if(modalForm.estado_civil != undefined)falPayload.estado_civil = modalForm.estado_civil;
+      if(modalForm.nacionalidade != undefined)falPayload.nacionalidade = modalForm.nacionalidade;
+      if(modalForm.causa_mortis != undefined)falPayload.causa_mortis = modalForm.causa_mortis;
+      if(modalForm.nome_doutor != undefined)falPayload.nome_doutor = modalForm.nome_doutor;
+      if(modalForm.certidao_obito != undefined)falPayload.certidao_obito = modalForm.certidao_obito;
+      if(modalForm.obs_fal != undefined)falPayload.obs_fal = modalForm.obs_fal;
+      if(modalForm.residenciaPreview != undefined)falPayload.residenciaPreview = modalForm.residenciaPreview;
+      if(modalForm.nome_resp != undefined)falPayload.nome_resp = modalForm.nome_resp;
+      if(modalForm.doc_resp != undefined)falPayload.doc_resp = modalForm.doc_resp;
+      if(modalForm.endereco_resp != undefined)falPayload.endereco_resp = modalForm.endereco_resp;
+
+
+      if(sepId && Object.keys(sepPayload).length){
+        await api.patch(`/sepultamentos/${sepId}`, sepPayload);
+      }
+      if(falId && Object.keys(falPayload).length){
+        await api.patch(`/falecidos/${falId}`, falPayload);
+      }
+
+      await loadAll();
+      const enriched = await loadAll();
+      const updated = enriched.find(r=>String(r.id)=== String(sepId))||{};
+      setRegistroSelecionado(updated);
+      setModalForm(updated);
+      alert("Registro atualizado");
+      setIsEditing(false);
+    }catch(err){
+      console.error("erro ao salvar", err);
+    }
+
+  }
 
   const handleArquivar = async (id) => {
     try {
@@ -128,6 +203,12 @@ export default function Registros() {
     } catch (error) {
       console.error("Erro ao arquivar", error);
     }
+  };
+
+  const handleSearch = async () =>{
+    setSearch(query);
+    await loadAll();
+    setPage(1);
   };
 
   const formatarData = (data) => {
@@ -161,11 +242,8 @@ export default function Registros() {
     if (page > totalPages) setPage(totalPages);
   }, [totalPages, page]);
 
-  useEffect(() => {
-    console.log({ currentPage, PAGE_SIZE, totalPages, totalItems: filteredRegistros.length, pageSlice: paginatedRegistros.length });
-  }, [currentPage, PAGE_SIZE, totalPages, filteredRegistros.length]);
 
-  const goToPrev = () => setPage(prev => {
+  /* const goToPrev = () => setPage(prev => {
     const num = Number(prev) || 1;
     return Math.max(1, num - 1);
   });
@@ -173,7 +251,7 @@ export default function Registros() {
   const goToNext = () => setPage(prev => {
     const num = Number(prev) || 1;
     return Math.min(totalPages, num + 1);
-  });
+  }); */
 
   const goToPage = (n) => {
     const num = Number(n) || 1;
@@ -194,16 +272,18 @@ export default function Registros() {
                   type="text"
                   name="busca"
                   placeholder="Pesquisar por nome"
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <SearchIcon type="button" onClick={loadAll}>
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => {if(e.key === "Enter"){e.preventDefault(); handleSearch();}}}
+                  />
+                <SearchIcon type="button" onClick={handleSearch} >
                   <FaSearch />
                 </SearchIcon>
               </SearchWrapper>
             </SearchBar>
 
             <TwoCols>
-              <SmallSelect name="tipo_sep">
+              <SmallSelect name="tipo_sep" value={pendingFilters.tipo} onChange={(e)=>setPendingFilters(prev=>({...prev, tipo:e.target.value}))}>
                 <option value="">Selecione o tipo de sepultura</option>
                 <option value="Cova">Cova</option>
                 <option value="Gaveta">Gaveta</option>
@@ -212,10 +292,13 @@ export default function Registros() {
 
             <TwoCols>
               <Field>
-                <SmallInput placeholder="Digite o número da quadra" />
-                <SmallInput placeholder="Digite o número da rua" />
-                <SmallInput placeholder="Digite o número da sepultura" />
-                <BtnPrimary type="button">Aplicar Filtros</BtnPrimary>
+                <SmallInput placeholder="Digite o número da quadra" value={pendingFilters.quadra} onChange={(e) =>setPendingFilters(prev=>({...prev, quadra:e.target.value}))} />
+                  
+                <SmallInput placeholder="Digite o número da sepultura" value={pendingFilters.sepultura} onChange={(e) =>setPendingFilters(prev=>({...prev, sepultura:e.target.value}))}/>
+                <BtnPrimary type="button" onClick={()=>{
+                  setFilters(pendingFilters);
+                  setPage(1);
+                  }}>Aplicar Filtros</BtnPrimary>
               </Field>
             </TwoCols>
 
@@ -241,10 +324,7 @@ export default function Registros() {
                           <Actions>
                             <IconBtn type="button" onClick={() => handleVisualizar(registro)}>
                               <FaEye />
-                            </IconBtn>
-                            <IconBtn type="button" onClick={() => handleEditar(registro.id)}>
-                              <FaPen />
-                            </IconBtn>
+                            </IconBtn>                          
                             <IconBtn type="button" onClick={() => handleArquivar(registro.id)}>
                               <FaTrash />
                             </IconBtn>
@@ -327,38 +407,40 @@ export default function Registros() {
 
           </div>
 
-          {modalOpen && registroSelecionado && (
+          {modalOpen && modalForm && (
             <ModalOverlay>
               <ModalContent>
                 <Title>INFORMAÇÕES DO FALECIDO</Title>
                 <ModalGrid>
-                  <Label>Nome: <span>{registroSelecionado.nome_fal || "-"}</span></Label>
-                  <Label>Idade: <span>{registroSelecionado.idade || "-"}</span></Label>
-                  <Label>Sexo: <span>{registroSelecionado.sexo || "-"}</span></Label>
-                  <Label>Cor: <span>{registroSelecionado.cor || "-"}</span></Label>
-                  <Label>Data de nascimento: <span>{registroSelecionado.data_nasc || "-"}</span></Label>
-                  <Label>Data e hora de falecimento: <span>{registroSelecionado.dh_falec || "-"}</span></Label>
-                  <Label>Data de sepultamento: <span>{registroSelecionado.dh_sep || "-"}</span></Label>
-                  <Label>Filiação pai: <span>{registroSelecionado.filiacao_pai || "-"}</span></Label>
-                  <Label>Filiação mãe: <span>{registroSelecionado.filiacao_mae || "-"}</span></Label>
-                  <Label>CPF: <span>{registroSelecionado.cpf || "-"}</span></Label>
-                  <Label>Profissão: <span>{registroSelecionado.profissao || "-"}</span></Label>
-                  <Label>Estado civil: <span>{registroSelecionado.estado_civil || "-"}</span></Label>
-                  <Label>Nacionalidade: <span>{registroSelecionado.nacionalidade || "-"}</span></Label>
-                  <Label>Causa mortis: <span>{registroSelecionado.causa_mortis || "-"}</span></Label>
-                  <Label>Nome do doutor: <span>{registroSelecionado.nome_doutor || "-"}</span></Label>
-                  <Label>Certidão de óbito: <span>{registroSelecionado.certidao_obito || "-"}</span></Label>
-                  <Label>Comprovante de residência: <span>{registroSelecionado.residenciaPreview || "-"}</span></Label>
-                  <Label>Responsável: <span>{registroSelecionado.nome_resp || "-"}</span></Label>
-                  <Label>Contato do responsável: <span>{registroSelecionado.tel_resp || "-"}</span></Label>
-                  <Label>Endereço do responsável <span>{registroSelecionado.endereco_resp || "-"}</span></Label>
-                  <Label>CPF do responsável: <span>{registroSelecionado.doc_resp || "-"}</span></Label>
-                  <Label>Quadra: <span>{registroSelecionado.quadra_sep || "-"}</span></Label>
-                  <Label>Rua: <span>{registroSelecionado.rua_sep || "-"}</span></Label>
-                  <Label>Nº da sepultura: <span>{registroSelecionado.num_sepultura_sep || "-"}</span></Label>
-                  <Label>Tipo de sepultura: <span>{registroSelecionado.tipo_sep || "-"}</span></Label>
+                  <Label>Nome: <Input value={modalForm.nome_fal || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("nome_fal",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Idade: <Input value={modalForm.idade || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("idade",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Sexo: <Input value={modalForm.sexo || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("sexo",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Cor: <Input value={modalForm.cor || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("cor",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Data de nascimento: <Input type="date" value={modalForm.data_nasc || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("data_nasc",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Data e hora de falecimento: <Input type="datetime-local"value={modalForm.dh_falec || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("dh_falec",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Data de sepultamento: <Input type="date" value={modalForm.dh_sep || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("dh_sep",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Filiação pai: <Input value={modalForm.filiacao_pai || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("filiacao_pai",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Filiação mãe: <Input value={modalForm.filiacao_mae || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("filiacao_mae",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>CPF: <Input value={modalForm.cpf || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("cpf",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Profissão: <Input value={modalForm.profissao || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("profissao",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Estado civil: <Input value={modalForm.estado_civil || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("estado_civil",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Nacionalidade: <Input value={modalForm.nacionalidade || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("nacionalidade",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Causa mortis: <Input value={modalForm.causa_mortis || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("causa_mortis",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Nome do doutor: <Input value={modalForm.nome_doutor || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("nome_doutor",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Certidão de óbito: <Input value={modalForm.certidao_obito || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("certidao_obito",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Comprovante de residência: <Input value={modalForm.residenciaPreview || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("residenciaPreview",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Responsável: <Input value={modalForm.nome_resp || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("nome_resp",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Contato do responsável: <Input value={modalForm.tel_resp || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("tel_resp",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Endereço do responsável: <Input value={modalForm.endereco_resp || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("endereco_resp",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>CPF do responsável: <Input value={modalForm.doc_resp || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("doc_resp",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Quadra: <Input value={modalForm.quadra_sep || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("quadra_sep",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Nº da sepultura: <Input value={modalForm.num_sepultura_sep || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("num_sepultura_sep",e.target.value)} style={{width:"100%"}}></Input></Label>
+                  <Label>Tipo de sepultura: <Input value={modalForm.tipo_sep || ""} readOnly={!isEditing} onChange={(e)=>handleChangeModal("tipo_sep",e.target.value)} style={{width:"100%"}}></Input></Label>
                 </ModalGrid>
-                <BtnPrimary onClick={() => setModalOpen(false)}>Fechar</BtnPrimary>
+                <BtnPrimary type="button" onClick={()=> setIsEditing(true) }>Editar</BtnPrimary>
+                <BtnPrimarySave type="button" onClick={handleSave} disabled={!isEditing}>Salvar</BtnPrimarySave>
+                <BtnPrimaryClose type="button" onClick={() => {setModalOpen(false); setIsEditing(false)}}>Fechar</BtnPrimaryClose>
+
               </ModalContent>
             </ModalOverlay>
           )}

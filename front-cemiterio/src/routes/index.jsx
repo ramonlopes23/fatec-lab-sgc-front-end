@@ -4,6 +4,7 @@ import Home from "../pages/Home";
 import Cadastros from "../pages/Cadastros";
 import Configurar from "../pages/Configurar";
 import Registros from "../pages/Registros";
+import VerMapa from "../pages/VerMapa";
 
 export default function AppRoutes(){
     return(
@@ -13,6 +14,7 @@ export default function AppRoutes(){
             <Route path='/cadastros' element={<Cadastros />} />
             <Route path='/configurar' element={<Configurar />} />
             <Route path='/registros' element={<Registros />} />
+            <Route path='/vermapa' element={<VerMapa />} />
         </Routes>
     );
 }
