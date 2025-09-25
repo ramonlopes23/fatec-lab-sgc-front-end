@@ -60,7 +60,7 @@ export const CovaItem = styled.button`
   box-shadow: 0 2px 0 rgba(0,0,0,0.12);
   transition: transform 120ms ease, box-shadow 120ms ease;
   position:relative;
-  
+
 
   &:hover { transform: translateY(-2px); }
   &:focus { outline: 2px solid #222; }
@@ -94,4 +94,29 @@ export const LegendItem = styled.div`
     background: ${({ color }) => color || "#ccc"};
     border: 1px solid rgba(0,0,0,0.06);
   }
+`;
+
+export const SmallSelect = styled.select`
+  padding: 8px 12px;
+  border-radius: 18px;
+  border: 1px solid #d6d9e6;
+  background: #fff;
+  font-size: 14px;
+  outline: none;
+  margin-right:10px;
+  margin-bottom:10px;
+`;
+
+export const Button = styled.button`
+  background: #191970;
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 24px;
+  margin-right:10px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.7; }
 `;

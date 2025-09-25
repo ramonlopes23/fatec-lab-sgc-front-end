@@ -1,7 +1,7 @@
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
 export default function Cadastros() {
@@ -65,11 +65,11 @@ export default function Cadastros() {
         nome_sep: "",
         data_obito_sep: "",
         dh_sep: "",
+        titulo_posse: "",
         quadra_sep: "",
         num_sepultura_sep: "",
         tipo_sep: "",
         coveiro_sep: "",
-        dec_obito: "",
         obs_sep: "",
     }
 
@@ -109,6 +109,16 @@ export default function Cadastros() {
     const [form, setForm] = useState(falecido);
     const [processType, setProcessType] = useState("Cadastro de falecido");
     const [registros, setRegistros] = useState([]);
+    const [falecidos, setFalecidos] = useState([]);
+
+    useEffect(() => {
+        let mounted = true;
+        api.get("/falecidos").then(res => {
+            if (!mounted) return;
+            setFalecidos(res.data || []);
+        }).catch(() => { if (mounted) setFalecidos([]); })
+        return () => { mounted = false; };
+    }, []);
 
 
     const handleProcessChange = (e) => {
@@ -135,13 +145,38 @@ export default function Cadastros() {
             return;
         }
 
+
         setForm(prev => ({ ...prev, [name]: incoming }));
     };
+
+    const handleSelectFalecido = (val) => {
+        const raw = val === undefined || val === null ? "" : String(val).trim();
+        if (raw === "") {
+            setForm(prev => ({ ...prev, falecido_id: "", falecido: "", nome_sep: "" }));
+            return;
+        }
+        const byStringId = falecidos.find(x => String(x.id) === raw);
+        let f = byStringId;
+        if (!f) {
+            const pid = parseInt(raw, 10);
+            if (!Number.isNaN(pid)) {
+                f = falecidos.find(x => Number(x.id) === pid);
+            }
+        }
+        if (!f) {
+            console.warn("Falecido não encontrado para o valor selecionado:", raw);
+        }
+        const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
+        setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
+    };
+
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+
         let requiredTemplate = {};
         if (processType === "Cadastro de falecido") requiredTemplate = falecido;
         else if (processType === "Cadastro de velório") requiredTemplate = velorio;
@@ -155,6 +190,13 @@ export default function Cadastros() {
         });
 
         if (missing.length) {
+            console.group("%cValidação de cadastro falhou", "color: #b00; font-weight:700");
+            console.log("processType:", processType);
+            console.log("requiredKeys:", requiredKeys);
+            console.log("form (valores):", form);
+            console.log("missing keys:", missing);
+            missing.forEach(k => console.log(`-> '${k}':`, form[k]));
+            console.groupEnd();
             alert("Preencha todos os campos obrigatórios antes de salvar");
             return;
         }
@@ -184,10 +226,14 @@ export default function Cadastros() {
             }
             else if (processType === "Cadastro de sepultamento") {
 
-                await api.post("/sepultamentos", form);
-
+                const payload = { ...form };
+                if (!payload.nome_sep && payload.falecido) {
+                    const f = falecidos.find(x => Number(x.id) === Number(payload.falecido));
+                    if (f) payload.nome_sep = f.nome_fal || f.nome;
+                }
+                await api.post("/sepultamentos", payload);
                 alert("Sepultamento cadastrado");
-                setForm(sepultamento);
+                setForm(sepultamento)
             }
             else {
                 alert("Tipo de processo inválido")
@@ -214,9 +260,6 @@ export default function Cadastros() {
         };
         reader.readAsDataURL(file)
     };
-
-
-
 
 
     return (
@@ -384,8 +427,14 @@ export default function Cadastros() {
                                     <ColumnLeft>
                                         <Field>
                                             <label>Nome do falecido</label>
-                                            <Input name="nome_sep" value={form.nome_sep} onChange={handleChange} placeholder="Digite o nome do falecido" />
+                                            <Select name="falecido_id" value={form.falecido_id ?? ""} onChange={(e) => handleSelectFalecido(e.target.value)}>
+                                                <option value="">Selecione o falecido</option>
+                                                {falecidos.map(f => (
+                                                    <option key={f.id} value={f.id}>{f.nome_fal || f.nome}</option>
+                                                ))}
+                                            </Select>
                                         </Field>
+
                                         <TwoCols>
                                             <Field>
                                                 <label>Data do óbito</label>
@@ -398,18 +447,16 @@ export default function Cadastros() {
                                         </TwoCols>
 
 
-                                        <Field>
-                                            <label>Quadra</label>
-                                            <Input name="quadra_sep" value={form.quadra_sep} onChange={handleChange} />
-                                        </Field>
-
-
-
                                         <TwoCols>
                                             <Field>
-                                                <label>Nº da sepultura</label>
-                                                <Input name="num_sepultura_sep" value={form.num_sepultura_sep} onChange={handleChange} />
+                                                <label>Possui título de posse?</label>
+                                                <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
+                                                    <option value="">Selecione o tipo de sepultura </option>
+                                                    <option value="Sim">Sim</option>
+                                                    <option value="Não">Não</option>
+                                                </Select>
                                             </Field>
+
                                             <Field>
                                                 <label>Tipo de sepultura</label>
                                                 <Select name="tipo_sep" value={form.tipo_sep} onChange={handleChange}>
@@ -418,19 +465,25 @@ export default function Cadastros() {
                                                     <option value="Gaveta">Gaveta</option>
                                                 </Select>
                                             </Field>
+
+
+                                        </TwoCols>
+
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Quadra</label>
+                                                <Input name="quadra_sep" value={form.quadra_sep} onChange={handleChange} />
+                                            </Field>
+                                            <Field>
+                                                <label>Nº da sepultura</label>
+                                                <Input name="num_sepultura_sep" value={form.num_sepultura_sep} onChange={handleChange} />
+                                            </Field>
+
                                         </TwoCols>
 
                                     </ColumnLeft>
 
                                     <ColumnRight>
-
-                                        <Field>
-                                            <label>Declaração de óbito</label>
-                                            <input type="file" accept="image/*" onChange={e => handleFileChange(e, "residencia")} />
-                                            {form.residenciaPreview && (
-                                                <img src={form.residenciaPreview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
-                                            )}
-                                        </Field>
 
                                         <Field>
                                             <label>Funcionário designado</label>
@@ -538,9 +591,19 @@ export default function Cadastros() {
                                             )}
                                         </Field>
 
+                                        <Field>
+                                            <label>Declaração de óbito</label>
+                                            <input name="dec_obito" type="file" accept="image/*" onChange={e => handleFileChange(e, "dec_obito")} />
+                                            {form.dec_obito && (
+                                                <img src={form.dec_obito} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
+                                            )}
+                                        </Field>
+
                                     </ColumnLeft>
 
                                     <ColumnRight>
+
+
 
                                         <Field>
                                             <label>Causa mortis</label>

@@ -61,3 +61,17 @@ export const ProcessAction = styled.div`
   font-weight: bold;
   color: #191970
 `;
+
+
+export const Btn = styled.button`
+  background: #191970;
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.95; }
+`;

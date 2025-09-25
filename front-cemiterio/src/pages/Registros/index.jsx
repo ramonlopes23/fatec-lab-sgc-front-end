@@ -39,6 +39,7 @@ export default function Registros() {
       const falecidosData = resFalecidos.data || [];
       const exumacoesData = resExumacoes.data || [];
       const sepultamentosData = resSepultamentos.data || [];
+      
 
       const findFalecidoForSep = (sep) => {
         const fk = sep.falecidoId ?? sep.falecido_id ?? sep.falecido;
@@ -59,7 +60,8 @@ export default function Registros() {
         const exu = findExuForSep(sep) || {};
         return {
           ...sep,
-          nome_fal: fal.nome_fal || fal.nome || sep.nome_sep || "",
+          falecido: fal || null,
+          nome_fal: sep.nome_sep || fal.nome_fal || fal.nome || "",
           idade: fal.idade || "",
           cpf: fal.cpf || "",
           rg: fal.rg || "",
@@ -80,7 +82,7 @@ export default function Registros() {
           endereco_resp: fal.endereco_resp || "",
           doc_resp: fal.doc_resp || "",
           cor: fal.cor || "",
-          exumacao: exu,
+          exumacao: exu || null,
           dh_exu: exu.dh_exu || "",
           motivo_exu: exu.motivo_exu || "",
 
@@ -122,8 +124,13 @@ export default function Registros() {
 
   const handleVisualizar = (registro) => {
 
+    const merged = {
+      ...registro,
+      ...(registro.falecido || {}),
+    };
+
     setRegistroSelecionado(registro)
-    setModalForm(registro || {});
+    setModalForm(merged);
     setIsEditing(false);
     setModalOpen(true);
     
