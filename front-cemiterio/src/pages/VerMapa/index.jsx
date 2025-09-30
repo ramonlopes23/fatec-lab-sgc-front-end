@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import MainLayout from "../../layout/MainLayout";
+import Footer from "../../components/Footer";
 import { GiCoffin } from "react-icons/gi";
 import { useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, Title, LegendItem, LegendRow, SmallSelect, Button } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols } from "./styles"
 
 export default function VerMapa() {
 
@@ -33,12 +34,28 @@ export default function VerMapa() {
                     const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);
                     if (!quadraMap.has(qId)) quadraMap.set(qId, { id: qId, nome: `Quadra ${qId}`, covas: [] });
                     const quadraObj = quadraMap.get(qId);
-                    quadraObj.covas.push({
-                        id: sep.id,
-                        numero: sep.num_sepultura_sep || sep.num_sepultura || sep.numero || "",
-                        status: sep.status === "concluido" ? "ocupada" : "disponivel",
-                        sep
-                    });
+
+                    const numero = sep.num_sepultura_sep || sep.num_sepultura || sep.numero || "";
+                    const sepStatus = (sep.status === "concluido" || sep.confirmado) ? "ocupada" : "disponivel";
+
+                    const existing = quadraObj.covas.find(c => String(c.numero) === String(numero));
+                    if (existing) {
+
+                        if (sepStatus === "ocupada") {
+                            existing.status = "ocupada";
+                            existing.sep = sep;
+                        } else {
+                            if (!existing.sep) existing.sep = sep;
+                            if (existing.status !== "ocupada") existing.status = sepStatus;
+                        }
+                    } else {
+                        quadraObj.covas.push({
+                            id: sep.id,
+                            numero,
+                            status: sepStatus,
+                            sep
+                        });
+                    }
                 });
 
                 const quadrasArr = Array.from(quadraMap.values()).sort((a, b) => String(a.id).localeCompare(String(b.id)));
@@ -125,7 +142,7 @@ export default function VerMapa() {
                     const rf = await api.get(`/falecidos/${falId}`);
                     fal = rf.data;
                 } catch (err) {
-                    console.warn("ERro ao carregar falecido vinculado", err);
+                    console.warn("Erro ao carregar falecido vinculado", err);
                 }
             }
 
@@ -138,7 +155,7 @@ export default function VerMapa() {
     }
 
     const statusList = [
-        { key: "ocupada", label: "Ocupado", color: "#000" },
+        { key: "ocupada", label: "Ocupada", color: "#000" },
         { key: "disponível", label: "Disponível", color: "#9e9e9e" },
         { key: "indisponível", label: "Indisponível", color: "#c55" },
         { key: "reservada", label: "Reservada", color: "#d2b24a" },
@@ -146,26 +163,27 @@ export default function VerMapa() {
 
 
     return (
-        <MainLayout>
+        <><MainLayout>
             <Container>
                 <Title>MAPA DO CEMITÉRIO</Title>
 
-                <SmallSelect name="tipo_sep" >
-                    <option value="">Selecione o tipo de sepultura</option>
-                    <option value="Cova">Cova</option>
-                    <option value="Gaveta">Gaveta</option>
-                </SmallSelect>
-                <SmallSelect name="quadra_sep" >
-                    <option value="">Selecione o numero da quadra</option>
-                    <option value="quadra_num">1</option>
-                    <option value="quadra_num">2</option>
-                </SmallSelect>
-                <SmallSelect name="sepultura_sep" >
-                    <option value="">Selecione o numero da sepultura</option>
-                    <option value="sep_num">1</option>
-                    <option value="sep_num">2</option>
-                </SmallSelect>
-
+                <ThreeCols>
+                    <SmallSelect name="tipo_sep">
+                        <option value="">Selecione o tipo de sepultura</option>
+                        <option value="Cova">Cova</option>
+                        <option value="Gaveta">Gaveta</option>
+                    </SmallSelect>
+                    <SmallSelect name="quadra_sep">
+                        <option value="">Selecione o numero da quadra</option>
+                        <option value="quadra_num">1</option>
+                        <option value="quadra_num">2</option>
+                    </SmallSelect>
+                    <SmallSelect name="sepultura_sep">
+                        <option value="">Selecione o numero da sepultura</option>
+                        <option value="sep_num">1</option>
+                        <option value="sep_num">2</option>
+                    </SmallSelect>
+                </ThreeCols>
 
 
                 <Button type="button">Aplicar Filtros</Button>
@@ -173,7 +191,7 @@ export default function VerMapa() {
 
 
                 <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
-                    <label style={{ fontWeight: 600 }}>Quadra: </label>
+                    <label style={{ fontWeight: 600, color: "#171770" }}>Quadra: </label>
                     <select value={selectedQuadraId ?? ""} onChange={handleSelectQuadra}>
                         {quadras.map(q => <option key={q.id} value={q.id}>{q.nome}</option>)}
                     </select>
@@ -205,10 +223,10 @@ export default function VerMapa() {
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
                         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setSelectedCova(null); setModalForm(null); } }}>
-                        <div style={{ width: 420, background: "#fff", padding: 18, borderRadius: 8 }}>
+                        <div style={{ color: "#171770", width: 420, background: "#fff", padding: 18, borderRadius: 8 }}>
                             {modalForm ? (
                                 <>
-                                    <h3 style={{ marginTop: 0 }}>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "Detalhes"}</h3>
+                                    <h3 style={{ marginTop: 0, color: "#171770" }}>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "Detalhes"}</h3>
                                     <p><strong>Quadra:</strong> {modalForm.quadra_sep || modalForm.quadra || "-"}</p>
                                     <p><strong>Nº da sepultura:</strong> {modalForm.num_sepultura_sep || modalForm.num_sepultura || modalForm.numero || "-"}</p>
                                     <p><strong>Tipo:</strong> {modalForm.tipo_sep || "-"}</p>
@@ -220,7 +238,7 @@ export default function VerMapa() {
                                 </>
                             ) : selectedCova ? (
                                 <>
-                                    <h3 style={{ marginTop: 0}}>Cova {selectedCova.numero}</h3>
+                                    <h3 style={{ marginTop: 0 }}>Cova {selectedCova.numero}</h3>
                                     <p><strong>Status:</strong>{selectedCova.status}</p>
                                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
                                         <button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver detalhes</button>
@@ -240,6 +258,6 @@ export default function VerMapa() {
                     </div>
                 )}
             </Container>
-        </MainLayout >
+        </MainLayout><Footer /></>
     )
 }

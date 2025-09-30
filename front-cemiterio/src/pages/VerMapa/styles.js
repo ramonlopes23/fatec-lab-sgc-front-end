@@ -107,6 +107,17 @@ export const SmallSelect = styled.select`
   margin-bottom:10px;
 `;
 
+export const ThreeCols = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
 export const Button = styled.button`
   background: #191970;
   color: #fff;

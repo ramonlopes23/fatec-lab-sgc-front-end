@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { DashboardWrapper, Card, CardHeader, CardBody, ProcessItem, ProcessInfo, ProcessAction, Btn } from "./styles";
 import { FaCross } from "react-icons/fa";
 import { FaSkullCrossbones } from "react-icons/fa";
@@ -8,47 +8,59 @@ import api from "../../services/api";
 export default function Dashboard() {
 
     const [processos, setProcessos] = useState([]);
+    const mountedRef = useRef(true);
 
     const icones = {
         Sepultamento: <FaCross />,
         Exumação: <FaSkullCrossbones />,
         Manutenção: <FaTools />
     };
+    
+    const loadProcessos = async () => {
+        try {
+            const [rFalecidos, rSep, rVel, rExu] = await Promise.all([
+                api.get("/falecidos"),
+                api.get("/sepultamentos"),
+                api.get("/velorios"),
+                api.get("/exumacoes"),
+            ]);
 
-    useEffect(() => {
-        let mounted = true;
-        const load = async () => {
-            try {
-                const [rFalecidos, rSep, rVel, rExu] = await Promise.all([
-                    api.get("/falecidos"),
-                    api.get("/sepultamentos"),
-                    api.get("/velorios"),
-                    api.get("/exumacoes"),
-                ]);
+            const falecidos = rFalecidos.data || [];
+            const sep = (rSep.data || []).map(s => ({ ...s, _type: "Sepultamento" }));
+            const vel = (rVel.data || []).map(v => ({ ...v, _type: "Velório" }));
+            const exu = (rExu.data || []).map(x => ({ ...x, _type: "Exumação" }));
 
-                const falecidos = rFalecidos.data || [];
-                const sep = (rSep.data || []).map(s => ({ ...s, _type: "Sepultamento" }));
-                const vel = (rVel.data || []).map(v => ({ ...v, _type: "Velório" }));
-                const exu = (rExu.data || []).map(x => ({ ...x, _type: "Exumação" }));
+            const all = [...vel, ...sep, ...exu].map(item => {
+                const fk = item.falecido ?? item.falecido_id ?? item.falecidoId;
+                const f = falecidos.find(fr => String(fr.id) === String(fk));
+                return {
+                    ...item,
+                    nome_fal: item.nome_sep || item.nome_vel || item.nome_exu || (f ? (f.nome_fal || f.nome) : item.nome),
+                    falecido: f || null
+                }
+            }) 
 
-                const all = [...vel, ...sep, ...exu].map(item => {
-                    const fk = item.falecido ?? item.falecido_id ?? item.falecidoId;
-                    const f = falecidos.find(fr => String(fr.id) === String(fk));
-                    return {
-                        ...item,
-                        nome_fal: item.nome_sep || item.nome_vel || item.nome_exu || (f ? (f.nome_fal || f.nome) : item.nome),
-                        falecido: f || null
-                    }
-                })
-                if (!mounted) return;
-                setProcessos(all.sort((a, b) => (a.dh_sep || a.data_velorio || a.dh_exu || "").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
-            } catch (err) {
-                console.error("Erro ao carregar dashboard", err);
-            }
+            if(!mountedRef.current) return;
+            const active = all.filter(it=>{
+                const st = String(it.status??"").toLowerCase();
+                const confirmed = it.confirmado === true || it.confirmado ==="true";
+                return !(st ==="concluido"||confirmed);
+            })
+            setProcessos(active.sort((a,b)=>(a.dh_sep || a.data_velorio || a.dh_exu ||"").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
+        } catch (err) {
+            console.error("Erro ao carregar dashboard", err);
+        }
+    };
+
+    useEffect(()=>{
+        mountedRef.current = true;
+        window._loadDashboardProcessos = loadProcessos;
+        loadProcessos();
+        return ()=>{
+            mountedRef.current = false;
         };
-        load();
-        return () => { mounted = false };
-    }, []);
+    },[]);
+
 
     const getScheduledDate = (item) => {
         const raw = item.dh_sep || item.data_velorio || item.dh_exu || item.data || item.horario || "";
@@ -100,34 +112,20 @@ export default function Dashboard() {
                 await api.patch(`/exumacoes/${item.id}`, { status: "concluido", confirmado: true }).catch(() => { });
             }
 
-            const falId = item.falecido?.id ?? item.falecido ?? item.falecido_id ?? item.falecidoId ?? "";
-            const payload = {
-                nome_sep: item.nome_fal || item.nome || "",
-                falecido: falId || undefined,
-                falecido_id: falId || undefined,
-                dh_sep: item.dh_sep || item.data_velorio || item.dh_exu || new Date().toISOString(),
-                quadra_sep: item.quadra || item.quadra_sep || item.quadraId || "",
-                num_sepultura_sep: item.num_sepultura || item.num_sepultura_sep || item.numero || "",
-                tipo_sep: item.tipo_sep || item.tipo || "Cova",
-                coveiro_sep: item.coveiro || item.funcionario || "",
-                obs_sep: item.obs || item.obs_vel || item.obs_exu || ""
-            };
+            await loadProcessos();
 
-            Object.keys(payload).forEach(k => {
-                if (payload[k] === undefined || payload[k] === "") delete payload[k]
-            });
-
-            const created = await api.post("/sepultamentos", payload);
-            console.log("Sepultamento criado: ", created.data);
-
-            setProcessos(prev => prev.filter(p => !(p._type === item._type && p.id === item.id)));
-            alert("Processo confirmado e sepultamento criado")
+            try {
+                window.dispatchEvent(new CustomEvent("processoConfirmado", { detail: { id: item.id, type: item._type } }))
+            } catch (e) {
+                console.error("Erro ao dispatch evento processoConfirmado", e)
+            }
+            alert("Processo Confirmado")
         } catch (err) {
-            console.error("Erro ao confirmar processo / criar sepultamento", err);
+            console.error("Erro ao confirmar processo", err);
             alert("Erro ao confirmar processo");
         }
 
-        
+
     }
     return (
         <DashboardWrapper>
