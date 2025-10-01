@@ -23,6 +23,7 @@ export const QuadraWrapper = styled.div`
   padding: 14px;
   margin-top: 8px;
   background: #fff;
+  position:relative;
 `;
 
 export const QuadraTitle = styled.div`
@@ -131,3 +132,22 @@ export const Button = styled.button`
 
   &:hover { opacity: 0.7; }
 `;
+
+export const BtnAdd = styled.button`
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-left: auto; 
+  background: #191970;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+  position: static; /* retirar positioning absoluto */
+  right: auto;
+  &:hover { opacity: 0.7; transform: translateY(-1px); }
+`
+

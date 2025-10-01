@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import { GiCoffin } from "react-icons/gi";
+import { CiCirclePlus } from "react-icons/ci";
 import { useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd } from "./styles"
 
 export default function VerMapa() {
 
@@ -13,8 +14,128 @@ export default function VerMapa() {
     const [selectedCova, setSelectedCova] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
     const [modalForm, setModalForm] = useState(null);
+    const [modalAddOpen, setModalAddOpen] = useState(false);
+    const [formCova, setFormCova] = useState({
+        quadra_cova: "",
+        num_cova: "",
+        status: "livre",
+        capacidade: "",
+        concessao: {
+            ativa: false,
+            responsavel: "",
+            prazo_anos: 0,
+            data_inicio: "",
+            data_fim: ""
+        },
+        obs: "",
+    });
+
 
     const location = useLocation();
+
+    const cova = {
+
+    }
+
+    const handleAddCova = () => {
+        setFormCova({
+            quadra_cova: "",
+            num_cova: "",
+            status: "disponivel",
+            capacidade: "",
+            concessao: {
+                ativa: false,
+                responsavel: "",
+                prazo_anos: 0,
+                data_inicio: "",
+                data_fim: ""
+            },
+            obs: "",
+        });
+        setModalAddOpen(true)
+    };
+
+    const updateFieldByName = (name,value) =>{
+        if(!name.includes(".")){
+            setFormCova(prev=>({...prev,[name]:value}));
+            return;
+        }
+        const parts = name.split(".");
+        setFormCova(prev=>{
+            const clone = {...prev};
+            let cur = clone;
+            for(let i = 0;i<parts.length - 1;i++){
+                const k = parts[i];
+                cur[k] = (cur[k] && typeof cur[k]==="object")?{...cur[k]}:{};
+                cur = cur[k];
+            }
+            cur[parts[parts.length - 1]] = value;
+            return clone;
+        });
+    };
+
+    const handleCovaChange = (e) =>{
+        const {name, value, type ,checked} = e.target;
+        const incoming = type ==="checkbox" ? checked : value;
+        updateFieldByName(name,incoming);
+    };
+
+    const normalizeStatus = (s) =>{
+        if(!s) return "livre";
+        const raw = String(s).toLowerCase();
+        if (raw.includes("reserv")) return "reservada";
+        if (raw.includes("indispon")) return "indisponivel";
+        if (raw.includes("ocup")) return "ocupada";
+        if (raw === "livre" || raw ==="disponivel" || raw=== "disponivel") return "livre";
+        return raw;
+
+    };
+
+    const handleCreateCova = async(e) =>{
+        if(e && e.preventDefault) e.preventDefault();
+        const quadra = String(formCova.quadra_cova || "").trim();
+        const num = String(formCova.num_cova || "").trim();
+        if(!quadra|| !num){
+            alert("Informe quadra e número da cova");
+            return;
+        }
+        const payload ={
+            quadra_cova: quadra,
+            num_cova: num,
+            status: normalizeStatus(formCova.status),
+            capacidade: formCova.capacidade || "",
+            concessao: {
+                ativa: !!(formCova.concessao && formCova.concessao.ativa),
+                responsavel: formCova.concessao?.responsavel||"",
+                prazo_anos: Number(formCova.concessao?.prazo_anos || 0),
+                data_inicio: formCova.concessao?.data_inicio||"",
+                data_fim: formCova.concessao?.data_fim||""
+            },
+            obs: formCova.obs||"",
+        };
+        try{
+            const chk = await api.get("/covas", {params:{quadra_cova:quadra, num_cova:num}})
+            if(Array.isArray(chk.data)&&chk.data.length>0){
+                alert("Já existe uma cova com essa quadra e número");
+                return;
+            }
+
+        }catch(e){
+            console.warn("Erro ao checar duplicata", e)
+        }
+        try{
+            await api.post("/covas",payload);
+            setModalAddOpen(false);
+            await loadMapData();
+            alert ("Cova criada");
+        }catch(err){
+            console.error("Erro ao criar cova", err);
+            alert("Erro ao criar cova");
+        }
+    }
+    const handleCloseAddModal = () =>{
+        setModalAddOpen(false);
+    };
 
     useEffect(() => {
 
@@ -118,7 +239,7 @@ export default function VerMapa() {
             setModalForm(null);
         }
         setModalOpen(true)
-    }
+    };
 
     const handleOpenDetails = async () => {
         if (!selectedCova) return alert("Selecione uma cova")
@@ -152,7 +273,7 @@ export default function VerMapa() {
             console.error("Erro ao carregar detalhes do sepultamento", err)
             alert("Erro ao carregar detalhes ");
         }
-    }
+    };
 
     const statusList = [
         { key: "ocupada", label: "Ocupada", color: "#000" },
@@ -216,7 +337,11 @@ export default function VerMapa() {
                             <span>{s.label}</span>
                         </LegendItem>
                     ))}
+
+                    <BtnAdd>Adicionar cova <CiCirclePlus size={20} /></BtnAdd>
                 </LegendRow>
+
+
 
                 {modalOpen && selectedCova && (
                     <div style={{
@@ -257,7 +382,9 @@ export default function VerMapa() {
                         </div>
                     </div>
                 )}
+
             </Container>
+
         </MainLayout><Footer /></>
     )
 }

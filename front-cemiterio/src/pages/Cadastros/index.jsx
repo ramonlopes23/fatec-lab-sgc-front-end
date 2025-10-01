@@ -4,22 +4,7 @@ import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
-export default function Cadastros() {
-
-    const cova = {
-        quadra_cova: "",
-        num_cova: "",
-        status: "",
-        capacidade:"",
-        concessao: {
-            "ativa": false,
-            "responsavel": "",
-            prazo_anos: 0,
-            data_inicio: null,
-            data_fim: null
-        },
-        obs: "",
-    }
+export default function Cadastros() {    
 
     const velorio = {
         nome_vel: "",
@@ -217,7 +202,7 @@ export default function Cadastros() {
         else if (processType === "Cadastro de velório") requiredTemplate = velorio;
         else if (processType === "Cadastro de exumação") requiredTemplate = exumacao;
         else if (processType === "Cadastro de sepultamento") requiredTemplate = sepultamento;
-        else if (processType === "Cadastro de cova") requiredTemplate = cova;
+       
 
         const requiredKeys = Object.keys(requiredTemplate);
         const missing = requiredKeys.filter((k) => {
@@ -238,14 +223,62 @@ export default function Cadastros() {
         }
 
         try {
-            if (processType === "Cadastro de cova") {
+            /* if (processType === "Cadastro de cova") {
                 await api.post("/covas", form);
 
                 alert("Cova cadastrada");
                 setForm(cova);
+                const normalizeStatus = (s) =>{
+                    if(!s) return "livre";
+                    const raw = String(s).toLowerCase();
+                    if(raw.includes("reserv")) return "reservada";
+                    if(raw.includes("indispon")) return "indisponível";
+                    if(raw.includes("ocup")) return "ocupada";
+                    if(raw==="livre" || raw === "disponivel" || raw ==="disponível") return "livre";
+                    return raw;
+                }
 
-            }
-            else if (processType === "Cadastro de falecido") {
+                const quadra = String(form.quadra_cova || "").trim();
+                const num = String(form.num_cova || "").trim();
+                if(!quadra || !num){
+                    alert("Informe quadra e número da cova antes de salvar");
+                    return;
+                }
+
+                const concessao ={
+                    ativa:!!(form.concessao && form.concessao.ativa),
+                    responsavel:form.concessao?.responsavel || "",
+                    prazo_anos:Number(form.concessao?.prazo_anos || 0),
+                    data_inicio:form.concessao?.data_inicio||"",
+                    data_fim:form.concessao?.data_fim ||""
+                }
+
+                const payload ={
+                    ...form,
+                    quadra_cova:quadra,
+                    num_cova:num,
+                    status:normalizeStatus(form.status),
+                    concessao,
+                };
+
+                try{
+                    const chk = await api.get("/covas", {params:{quadra_cova:quadra, num_cova:num}});
+                    const exists = Array.isArray(chk.data) && chk.data.length > 0;
+                    if (exists){
+                        alert("Já existe uma cova com essa quadra e número");
+                        return;
+                    }
+                }catch(e){
+                    console.warn("Erro ao checar duplicata de cova: ", e);
+
+                }
+
+                await api.post("/covas", payload);
+                alert("Cova cadastrada");
+                setForm(cova); */
+
+            
+            if (processType === "Cadastro de falecido") {
 
                 await api.post("/falecidos", form);
 
@@ -401,7 +434,7 @@ export default function Cadastros() {
                                         </FormActions>
                                     </ColumnRight>
                                 </>
-                            ) : processType === "Cadastro de túmulo" ? (
+                             /* : processType === "Cadastro de túmulo" ? (
                                 <>
                                     <ColumnLeft>
                                     <TwoCols>
@@ -479,7 +512,7 @@ export default function Cadastros() {
                                         <BtnPrimary type="submit">Salvar</BtnPrimary>
                                     </FormActions>
                                 </ColumnRight>
-                            </>
+                            </> */
                             ) : processType === "Cadastro de exumação" ? (
                                 <>
                                             <ColumnLeft>
