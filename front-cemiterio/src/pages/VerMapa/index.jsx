@@ -55,18 +55,18 @@ export default function VerMapa() {
         setModalAddOpen(true)
     };
 
-    const updateFieldByName = (name,value) =>{
-        if(!name.includes(".")){
-            setFormCova(prev=>({...prev,[name]:value}));
+    const updateFieldByName = (name, value) => {
+        if (!name.includes(".")) {
+            setFormCova(prev => ({ ...prev, [name]: value }));
             return;
         }
         const parts = name.split(".");
-        setFormCova(prev=>{
-            const clone = {...prev};
+        setFormCova(prev => {
+            const clone = { ...prev };
             let cur = clone;
-            for(let i = 0;i<parts.length - 1;i++){
+            for (let i = 0; i < parts.length - 1; i++) {
                 const k = parts[i];
-                cur[k] = (cur[k] && typeof cur[k]==="object")?{...cur[k]}:{};
+                cur[k] = (cur[k] && typeof cur[k] === "object") ? { ...cur[k] } : {};
                 cur = cur[k];
             }
             cur[parts[parts.length - 1]] = value;
@@ -74,72 +74,171 @@ export default function VerMapa() {
         });
     };
 
-    const handleCovaChange = (e) =>{
-        const {name, value, type ,checked} = e.target;
-        const incoming = type ==="checkbox" ? checked : value;
-        updateFieldByName(name,incoming);
+    const handleCovaChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const incoming = type === "checkbox" ? checked : value;
+        updateFieldByName(name, incoming);
     };
 
-    const normalizeStatus = (s) =>{
-        if(!s) return "livre";
+    const normalizeStatus = (s) => {
+        if (!s) return "livre";
         const raw = String(s).toLowerCase();
         if (raw.includes("reserv")) return "reservada";
         if (raw.includes("indispon")) return "indisponivel";
         if (raw.includes("ocup")) return "ocupada";
-        if (raw === "livre" || raw ==="disponivel" || raw=== "disponivel") return "livre";
+        if (raw === "livre" || raw === "disponivel" || raw === "disponivel") return "livre";
         return raw;
 
     };
 
-    const handleCreateCova = async(e) =>{
-        if(e && e.preventDefault) e.preventDefault();
+    const handleCreateCova = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
         const quadra = String(formCova.quadra_cova || "").trim();
         const num = String(formCova.num_cova || "").trim();
-        if(!quadra|| !num){
+        if (!quadra || !num) {
             alert("Informe quadra e número da cova");
             return;
         }
-        const payload ={
+        const payload = {
             quadra_cova: quadra,
             num_cova: num,
             status: normalizeStatus(formCova.status),
             capacidade: formCova.capacidade || "",
             concessao: {
                 ativa: !!(formCova.concessao && formCova.concessao.ativa),
-                responsavel: formCova.concessao?.responsavel||"",
+                responsavel: formCova.concessao?.responsavel || "",
                 prazo_anos: Number(formCova.concessao?.prazo_anos || 0),
-                data_inicio: formCova.concessao?.data_inicio||"",
-                data_fim: formCova.concessao?.data_fim||""
+                data_inicio: formCova.concessao?.data_inicio || "",
+                data_fim: formCova.concessao?.data_fim || ""
             },
-            obs: formCova.obs||"",
+            obs: formCova.obs || "",
         };
-        try{
-            const chk = await api.get("/covas", {params:{quadra_cova:quadra, num_cova:num}})
-            if(Array.isArray(chk.data)&&chk.data.length>0){
+        try {
+            const chk = await api.get("/covas", { params: { quadra_cova: quadra, num_cova: num } })
+            if (Array.isArray(chk.data) && chk.data.length > 0) {
                 alert("Já existe uma cova com essa quadra e número");
                 return;
             }
 
-        }catch(e){
+        } catch (e) {
             console.warn("Erro ao checar duplicata", e)
         }
-        try{
-            await api.post("/covas",payload);
+        try {
+            await api.post("/covas", payload);
             setModalAddOpen(false);
             await loadMapData();
-            alert ("Cova criada");
-        }catch(err){
+            alert("Cova criada");
+        } catch (err) {
             console.error("Erro ao criar cova", err);
             alert("Erro ao criar cova");
         }
     }
-    const handleCloseAddModal = () =>{
+
+    const handleCloseAddModal = () => {
         setModalAddOpen(false);
     };
 
-    useEffect(() => {
-
+    const loadMapData = async () => {
         let mounted = true;
+        try {
+            const [rCovas, rSep] = await Promise.all([api.get("/covas"), api.get("/sepultamentos")]);
+            if (!mounted) return;
+            const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
+            const sepData = Array.isArray(rSep.data) ? rSep.data : [];
+
+            const normalizeCovaStatus = (s) => {
+                if (!s) return "disponível";
+                const raw = String(s).toLowerCase();
+                if (raw.includes("reserv")) return "reservada";
+                if (raw.includes("indispon")) return "indisponível";
+                if (raw.includes("ocup")) return "ocupada";
+                if (raw === "livre" || raw === "disponivel" || raw === "disponível") return "disponível";
+                return raw;
+
+            };
+
+            const quadraMap = new Map();
+            covasData.forEach(cova => {
+                const qKey = cova.quadra_cova ?? cova.quadra ?? "0";
+                const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);
+                if (!quadraMap.has(qId)) quadraMap.set(qId, { id: qId, nome: `Quadra ${qId}`, covas: [] });
+                const quadraObj = quadrasMap.get(qId);
+                const numero = cova.num_cova ?? cova.num_sepultura ?? cova.numero ?? "";
+                quadraObj.covas.push({
+                    id: cova.id ?? `${qId}-${numero}`,
+                    numero,
+                    status: normalizeCovaStatus(cova.status),
+                    cova
+                });
+            });
+
+            sepData.forEach(sep => {
+                const qKey = sep.quadra_sep ?? sep.quadra ?? "0";
+                const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);
+                if (!quadraMap.has(qId)) quadraMap.get(qId);
+                const numero = sep.num_sepultura_sep || sep.num_sepultura || sep.numero || "";
+                const titulo_posse = String(sep.titulo_posse ?? "").toLowerCase() === "sim";
+                const confirmed = sep.confirmado === true || String(sep.confirmado).toLowerCase() === "true";
+                const sepIsConcluded = confirmed || String(sep.status ?? "").toLowerCase().includes("concl");
+
+                const existing = quadraObj.covas.find(c => String(c.numero) === String(numero));
+                if (existing) {
+                    if (sepIsConclude) {
+                        existing.status = "ocupado";
+                        existing.sep = sep;
+                    } else if (titulo_posse && existing.status !== "ocupada") {
+                        existing.status = "reservada";
+                        existing.sep = existing.sep || sep;
+                    } else {
+                        existing.sep = existing.sep || sep;
+                    }
+
+                } else {
+                    quadraObj.covas.push({
+                        id: sep.id ?? `${qId}-${numero}`,
+                        numero,
+                        status: titulo_posse ? "reservada" : (sepIsConcluded ? "ocupada" : "ocupada"),
+                        sep
+                    });
+                }
+            })
+
+            const quadrasArr = Array.from(quadraMap.value()).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+            setQuadras(quadrasArr);
+            if (quadrasArr.length) setSelectedQuadraId(quadrasArr[0].id);
+
+            const qs = new URLSearchParams(location.search);
+            const sepId = qs.get("sepId") || qs.get("sepultamentoId");
+            if (sepId) {
+                const sep = sepData.find(s => String(s.id) === String(sepId));
+                if (sep) {
+                    const falId = sep?.falecido ?? sep?.falecido_id ?? sep?.falecidoId;
+                    let fal = null;
+                    if (falId) {
+                        try {
+                            const rf = await api.get(`/falecidos/${falId}`);
+                            fal = rf.data;
+                        }catch(e){
+                            console.error("Erro ao buscar falecido", e)
+                        }
+                        
+                    }
+                    const qid = Number(sep.quadra_sep ?? sep.quadra);
+                    if (!Number.isNaN(qid)) setSelectedQuadraId(qid);
+                    setSelectedCova({id:sep.id,numero:sep.num_sepultura_sep || sep.num_sepultura || sep.numero || "", sep});
+                    setModalForm({...sep,falecido:fal||null});
+                    setModalOpen(true);
+                }
+            }
+
+        }catch(err){
+            console.error("Erro ao carregar sepultamento/quadras", err);
+        }
+    };
+
+        useEffect(() => {loadMapData();},[location.search]);
+
+        /*let mounted = true;
 
         (async () => {
             try {
@@ -210,7 +309,7 @@ export default function VerMapa() {
             }
         })();
         return () => { mounted = false; };
-    }, [location.search]);
+    }, [location.search]); */
 
 
     const quadraSelecionada = quadras.find(q => q.id === Number(selectedQuadraId)) || quadras[0] || { covas: [] };
@@ -338,8 +437,10 @@ export default function VerMapa() {
                         </LegendItem>
                     ))}
 
-                    <BtnAdd>Adicionar cova <CiCirclePlus size={20} /></BtnAdd>
+                    <BtnAdd onClick={handleAddCova}>Adicionar cova <CiCirclePlus size={20} /></BtnAdd>
                 </LegendRow>
+
+                
 
 
 
