@@ -347,7 +347,6 @@ export default function Cadastros() {
                         <FormTop>
                             <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
                             <SelectTop name="processo" value={processType} onChange={handleProcessChange}>
-                                <option>Cadastro de túmulo</option>
                                 <option>Cadastro de falecido</option>
                                 <option>Cadastro de velório</option>
                                 <option>Cadastro de exumação</option>

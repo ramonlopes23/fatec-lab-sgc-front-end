@@ -30,6 +30,7 @@ export const QuadraTitle = styled.div`
   font-weight: 700;
   font-size: 14px;
   margin-bottom: 12px;
+  color:#191970;
 `;
 
 export const CovaGrid = styled.div`
@@ -146,7 +147,7 @@ export const BtnAdd = styled.button`
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(15,13,58,0.18);
-  position: static; /* retirar positioning absoluto */
+  position: static; 
   right: auto;
   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `
