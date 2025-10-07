@@ -19,7 +19,7 @@ export const Title = styled.h2`
 
 export const QuadraWrapper = styled.div`
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 14px;
   margin-top: 8px;
   background: #fff;
@@ -31,6 +31,26 @@ export const QuadraTitle = styled.div`
   font-size: 14px;
   margin-bottom: 12px;
   color:#191970;
+`;
+
+export const QuadraInfo = styled.div`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  z-index: 2;
+`;
+
+export const InfoPill = styled.span`
+  background: #f1f3ff;
+  color: #191970;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid rgba(0,0,0,0.06);
 `;
 
 export const CovaGrid = styled.div`
