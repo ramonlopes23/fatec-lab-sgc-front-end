@@ -476,25 +476,21 @@ export default function VerMapa() {
                     </select>
                 </div>
 
-                {quadras.map(q => {
-                    const atualCovas = Array.isArray(q.covas) ? q.covas.length : getCovasCount?.(q.num_quadra ?? q.id) ?? 0;
-                    const maxCovas = Number(q.max_covas || 0);
-                }
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
-                        <QuadraInfo key={String(q.id)}>
-                            <InfoPill>Máx: {maxCovas > 0 ? maxCovas : "-"}</InfoPill>
-                            <InfoPill>Atuais: {atualCovas}</InfoPill>
-                        </QuadraInfo>
-                        <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
-                        <CovaGrid>
-                            {quadraSelecionada.covas.map((cova) => (
-                                <CovaItem key={cova.id} status={cova.status} onClick={() => handleClickCova(cova)} title={`Cova ${cova.numero} - ${cova.status}`}>
-                                    <GiCoffin aria-hidden="true" />
-                                    <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
-                                </CovaItem>
-                            ))}
-                        </CovaGrid>
-                    </QuadraWrapper>
+                    <QuadraInfo key={String(quadraSelecionada.id)}>
+                        <InfoPill>Máx: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
+                        <InfoPill>Atuais: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
+                    </QuadraInfo>
+                    <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
+                    <CovaGrid>
+                        {quadraSelecionada.covas.map((cova) => (
+                            <CovaItem key={cova.id} status={cova.status} onClick={() => handleClickCova(cova)} title={`Cova ${cova.numero} - ${cova.status}`}>
+                                <GiCoffin aria-hidden="true" />
+                                <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
+                            </CovaItem>
+                        ))}
+                    </CovaGrid>
+                </QuadraWrapper>
 
 
                     <LegendRow>
