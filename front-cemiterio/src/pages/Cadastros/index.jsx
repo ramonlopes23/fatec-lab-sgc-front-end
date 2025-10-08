@@ -4,7 +4,7 @@ import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
 
-export default function Cadastros() {    
+export default function Cadastros() {
 
     const velorio = {
         nome_vel: "",
@@ -111,6 +111,38 @@ export default function Cadastros() {
     const [registros, setRegistros] = useState([]);
     const [falecidos, setFalecidos] = useState([]);
 
+    const [searchFal, setSearchFal] = useState("");
+    const [filteredFalecidos, setFilteredFalecidos] = useState([]);
+    const [showFalList, setShowFalList] = useState(false);
+
+    useEffect(() => {
+        if (!searchFal) {
+            setFilteredFalecidos([]);
+            return;
+        }
+        const s = String(searchFal).toLowerCase();
+        setFilteredFalecidos((falecidos || []).filter(f => ((f.nome_fal || f.nome) || "").toLowerCase().includes(s)).slice(0, 10));
+    }, [searchFal, falecidos])
+
+
+    const [quadras, setQuadras] = useState([]);
+    const [covas, setCovas] = useState([]);
+    const [availableCovas, setAvailableCovas] = useState([]);
+    const isCovaAvailable = c => {
+        const s = String(c?.status ?? "").toLowerCase();
+        return !(s.includes("ocup") || s.includes("indispon"));
+    };
+
+    useEffect(() => {
+        let mounted = true;
+        Promise.all([api.get("/quadras"), api.get("/covas")]).then(([rq, rc]) => {
+            if (!mounted) return;
+            setQuadras(Array.isArray(rq.data) ? rq.data : []);
+            setCovas(Array.isArray(rc.data) ? rc.data : []);
+        }).catch(() => { if (mounted) { setQuadras([]); setCovas([]); } });
+        return () => { mounted = false; };
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         api.get("/falecidos").then(res => {
@@ -120,12 +152,20 @@ export default function Cadastros() {
         return () => { mounted = false; };
     }, []);
 
+    const handleQuadraSepChange = (val) => {
+        setForm(prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
+        const list = covas.filter(c => {
+            const key = String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "");
+            return String(key) === String(val);
+        });
+        setAvailableCovas(list.filter(isCovaAvailable));
+    };
+
 
     const handleProcessChange = (e) => {
         const val = e.target.value;
         setProcessType(val);
-        if (val === "Cadastro de cova") setForm(cova);
-        else if (val === "Cadastro de velório") setForm(velorio);
+        if (val === "Cadastro de velório") setForm(velorio);
         else if (val === "Cadastro de exumação") setForm(exumacao);
         else if (val === "Cadastro de sepultamento") setForm(sepultamento)
         else setForm(falecido)
@@ -169,27 +209,27 @@ export default function Cadastros() {
         updateFieldByName(name, incoming)
     };
 
-    const handleSelectFalecido = (val) => {
-        const raw = val === undefined || val === null ? "" : String(val).trim();
-        if (raw === "") {
-            setForm(prev => ({ ...prev, falecido_id: "", falecido: "", nome_sep: "" }));
-            return;
-        }
-        const byStringId = falecidos.find(x => String(x.id) === raw);
-        let f = byStringId;
-        if (!f) {
-            const pid = parseInt(raw, 10);
-            if (!Number.isNaN(pid)) {
-                f = falecidos.find(x => Number(x.id) === pid);
+    /*     const handleSelectFalecido = (val) => {
+            const raw = val === undefined || val === null ? "" : String(val).trim();
+            if (raw === "") {
+                setForm(prev => ({ ...prev, falecido_id: "", falecido: "", nome_sep: "" }));
+                return;
             }
-        }
-        if (!f) {
-            console.warn("Falecido não encontrado para o valor selecionado:", raw);
-        }
-        const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
-        setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
-    };
-
+            const byStringId = falecidos.find(x => String(x.id) === raw);
+            let f = byStringId;
+            if (!f) {
+                const pid = parseInt(raw, 10);
+                if (!Number.isNaN(pid)) {
+                    f = falecidos.find(x => Number(x.id) === pid);
+                }
+            }
+            if (!f) {
+                console.warn("Falecido não encontrado para o valor selecionado:", raw);
+            }
+            const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
+            setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
+        };
+     */
 
 
     const handleSubmit = async (e) => {
@@ -202,7 +242,7 @@ export default function Cadastros() {
         else if (processType === "Cadastro de velório") requiredTemplate = velorio;
         else if (processType === "Cadastro de exumação") requiredTemplate = exumacao;
         else if (processType === "Cadastro de sepultamento") requiredTemplate = sepultamento;
-       
+
 
         const requiredKeys = Object.keys(requiredTemplate);
         const missing = requiredKeys.filter((k) => {
@@ -223,61 +263,7 @@ export default function Cadastros() {
         }
 
         try {
-            /* if (processType === "Cadastro de cova") {
-                await api.post("/covas", form);
 
-                alert("Cova cadastrada");
-                setForm(cova);
-                const normalizeStatus = (s) =>{
-                    if(!s) return "livre";
-                    const raw = String(s).toLowerCase();
-                    if(raw.includes("reserv")) return "reservada";
-                    if(raw.includes("indispon")) return "indisponível";
-                    if(raw.includes("ocup")) return "ocupada";
-                    if(raw==="livre" || raw === "disponivel" || raw ==="disponível") return "livre";
-                    return raw;
-                }
-
-                const quadra = String(form.quadra_cova || "").trim();
-                const num = String(form.num_cova || "").trim();
-                if(!quadra || !num){
-                    alert("Informe quadra e número da cova antes de salvar");
-                    return;
-                }
-
-                const concessao ={
-                    ativa:!!(form.concessao && form.concessao.ativa),
-                    responsavel:form.concessao?.responsavel || "",
-                    prazo_anos:Number(form.concessao?.prazo_anos || 0),
-                    data_inicio:form.concessao?.data_inicio||"",
-                    data_fim:form.concessao?.data_fim ||""
-                }
-
-                const payload ={
-                    ...form,
-                    quadra_cova:quadra,
-                    num_cova:num,
-                    status:normalizeStatus(form.status),
-                    concessao,
-                };
-
-                try{
-                    const chk = await api.get("/covas", {params:{quadra_cova:quadra, num_cova:num}});
-                    const exists = Array.isArray(chk.data) && chk.data.length > 0;
-                    if (exists){
-                        alert("Já existe uma cova com essa quadra e número");
-                        return;
-                    }
-                }catch(e){
-                    console.warn("Erro ao checar duplicata de cova: ", e);
-
-                }
-
-                await api.post("/covas", payload);
-                alert("Cova cadastrada");
-                setForm(cova); */
-
-            
             if (processType === "Cadastro de falecido") {
 
                 await api.post("/falecidos", form);
@@ -307,7 +293,22 @@ export default function Cadastros() {
                     const f = falecidos.find(x => Number(x.id) === Number(payload.falecido));
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
-                await api.post("/sepultamentos", payload);
+
+                /*                 const res = await api.post("/sepultamentos", payload);
+                 */
+                try {
+                    const params = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura, num_cova: payload.num_sepultura_sep } };
+                    const r = await api.get("/covas", params);
+                    const found = Array.isArray(r.data) && r.data.length ? r.data[0] : null;
+                    if (found && found.id != null) {
+                        await api.patch(`/covas/${found.id}`, { status: "ocupada" });
+                        setCovas(prev => prev.map(c => c.id === found.id ? { ...c, status: "ocupada" } : c));
+                        setAvailableCovas(prev => prev.filter(c => String(c.id) !== String(found.id)));
+                    }
+
+                } catch (err) {
+                    console.warn("Erro ao atualizar status da cova: ", err)
+                }
                 alert("Sepultamento cadastrado");
                 setForm(sepultamento)
             }
@@ -433,399 +434,340 @@ export default function Cadastros() {
                                         </FormActions>
                                     </ColumnRight>
                                 </>
-                             /* : processType === "Cadastro de túmulo" ? (
+                            ) : processType === "Cadastro de exumação" ? (
                                 <>
                                     <ColumnLeft>
-                                    <TwoCols>
                                         <Field>
-                                            <label>Número da Sepultura</label>
-                                            <Input name="num_cova" value={form.num_cova} onChange={handleChange} placeholder="Nº da sepultura"></Input>
+                                            <label>Nome do falecido</label>
+                                            <Input name="nome_exu" value={form.nome_exu} onChange={handleChange} placeholder="Nome do falecido" />
+                                        </Field>
+
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Data do óbito</label>
+                                                <Input type="date" name="data_obito" value={form.data_obito} onChange={handleChange} />
+                                            </Field>
+                                            <Field>
+                                                <label>Data do sepultamento</label>
+                                                <Input type="date" name="data_sepultamento" value={form.data_sepultamento} onChange={handleChange} />
+                                            </Field>
+                                        </TwoCols>
+
+                                        <Field>
+                                            <label>Quadra</label>
+                                            <Input name="quadra" value={form.quadra} onChange={handleChange} placeholder="Quadra" />
                                         </Field>
 
                                         <Field>
-                                            <label>Quadra da Sepultura</label>
-                                            <Input name="quadra_cova" value={form.quadra_cova} onChange={handleChange} placeholder="Nº da quadra"></Input>
+                                            <label>Nº da sepultura</label>
+                                            <Input name="num_sepultura" value={form.num_sepultura} onChange={handleChange} placeholder="Número da sepultura" />
                                         </Field>
-                                    </TwoCols>
+                                    </ColumnLeft>
 
-                                    <TwoCols>
+                                    <ColumnRight>
                                         <Field>
-                                            <label>Status da sepultura</label>
-                                            <Select name="status" value={form.status} onChange={handleChange}>
-                                                <option value="">Selecione o status da sepultura</option>
-                                                <option value="Disponível">Disponível</option>
-                                                <option value="Ocupada">Ocupado</option>
-                                                <option value="Indisponível">Indisponível</option>
-                                                <option value="Reservada">Reservada</option>
-                                            </Select>
+                                            <label>Tipo</label>
+                                            <Input name="tipo" value={form.tipo} onChange={handleChange} placeholder="Ex.: simples / coletiva" />
                                         </Field>
 
                                         <Field>
-                                            <label>Capacidade</label>
-                                            <Input type="number" name="capacidade" value={form.capacidade} onChange={handleChange} placeholder="Capacidade"></Input>
+                                            <label>Data/Hora exumação</label>
+                                            <Input type="datetime-local" name="dh_exu" value={form.dh_exu} onChange={handleChange} />
                                         </Field>
-                                    </TwoCols>
-                                    
+
+                                        <Field>
+                                            <label>Motivo da exumação</label>
+                                            <Input name="motivo_exu" value={form.motivo_exu} onChange={handleChange} placeholder="Motivo" />
+                                        </Field>
+
+                                        <Field>
+                                            <label>Destino</label>
+                                            <Input name="destino" value={form.destino} onChange={handleChange} placeholder="Destino do material" />
+                                        </Field>
+
+                                        <Field>
+                                            <label>Coveiro responsável</label>
+                                            <Input name="coveiro_exu" value={form.coveiro_exu} onChange={handleChange} placeholder="Nome do coveiro" />
+                                        </Field>
+
                                         <Field>
                                             <label>Observações</label>
-                                            <Textarea name="obs" value={form.obs || ""} onChange={handleChange} placeholder="Observações..." />
+                                            <Textarea name="obs_exu" value={form.obs_exu} onChange={handleChange} placeholder="Observações..." />
                                         </Field>
 
+                                        <FormActions>
+                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
+                                        </FormActions>
+                                    </ColumnRight>
+                                </>
+
+                            ) : processType === "Cadastro de sepultamento" ? (
+                                <>
+                                    <ColumnLeft>
+                                        <Field>
+                                            <label >Nome do falecido</label>
+                                            <div style={{ position: "relative" }}>
+                                                <input type="text"
+                                                    placeholder="Digite o nome do falecido..."
+                                                    value={searchFal || (form.nome_sep || "")}
+                                                    onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); }}
+                                                    onFocus={() => setShowFalList(true)}
+                                                    onBlur={() => setTimeout(() => setShowFalList(false), 150)}
+                                                    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}                                           }
+                                            />
+                                                {showFalList && filteredFalecidos.length > 0 && (
+                                                    <ul style={{position:"absolute"}}></ul>
+                                           )}
+                                        </Field>
+
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Data do óbito</label>
+                                                <Input type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} />
+                                            </Field>
+                                            <Field>
+                                                <label>Data e hora de sepultamento</label>
+                                                <Input type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" />
+                                            </Field>
+                                        </TwoCols>
+
+
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Possui título de posse?</label>
+                                                <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
+                                                    <option value="">Selecione o tipo de sepultura </option>
+                                                    <option value="Sim">Sim</option>
+                                                    <option value="Não">Não</option>
+                                                </Select>
+                                            </Field>
+
+                                            <Field>
+                                                <label>Tipo de sepultura</label>
+                                                <Select name="tipo_sep" value={form.tipo_sep} onChange={handleChange}>
+                                                    <option value="">Selecione o tipo de sepultura </option>
+                                                    <option value="Cova">Cova</option>
+                                                    <option value="Gaveta">Gaveta</option>
+                                                </Select>
+                                            </Field>
+
+
+                                        </TwoCols>
+
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Quadra</label>
+                                                <Select name="quadra_sep" value={form.quadra_sep ?? ""} onChange={(e) => handleQuadraSepChange(e.target.value)}>
+                                                    <option value="">Selecione a quadra</option>
+                                                    {quadras.map(q => (
+                                                        <option key={String(q.id)} value={String(q.id)}>
+                                                            {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                            </Field>
+                                            <Field>
+                                                <label>Nº da sepultura</label>
+                                                <Select name="num_sepultura_sep" value={form.num_sepultura_sep ?? ""} onChange={handleChange}>
+                                                    <option value="">Selecione a quadra</option>
+                                                    {availableCovas.map(c => (
+                                                        <option key={String(c.id ?? `${c.quadra_cova}-${c.num_cova}`)} value={String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "")}>
+                                                            {c.num_cova ?? c.numero ?? c.num_sepultura ?? ""}
+                                                        </option>
+                                                    ))}
+                                                </Select>
+                                            </Field>
+
+                                        </TwoCols>
 
                                     </ColumnLeft>
 
                                     <ColumnRight>
 
                                         <Field>
-                                            <label>Concessão ativa</label>
-                                            <input type="checkbox" name="concessao.ativa" checked={!!(form.concessao && form.concessao.ativa)} onChange={handleChange} />
-
+                                            <label>Funcionário designado</label>
+                                            <Input name="coveiro_sep" value={form.coveiro_sep} onChange={handleChange} placeholder="Digite o nome do funcionário" />
                                         </Field>
 
-                                        {form.concessao && form.concessao.ativa ? (
-                                            <>
-                                                <Field>
-                                                    <label>Responsável pela concessão</label>
-                                                    <Input name="concessao.responsavel" value={form.concessao?.responsavel || ""} onChange={handleChange} placeholder="Nome do responsável" />
+                                        <Field>
+                                            <label>Observações</label>
+                                            <Textarea name="obs_sep" value={form.obs_sep} onChange={handleChange} placeholder="Observações..." />
+                                        </Field>
 
-                                                </Field>
-
-                                                <Field>
-                                                    <label> Prazo (anos) </label>
-                                                    <Input type="number" name="concessao.prazo_anos" value={form.concessao?.prazo_anos ?? 0} onChange={handleChange} />
-                                                </Field>
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Data início</label>
-                                                        <Input type="date" name="concessao.data_inicio" value={form.concessao?.data_inicio || ""} onChange={handleChange}></Input>
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Data fim</label>
-                                                        <Input type="date" name="concessao.data_fim" value={form.concessao?.data_fim || ""} onChange={handleChange}></Input>
-                                                    </Field>
-                                                </TwoCols>
-                                            </>
-                                        ) : null}
-                                    <FormActions>
-                                        <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                    </FormActions>
-                                </ColumnRight>
-                            </> */
-                            ) : processType === "Cadastro de exumação" ? (
+                                        <FormActions>
+                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
+                                        </FormActions>
+                                    </ColumnRight>
+                                </>
+                            ) : (
                                 <>
-                                            <ColumnLeft>
-                                                <Field>
-                                                    <label>Nome do falecido</label>
-                                                    <Input name="nome_exu" value={form.nome_exu} onChange={handleChange} placeholder="Nome do falecido" />
-                                                </Field>
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Data do óbito</label>
-                                                        <Input type="date" name="data_obito" value={form.data_obito} onChange={handleChange} />
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Data do sepultamento</label>
-                                                        <Input type="date" name="data_sepultamento" value={form.data_sepultamento} onChange={handleChange} />
-                                                    </Field>
-                                                </TwoCols>
-
-                                                <Field>
-                                                    <label>Quadra</label>
-                                                    <Input name="quadra" value={form.quadra} onChange={handleChange} placeholder="Quadra" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Nº da sepultura</label>
-                                                    <Input name="num_sepultura" value={form.num_sepultura} onChange={handleChange} placeholder="Número da sepultura" />
-                                                </Field>
-                                            </ColumnLeft>
-
-                                            <ColumnRight>
-                                                <Field>
-                                                    <label>Tipo</label>
-                                                    <Input name="tipo" value={form.tipo} onChange={handleChange} placeholder="Ex.: simples / coletiva" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Data/Hora exumação</label>
-                                                    <Input type="datetime-local" name="dh_exu" value={form.dh_exu} onChange={handleChange} />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Motivo da exumação</label>
-                                                    <Input name="motivo_exu" value={form.motivo_exu} onChange={handleChange} placeholder="Motivo" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Destino</label>
-                                                    <Input name="destino" value={form.destino} onChange={handleChange} placeholder="Destino do material" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Coveiro responsável</label>
-                                                    <Input name="coveiro_exu" value={form.coveiro_exu} onChange={handleChange} placeholder="Nome do coveiro" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Observações</label>
-                                                    <Textarea name="obs_exu" value={form.obs_exu} onChange={handleChange} placeholder="Observações..." />
-                                                </Field>
-
-                                                <FormActions>
-                                                    <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                                </FormActions>
-                                            </ColumnRight>
-                                        </>
-
-                                        ) : processType === "Cadastro de sepultamento" ? (
-                                        <>
-                                            <ColumnLeft>
-                                                <Field>
-                                                    <label>Nome do falecido</label>
-                                                    <Select name="falecido_id" value={form.falecido_id ?? ""} onChange={(e) => handleSelectFalecido(e.target.value)}>
-                                                        <option value="">Selecione o falecido</option>
-                                                        {falecidos.map(f => (
-                                                            <option key={f.id} value={f.id}>{f.nome_fal || f.nome}</option>
-                                                        ))}
-                                                    </Select>
-                                                </Field>
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Data do óbito</label>
-                                                        <Input type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} />
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Data e hora de sepultamento</label>
-                                                        <Input type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" />
-                                                    </Field>
-                                                </TwoCols>
+                                    <ColumnLeft>
+                                        <Field>
+                                            <label>Nome completo</label>
+                                            <Input name="nome_fal" value={form.nome_fal} onChange={handleChange} placeholder="Digite o nome do falecido" />
+                                        </Field>
 
 
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Possui título de posse?</label>
-                                                        <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
-                                                            <option value="">Selecione o tipo de sepultura </option>
-                                                            <option value="Sim">Sim</option>
-                                                            <option value="Não">Não</option>
-                                                        </Select>
-                                                    </Field>
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Idade</label>
+                                                <Input name="idade" value={form.idade} onChange={handleChange} />
+                                            </Field>
 
-                                                    <Field>
-                                                        <label>Tipo de sepultura</label>
-                                                        <Select name="tipo_sep" value={form.tipo_sep} onChange={handleChange}>
-                                                            <option value="">Selecione o tipo de sepultura </option>
-                                                            <option value="Cova">Cova</option>
-                                                            <option value="Gaveta">Gaveta</option>
-                                                        </Select>
-                                                    </Field>
+                                            <Field>
+                                                <label>Sexo</label>
+                                                <Select name="sexo" value={form.sexo} onChange={handleChange}>
+                                                    <option value="">Selecione</option>
+                                                    <option value="masculino">Masculino</option>
+                                                    <option value="feminino">Feminino</option>
+                                                </Select>
+                                            </Field>
+                                        </TwoCols>
 
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Estado civil</label>
+                                                <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
+                                                    <option value="">Selecione o estado civil</option>
+                                                    <option value="Solteiro">Solteiro(a)</option>
+                                                    <option value="Casado">Casado(a)</option>
+                                                    <option value="Separado">Separado(a)</option>
+                                                    <option value="Divorciado">Divorciado(a)</option>
+                                                    <option value="Viúvo">Viúvo(a)</option>
+                                                </Select>
+                                            </Field>
+                                            <Field>
+                                                <label>Cor</label>
+                                                <Select name="cor" value={form.cor} onChange={handleChange}>
+                                                    <option value="">Selecione a cor</option>
+                                                    <option value="Branca">Branca</option>
+                                                    <option value="Preta">Preta</option>
+                                                    <option value="Parda">Parda</option>
+                                                    <option value="Amarela">Amarela</option>
+                                                    <option value="Indígena">Indígena</option>
+                                                </Select>
+                                            </Field>
+                                        </TwoCols>
 
-                                                </TwoCols>
+                                        <TwoCols>
+                                            <Field>
+                                                <label>Data de nascimento</label>
+                                                <Input type="date" name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
+                                            </Field>
+                                            <Field>
+                                                <label>Data e hora do falecimento</label>
+                                                <Input type="datetime-local" name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
+                                            </Field>
+                                        </TwoCols>
 
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Quadra</label>
-                                                        <Input name="quadra_sep" value={form.quadra_sep} onChange={handleChange} />
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Nº da sepultura</label>
-                                                        <Input name="num_sepultura_sep" value={form.num_sepultura_sep} onChange={handleChange} />
-                                                    </Field>
+                                        <Field>
+                                            <label>Filiação pai</label>
+                                            <Input name="filiacao_pai" value={form.filiacao_pai} onChange={handleChange} placeholder="Digite o nome do pai" />
+                                        </Field>
 
-                                                </TwoCols>
+                                        <Field>
+                                            <label>Filiação mãe</label>
+                                            <Input name="filiacao_mae" value={form.filiacao_mae} onChange={handleChange} placeholder="Digite o nome da mãe" />
+                                        </Field>
 
-                                            </ColumnLeft>
+                                        <Field>
+                                            <label>Profissão</label>
+                                            <Input name="profissao" value={form.profissao} onChange={handleChange} placeholder="Digite a profissão do falecido" />
+                                        </Field>
 
-                                            <ColumnRight>
+                                        <Field>
+                                            <label>Nacionalidade</label>
+                                            <Input name="nacionalidade" value={form.nacionalidade} onChange={handleChange} placeholder="Digite a nacionalidade do falecido" />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Funcionário designado</label>
-                                                    <Input name="coveiro_sep" value={form.coveiro_sep} onChange={handleChange} placeholder="Digite o nome do funcionário" />
-                                                </Field>
+                                        <Field>
+                                            <label>Comprovante de residencia</label>
+                                        </Field>
+                                        <Field>
+                                            <input type="file" accept="image/*" onChange={e => handleFileChange(e, "residencia")} />
+                                            {form.residenciaPreview && (
+                                                <img src={form.residenciaPreview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
+                                            )}
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Observações</label>
-                                                    <Textarea name="obs_sep" value={form.obs_sep} onChange={handleChange} placeholder="Observações..." />
-                                                </Field>
+                                        <Field>
+                                            <label>Declaração de óbito</label>
+                                            <input name="dec_obito" type="file" accept="image/*" onChange={e => handleFileChange(e, "dec_obito")} />
+                                            {form.dec_obito && (
+                                                <img src={form.dec_obito} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
+                                            )}
+                                        </Field>
 
-                                                <FormActions>
-                                                    <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                                </FormActions>
-                                            </ColumnRight>
-                                        </>
-                                        ) : (
-                                        <>
-                                            <ColumnLeft>
-                                                <Field>
-                                                    <label>Nome completo</label>
-                                                    <Input name="nome_fal" value={form.nome_fal} onChange={handleChange} placeholder="Digite o nome do falecido" />
-                                                </Field>
+                                    </ColumnLeft>
 
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Idade</label>
-                                                        <Input name="idade" value={form.idade} onChange={handleChange} />
-                                                    </Field>
-
-                                                    <Field>
-                                                        <label>Sexo</label>
-                                                        <Select name="sexo" value={form.sexo} onChange={handleChange}>
-                                                            <option value="">Selecione</option>
-                                                            <option value="masculino">Masculino</option>
-                                                            <option value="feminino">Feminino</option>
-                                                        </Select>
-                                                    </Field>
-                                                </TwoCols>
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Estado civil</label>
-                                                        <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
-                                                            <option value="">Selecione o estado civil</option>
-                                                            <option value="Solteiro">Solteiro(a)</option>
-                                                            <option value="Casado">Casado(a)</option>
-                                                            <option value="Separado">Separado(a)</option>
-                                                            <option value="Divorciado">Divorciado(a)</option>
-                                                            <option value="Viúvo">Viúvo(a)</option>
-                                                        </Select>
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Cor</label>
-                                                        <Select name="cor" value={form.cor} onChange={handleChange}>
-                                                            <option value="">Selecione a cor</option>
-                                                            <option value="Branca">Branca</option>
-                                                            <option value="Preta">Preta</option>
-                                                            <option value="Parda">Parda</option>
-                                                            <option value="Amarela">Amarela</option>
-                                                            <option value="Indígena">Indígena</option>
-                                                        </Select>
-                                                    </Field>
-                                                </TwoCols>
-
-                                                <TwoCols>
-                                                    <Field>
-                                                        <label>Data de nascimento</label>
-                                                        <Input type="date" name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
-                                                    </Field>
-                                                    <Field>
-                                                        <label>Data e hora do falecimento</label>
-                                                        <Input type="datetime-local" name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
-                                                    </Field>
-                                                </TwoCols>
-
-                                                <Field>
-                                                    <label>Filiação pai</label>
-                                                    <Input name="filiacao_pai" value={form.filiacao_pai} onChange={handleChange} placeholder="Digite o nome do pai" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Filiação mãe</label>
-                                                    <Input name="filiacao_mae" value={form.filiacao_mae} onChange={handleChange} placeholder="Digite o nome da mãe" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Profissão</label>
-                                                    <Input name="profissao" value={form.profissao} onChange={handleChange} placeholder="Digite a profissão do falecido" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Nacionalidade</label>
-                                                    <Input name="nacionalidade" value={form.nacionalidade} onChange={handleChange} placeholder="Digite a nacionalidade do falecido" />
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Comprovante de residencia</label>
-                                                </Field>
-                                                <Field>
-                                                    <input type="file" accept="image/*" onChange={e => handleFileChange(e, "residencia")} />
-                                                    {form.residenciaPreview && (
-                                                        <img src={form.residenciaPreview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
-                                                    )}
-                                                </Field>
-
-                                                <Field>
-                                                    <label>Declaração de óbito</label>
-                                                    <input name="dec_obito" type="file" accept="image/*" onChange={e => handleFileChange(e, "dec_obito")} />
-                                                    {form.dec_obito && (
-                                                        <img src={form.dec_obito} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
-                                                    )}
-                                                </Field>
-
-                                            </ColumnLeft>
-
-                                            <ColumnRight>
+                                    <ColumnRight>
 
 
 
-                                                <Field>
-                                                    <label>Causa mortis</label>
-                                                    <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
-                                                </Field>
+                                        <Field>
+                                            <label>Causa mortis</label>
+                                            <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>CPF do falecido</label>
-                                                    <Input name="cpf" value={cpfMask(form.cpf)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
-                                                </Field>
+                                        <Field>
+                                            <label>CPF do falecido</label>
+                                            <Input name="cpf" value={cpfMask(form.cpf)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>RG do falecido</label>
-                                                    <Input name="rg" value={form.rg} onChange={handleChange} placeholder="00.000.000-0" maxLength={12} />
-                                                </Field>
+                                        <Field>
+                                            <label>RG do falecido</label>
+                                            <Input name="rg" value={form.rg} onChange={handleChange} placeholder="00.000.000-0" maxLength={12} />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Certidão de óbito</label>
-                                                    <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" maxLength={32} />
-                                                </Field>
+                                        <Field>
+                                            <label>Certidão de óbito</label>
+                                            <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" maxLength={32} />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Nome do médico responsável</label>
-                                                    <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
-                                                </Field>
+                                        <Field>
+                                            <label>Nome do médico responsável</label>
+                                            <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Nome do familiar ou responsável</label>
-                                                    <Input name="nome_resp" value={form.nome_resp} onChange={handleChange} placeholder="Digite o nome do responsável" />
-                                                </Field>
+                                        <Field>
+                                            <label>Nome do familiar ou responsável</label>
+                                            <Input name="nome_resp" value={form.nome_resp} onChange={handleChange} placeholder="Digite o nome do responsável" />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>CPF do responsável</label>
-                                                    <Input name="doc_resp" value={cpfMask(form.doc_resp)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
-                                                </Field>
+                                        <Field>
+                                            <label>CPF do responsável</label>
+                                            <Input name="doc_resp" value={cpfMask(form.doc_resp)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Contato do responsável</label>
-                                                    <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" maxLength={14} />
-                                                </Field>
+                                        <Field>
+                                            <label>Contato do responsável</label>
+                                            <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" maxLength={14} />
+                                        </Field>
 
-                                                <Field>
-                                                    <label>Endereço do responsável</label>
-                                                    <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Digite o endereço do responsável" />
-                                                </Field>
+                                        <Field>
+                                            <label>Endereço do responsável</label>
+                                            <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Digite o endereço do responsável" />
+                                        </Field>
 
 
-                                                <Field>
-                                                    <label>Observações</label>
-                                                    <Textarea name="obs_fal" value={form.obs_fal} onChange={handleChange} placeholder="Observações..." />
-                                                </Field>
+                                        <Field>
+                                            <label>Observações</label>
+                                            <Textarea name="obs_fal" value={form.obs_fal} onChange={handleChange} placeholder="Observações..." />
+                                        </Field>
 
-                                                <FormActions>
-                                                    <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                                </FormActions>
-                                            </ColumnRight>
-                                        </>
+                                        <FormActions>
+                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
+                                        </FormActions>
+                                    </ColumnRight>
+                                </>
                             )}
 
-                                    </FormGrid>
-                                </FormStyled>
-                        </Container>
-                    </MainLayout >
-                    <Footer />
-                </div>
+                        </FormGrid>
+                    </FormStyled>
+                </Container>
+            </MainLayout >
+            <Footer />
+        </div>
 
-                )
+    )
 }

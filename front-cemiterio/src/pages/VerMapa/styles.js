@@ -157,6 +157,7 @@ export const Button = styled.button`
 export const BtnAdd = styled.button`
   display:flex;
   gap:8px;
+  font-size:15px;
   align-items:center;
   margin-left: auto; 
   background: #191970;
@@ -170,5 +171,5 @@ export const BtnAdd = styled.button`
   position: static; 
   right: auto;
   &:hover { opacity: 0.7; transform: translateY(-1px); }
-`
+`;
 

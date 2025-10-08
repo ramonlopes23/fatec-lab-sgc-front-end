@@ -6,7 +6,7 @@ import { CiCirclePlus } from "react-icons/ci";
 import { useLocation } from "react-router-dom";
 import api from "../../services/api";
 import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd } from "./styles"
-import { FormGrid } from "../Cadastros/styles";
+
 
 export default function VerMapa() {
 
@@ -26,7 +26,8 @@ export default function VerMapa() {
     const [formCova, setFormCova] = useState({
         quadra_cova: "",
         num_cova: "",
-        status: "livre",
+        tipo_cova:"",
+        status: "",
         capacidade: "",
         concessao: {
             ativa: false,
@@ -59,7 +60,6 @@ export default function VerMapa() {
     }
 
 
-
     const handleAddCova = () => {
         const quadra = selectedQuadraId;
         const qObj = quadras.find(q => String(q.id) === String(quadra) || String(q.num_quadra) === String(quadra) || String(q.nome).endsWith(String(quadra)));
@@ -77,6 +77,7 @@ export default function VerMapa() {
         setFormCova({
             quadra_cova: "",
             num_cova: "",
+            tipo_cova:"",
             status: "disponivel",
             capacidade: "",
             concessao: {
@@ -211,6 +212,7 @@ export default function VerMapa() {
         if (e && e.preventDefault) e.preventDefault();
         const quadra = String(formCova.quadra_cova || "").trim();
         const num = String(formCova.num_cova || "").trim();
+        const tipo = String(formCova.tipo_cova || "").trim();
         if (!quadra || !num) {
             alert("Informe quadra e número da cova");
             return;
@@ -218,6 +220,7 @@ export default function VerMapa() {
         const payload = {
             quadra_cova: quadra,
             num_cova: num,
+            tipo_cova: tipo,
             status: normalizeStatus(formCova.status),
             capacidade: formCova.capacidade || "",
             concessao: {
@@ -243,7 +246,7 @@ export default function VerMapa() {
             await api.post("/covas", payload);
             setModalAddCovaOpen(false);
             await loadMapData();
-            alert("Cova criada");
+            alert("Sepultura criada");
         } catch (err) {
             console.error("Erro ao criar cova", err);
             alert("Erro ao criar cova");
@@ -478,8 +481,8 @@ export default function VerMapa() {
 
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
                     <QuadraInfo key={String(quadraSelecionada.id)}>
-                        <InfoPill>Máx: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
-                        <InfoPill>Atuais: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
+                        <InfoPill>Capacidade máxima: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
+                        <InfoPill>Número de sepulturas atuais: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
                     </QuadraInfo>
                     <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
                     <CovaGrid>
@@ -493,59 +496,62 @@ export default function VerMapa() {
                 </QuadraWrapper>
 
 
-                    <LegendRow>
-                        {statusList.map(s => (
-                            <LegendItem key={s.key} color={s.color}>
-                                <span className="color" />
-                                <span>{s.label}</span>
-                            </LegendItem>
-                        ))}
+                <LegendRow>
+                    {statusList.map(s => (
+                        <LegendItem key={s.key} color={s.color}>
+                            <span className="color" />
+                            <span>{s.label}</span>
+                        </LegendItem>
+                    ))}
 
-                        <BtnAdd onClick={handleAddQuadra}>Adicionar quadra <CiCirclePlus size={20} /></BtnAdd>
-                        <BtnAdd onClick={handleAddCova}>Adicionar cova <CiCirclePlus size={20} /></BtnAdd>
-                    </LegendRow>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <BtnAdd onClick={handleAddQuadra}>Quadra<CiCirclePlus size={20} /></BtnAdd>
+                        <BtnAdd onClick={handleAddCova}>Sepultura<CiCirclePlus size={20} /></BtnAdd>
+                    </div>
 
-                { modalAddQuadraOpen && (
-                        <div style={{
-                            position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
-                        }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddQuadraModal(); }}>
-                            <form onSubmit={handleCreateQuadra} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
-                                <h3 style={{ marginTop: 0 }}>Criar quadra</h3>
-                                <div style={{ display: "flex", gap: 12 }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label>Nº da quadra</label>
-                                        <input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label>Máximo de covas</label>
-                                        <input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
-                                    </div>
+                </LegendRow>
+
+                {modalAddQuadraOpen && (
+                    <div style={{
+                        position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+                    }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddQuadraModal(); }}>
+                        <form onSubmit={handleCreateQuadra} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
+                            <h3 style={{ marginTop: 0 }}>Criar quadra</h3>
+                            <div style={{ display: "flex", gap: 12 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Nº da quadra</label>
+                                    <input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
                                 </div>
-                                <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label>Status</label>
-                                        <select name="status" value={formQuadra.status} onChange={handleQuadraChange}>
-                                            <option value="ativa">Ativa</option>
-                                            <option value="desativada">Desativada</option>
-                                        </select>
-                                    </div>
+                                <div style={{ flex: 1 }}>
+                                    <label>Máximo de covas</label>
+                                    <input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
                                 </div>
-                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                    <button type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</button>
-                                    <button type="submit" style={{ padding: "8px 10px" }}>Criar</button>
-
+                            </div>
+                            <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+                                <div style={{ flex: 1 }}>
+                                    <label>Status</label>
+                                    <select name="status" value={formQuadra.status} onChange={handleQuadraChange}>
+                                        <option value="ativa">Ativa</option>
+                                        <option value="desativada">Desativada</option>
+                                    </select>
                                 </div>
+                            </div>
+                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                                <button type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</button>
+                                <button type="submit" style={{ padding: "8px 10px" }}>Criar</button>
 
-                            </form>
-                        </div>
-                    )}
+                            </div>
+
+                        </form>
+                    </div>
+                )}
 
                 {modalAddCovaOpen && (
                     <div style={{
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddCovaModal(); }}>
                         <form onSubmit={handleCreateCova} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
-                            <h3 style={{ marginTop: 0 }}>Criar cova</h3>
+                            <h3 style={{ marginTop: 0 }}>Criar sepultura</h3>
                             <div style={{ display: "flex", gap: 12 }}>
                                 <div style={{ flex: 1 }}>
                                     <label>Quadra</label>
@@ -568,6 +574,16 @@ export default function VerMapa() {
                                     <input name="num_cova" value={formCova.num_cova} onChange={handleCovaChange} />
                                 </div>
                             </div>
+
+                            <div style={{ marginTop: 10 }}>
+                                <label>Tipo</label>
+                                <select name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
+                                    <option value="cova">Cova</option>
+                                    <option value="gaveta">Gaveta</option>
+                                    <option value="nicho">Nicho</option>
+                                </select>
+                            </div>
+
                             <div style={{ marginTop: 10 }}>
                                 <label>Status</label>
                                 <select name="status" value={formCova.status} onChange={handleCovaChange}>
@@ -577,6 +593,13 @@ export default function VerMapa() {
                                     <option value="ocupada">Ocupada</option>
                                 </select>
                             </div>
+
+                            <div style={{marginTop:10}}>
+                                <label>Capacidade</label>
+                                <input type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
+                            </div>
+
+                            
 
                             <div style={{ marginTop: 10 }}>
                                 <label>
@@ -630,7 +653,6 @@ export default function VerMapa() {
                             {modalForm ? (
                                 <>
                                     <h3 style={{ marginTop: 0, color: "#171770" }}>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "Detalhes"}</h3>
-                                    <p><strong>Quadra:</strong> {modalForm.quadra_sep || modalForm.quadra || "-"}</p>
                                     <p><strong>Nº da sepultura:</strong> {modalForm.num_sepultura_sep || modalForm.num_sepultura || modalForm.numero || "-"}</p>
                                     <p><strong>Tipo:</strong> {modalForm.tipo_sep || "-"}</p>
                                     <p><strong>Data/Hora sepultamento:</strong> {modalForm.dh_sep || modalForm.data_obito_sep || "-"}</p>
@@ -641,8 +663,9 @@ export default function VerMapa() {
                                 </>
                             ) : selectedCova ? (
                                 <>
-                                    <h3 style={{ marginTop: 0 }}>Cova {selectedCova.numero}</h3>
-                                    <p><strong>Status:</strong>{selectedCova.status}</p>
+                                    <h3 style={{ marginTop: 0 }}>Sepultura {selectedCova.numero}</h3>
+                                    <p><strong>Status: </strong>{selectedCova.status}</p>
+                                    <p><strong>Capacidade da sepultura: </strong>{selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? "-"}</p>
                                     <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
                                         <button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver detalhes</button>
                                         <button onClick={() => { setModalOpen(false); setSelectedCova(null); }} style={{ padding: "8px 10px" }}>Fechar</button>
