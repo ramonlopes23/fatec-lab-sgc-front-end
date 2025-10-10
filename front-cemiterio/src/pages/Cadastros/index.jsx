@@ -2,7 +2,7 @@ import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
-import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols } from "./styles"
+import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles"
 
 export default function Cadastros() {
 
@@ -289,9 +289,10 @@ export default function Cadastros() {
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
 
-                /*                 const res = await api.post("/sepultamentos", payload);
-                 */
+/*                 const res = await api.post("/sepultamentos", payload);
+ */                 
                 try {
+                    await api.post("/sepultamentos", payload);
                     const params = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura, num_cova1: payload.num_sepultura_sep } };
                     const r = await api.get("/covas", params);
                     const found = Array.isArray(r.data) && r.data.length ? r.data[0] : null;
@@ -353,23 +354,24 @@ export default function Cadastros() {
         setAvailableCovas(computeAvailableCovas(form.quadra_sep, form.titulo_posse));
     }, [form.quadra_sep, form.titulo_posse, covas]);
 
-    const tipoCovaSelecionada = useMemo(()=>{
-        if(!form.quadra_sep || !form.num_sepultura) return "";
-        const byNumber = (list) => list.find(c=>
+    const tipoCovaSelecionada = useMemo(() => {
+        if (!form.quadra_sep || !form.num_sepultura_sep) return "";
+        const target = String(form.num_sepultura_sep);
+        const byNumber = (list) => list.find(c =>
             String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "") === String(form.num_sepultura_sep)
         );
-        let found = byNumber(availableCovas || []);
-        if (!found){
-            found = covas.find(c=>
-            (String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "")===String(form.quadra_sep)) &&
-            (String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "")===String(form.num_sepultura_sep)) 
+        let found = byNumber(availableCovas);
+        if (!found) {
+            found = covas.find(c =>
+                String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "") === String(form.quadra_sep) &&
+                String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "") === target
             );
         }
         return found?.tipo_cova ?? "";
 
-    }, [form.quadra_sep, form.num_sepultura_sep, covas, availableCovas]);
+    }, [form.quadra_sep, form.num_sepultura_sep, form.num_sepultura, covas, availableCovas]);
 
-    
+
 
 
     return (
@@ -585,10 +587,10 @@ export default function Cadastros() {
                                             <Field>
                                                 <label>Possui título de posse?</label>
                                                 <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
-                                                    <option value="Não">Não</option>
                                                     <option value="Sim">Sim</option>
+                                                    <option value="Não">Não</option>                                                    
                                                 </Select>
-                                            </Field>                                           
+                                            </Field>
 
 
                                         </TwoCols>
@@ -616,9 +618,10 @@ export default function Cadastros() {
                                                     ))}
                                                 </Select>
                                             </Field>
-                                            <label>Tipo de sepultura: </label>
+                                            
                                             <Field>
-                                                    <Input readOnly value={tipoCovaSelecionada || "-"} />
+                                                <label>Tipo de sepultura: </label>
+                                                <InputCova value={tipoCovaSelecionada || "-"} />
                                             </Field>
 
                                         </TwoCols>

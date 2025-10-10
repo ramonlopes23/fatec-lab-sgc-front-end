@@ -15,51 +15,69 @@ export default function Dashboard() {
         Exumação: <FaSkullCrossbones />,
         Manutenção: <FaTools />
     };
-    
+
     const loadProcessos = async () => {
         try {
-            const [rFalecidos, rSep, rVel, rExu] = await Promise.all([
+            const [rFalecidos, rSep, rVel, rExu, rQuadras] = await Promise.all([
                 api.get("/falecidos"),
                 api.get("/sepultamentos"),
                 api.get("/velorios"),
                 api.get("/exumacoes"),
+                api.get("/quadras"),
             ]);
 
             const falecidos = rFalecidos.data || [];
             const sep = (rSep.data || []).map(s => ({ ...s, _type: "Sepultamento" }));
             const vel = (rVel.data || []).map(v => ({ ...v, _type: "Velório" }));
             const exu = (rExu.data || []).map(x => ({ ...x, _type: "Exumação" }));
+            const quadras = rQuadras.data || [];
 
             const all = [...vel, ...sep, ...exu].map(item => {
                 const fk = item.falecido ?? item.falecido_id ?? item.falecidoId;
                 const f = falecidos.find(fr => String(fr.id) === String(fk));
+
+                let quadra_num = null;
+                if (item._type === "Sepultamento") {
+                    const qKey = item.quadra_sep ?? item.quadra ?? item.quadra_cova ?? null;
+                    const qObj = quadras.find(qt =>
+                        String(qt.id) === String(qKey)
+                        || String(qt.num_quadra) === String(qKey)
+                        || (qt.nome && String(qt.nome).endsWith(String(qKey)))
+                    );
+                    quadra_num = qObj ? (qObj.num_quadra ?? qObj.id) : (qKey ?? null);
+                }
+
+                const num_sepultura = item.num_sepultura_sep ?? item.num_sepultura ?? item.numero ?? item.num_cova ?? null;
+
                 return {
                     ...item,
                     nome_fal: item.nome_sep || item.nome_vel || item.nome_exu || (f ? (f.nome_fal || f.nome) : item.nome),
-                    falecido: f || null
+                    falecido: f || null,
+                    quadra_num,
+                    num_sepultura,
                 }
-            }) 
-
-            if(!mountedRef.current) return;
-            const active = all.filter(it=>{
-                const st = String(it.status??"").toLowerCase();
-                const confirmed = it.confirmado === true || it.confirmado ==="true";
-                return !(st ==="concluido"||confirmed);
             })
-            setProcessos(active.sort((a,b)=>(a.dh_sep || a.data_velorio || a.dh_exu ||"").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
+
+            if (!mountedRef.current) return;
+            const active = all.filter(it => {
+                const st = String(it.status ?? "").toLowerCase();
+                const confirmed = it.confirmado === true || it.confirmado === "true";
+                return !(st === "concluido" || confirmed);
+            })
+            setProcessos(active.sort((a, b) => (a.dh_sep || a.data_velorio || a.dh_exu || "").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
         } catch (err) {
             console.error("Erro ao carregar dashboard", err);
         }
     };
 
-    useEffect(()=>{
+    useEffect(() => {
         mountedRef.current = true;
         window._loadDashboardProcessos = loadProcessos;
         loadProcessos();
-        return ()=>{
+        return () => {
             mountedRef.current = false;
         };
-    },[]);
+    }, []);
 
 
     const getScheduledDate = (item) => {
@@ -138,7 +156,13 @@ export default function Dashboard() {
                                 <strong>{p.nome_fal || p.nome}</strong>
                                 {p._type === "Velório" && p.data_velorio && <span>Velorio:{p.data_velorio}</span>}
                                 {p._type === "Exumação" && p.dh_exu && <span>Sepultamento: {p.dh_exu}</span>}
-                                {p._type === "Sepultamento" && p.dh_sep && <span>Sepultamento: {p.dh_sep}</span>}
+                                {p._type === "Sepultamento" && p.dh_sep && (
+                                    <span>
+                                        Sepultamento: {p.dh_sep}
+                                        {p.quadra_num ? ` — Quadra: ${p.quadra_num}` : ""}
+                                        {p.num_sepultura ? ` — Sepultura: ${p.num_sepultura}` : ""}
+                                    </span>
+                                )}
                             </ProcessInfo>
                             <ProcessAction>
                                 {icones[p._type] || null}

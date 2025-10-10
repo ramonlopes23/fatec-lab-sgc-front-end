@@ -155,3 +155,16 @@ export const BtnPrimary = styled.button`
 
   &:hover { opacity: 0.95; }
 `;
+
+export const InputCova = styled.input`
+  width: 100%;
+  box-sizing: border-box;
+  
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid #d6d9e6;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+  color: #222;
+`;
