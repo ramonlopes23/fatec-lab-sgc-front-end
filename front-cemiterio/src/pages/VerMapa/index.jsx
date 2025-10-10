@@ -5,7 +5,7 @@ import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnPrimaryClose } from "./styles"
 
 
 export default function VerMapa() {
@@ -26,7 +26,7 @@ export default function VerMapa() {
     const [formCova, setFormCova] = useState({
         quadra_cova: "",
         num_cova: "",
-        tipo_cova:"",
+        tipo_cova: "",
         status: "",
         capacidade: "",
         concessao: {
@@ -77,7 +77,7 @@ export default function VerMapa() {
         setFormCova({
             quadra_cova: "",
             num_cova: "",
-            tipo_cova:"",
+            tipo_cova: "",
             status: "disponivel",
             capacidade: "",
             concessao: {
@@ -458,6 +458,13 @@ export default function VerMapa() {
         { key: "reservada", label: "Reservada", color: "#d2b24a" },
     ];
 
+    const sepDataForModal = modalForm ?? selectedCova?.sep ?? null;
+    const isOccupiedForModal = String(selectedCova?.status || "").toLowerCase().includes("ocup") || !!sepDataForModal;
+    const tipoForModal = selectedCova?.tipo_cova ?? selectedCova?.cova?.tipo_cova ?? sepDataForModal?.tipo_cova ?? sepDataForModal?.tipo_sep ?? "-";
+    const capacidadeForModal = selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? sepDataForModal?.capacidade ?? "-";
+    const numeroForModal = sepDataForModal?.num_sepultura_sep ?? sepDataForModal?.num_sepultura ?? sepDataForModal?.numero ?? selectedCova?.numero ?? "-";
+    /* const nomeSepForModal = sepDataForModal?.nome_sep ?? sepDataForModal?.falecido?.nome_fal ?? sepDataForModal?.falecido?.nome ?? null; */
+
 
     return (
         <><MainLayout>
@@ -594,12 +601,12 @@ export default function VerMapa() {
                                 </select>
                             </div>
 
-                            <div style={{marginTop:10}}>
+                            <div style={{ marginTop: 10 }}>
                                 <label>Capacidade</label>
                                 <input type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
                             </div>
 
-                            
+
 
                             <div style={{ marginTop: 10 }}>
                                 <label>
@@ -645,44 +652,34 @@ export default function VerMapa() {
                 )}
 
                 {modalOpen && selectedCova && (
+
                     <div style={{
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
                         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setSelectedCova(null); setModalForm(null); } }}>
                         <div style={{ color: "#171770", width: 420, background: "#fff", padding: 18, borderRadius: 8 }}>
-                            {modalForm ? (
+
+                            <p><strong>Nº da sepultura:</strong> {numeroForModal}</p>
+                            <p><strong>Status:</strong> {selectedCova.status ?? (isOccupiedForModal ? "ocupada" : "-")}</p>
+                            <p><strong>Tipo:</strong> {tipoForModal}</p>
+                            <p><strong>Capacidade da sepultura:</strong> {capacidadeForModal}</p>
+
+                            {sepDataForModal ? (
                                 <>
-                                    <h3 style={{ marginTop: 0, color: "#171770" }}>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "Detalhes"}</h3>
-                                    <p><strong>Nº da sepultura:</strong> {modalForm.num_sepultura_sep || modalForm.num_sepultura || modalForm.numero || "-"}</p>
-                                    <p><strong>Tipo:</strong> {modalForm.tipo_sep || "-"}</p>
-                                    <p><strong>Data/Hora sepultamento:</strong> {modalForm.dh_sep || modalForm.data_obito_sep || "-"}</p>
-                                    <p><strong>Data do óbito:</strong> {modalForm.data_obito || modalForm.data_obito_sep || modalForm.falecido?.data_nasc || modalForm.falecido?.dh_falec || "-"}</p>
-                                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                        <button onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</button>
-                                    </div>
+                                    <hr />
+                                    <p><strong>Nome do sepultado: </strong>{sepDataForModal.nomeSep || sepDataForModal.falecido?.nome_fal || sepDataForModal.falecido?.nome || "-"}</p>
+                                    <p><strong>Data e hora do sepultamento: </strong>{sepDataForModal.dh_sep || sepDataForModal.data_hora || sepDataForModal.data_obito_sep || "-"}</p>
+                                    <p><strong>Data do óbito: </strong>{sepDataForModal.data_obito || sepDataForModal.data_obito_sep || "-"}</p>
                                 </>
-                            ) : selectedCova ? (
-                                <>
-                                    <h3 style={{ marginTop: 0 }}>Sepultura {selectedCova.numero}</h3>
-                                    <p><strong>Status: </strong>{selectedCova.status}</p>
-                                    <p><strong>Capacidade da sepultura: </strong>{selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? "-"}</p>
-                                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                        <button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver detalhes</button>
-                                        <button onClick={() => { setModalOpen(false); setSelectedCova(null); }} style={{ padding: "8px 10px" }}>Fechar</button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <div>Nenhuma cova selecionada.</div>
-                                    <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                        <Button onClick={() => { setModalOpen(false); setSelectedCova(null); }} style={{ padding: "8px 10px" }}>Fechar</Button>
-                                    </div>
-                                </>
-                            )}
+                            ) : null}
+                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                                {sepDataForModal ? <Button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver Detalhes</Button> : null}
+                                <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
+                            </div>
 
                         </div>
                     </div>
-                )}
+                    )}
 
             </Container>
 

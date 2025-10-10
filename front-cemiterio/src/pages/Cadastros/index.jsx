@@ -68,7 +68,6 @@ export default function Cadastros() {
         titulo_posse: "",
         quadra_sep: "",
         num_sepultura_sep: "",
-        tipo_sep: "",
         coveiro_sep: "",
         obs_sep: "",
     }
@@ -154,11 +153,7 @@ export default function Cadastros() {
 
     const handleQuadraSepChange = (val) => {
         setForm(prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
-        const list = covas.filter(c => {
-            const key = String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "");
-            return String(key) === String(val);
-        });
-        setAvailableCovas(list.filter(isCovaAvailable));
+        setAvailableCovas(computeAvailableCovas(val, form.titulo_posse));
     };
 
 
@@ -209,27 +204,27 @@ export default function Cadastros() {
         updateFieldByName(name, incoming)
     };
 
-    /*     const handleSelectFalecido = (val) => {
-            const raw = val === undefined || val === null ? "" : String(val).trim();
-            if (raw === "") {
-                setForm(prev => ({ ...prev, falecido_id: "", falecido: "", nome_sep: "" }));
-                return;
+    const handleSelectFalecido = (val) => {
+        const raw = val === undefined || val === null ? "" : String(val).trim();
+        if (raw === "") {
+            setForm(prev => ({ ...prev, falecido_id: "", falecido: "", nome_sep: "" }));
+            return;
+        }
+        const byStringId = falecidos.find(x => String(x.id) === raw);
+        let f = byStringId;
+        if (!f) {
+            const pid = parseInt(raw, 10);
+            if (!Number.isNaN(pid)) {
+                f = falecidos.find(x => Number(x.id) === pid);
             }
-            const byStringId = falecidos.find(x => String(x.id) === raw);
-            let f = byStringId;
-            if (!f) {
-                const pid = parseInt(raw, 10);
-                if (!Number.isNaN(pid)) {
-                    f = falecidos.find(x => Number(x.id) === pid);
-                }
-            }
-            if (!f) {
-                console.warn("Falecido não encontrado para o valor selecionado:", raw);
-            }
-            const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
-            setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
-        };
-     */
+        }
+        if (!f) {
+            console.warn("Falecido não encontrado para o valor selecionado:", raw);
+        }
+        const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
+        setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
+    };
+
 
 
     const handleSubmit = async (e) => {
@@ -297,7 +292,7 @@ export default function Cadastros() {
                 /*                 const res = await api.post("/sepultamentos", payload);
                  */
                 try {
-                    const params = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura, num_cova: payload.num_sepultura_sep } };
+                    const params = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura, num_cova1: payload.num_sepultura_sep } };
                     const r = await api.get("/covas", params);
                     const found = Array.isArray(r.data) && r.data.length ? r.data[0] : null;
                     if (found && found.id != null) {
@@ -335,8 +330,46 @@ export default function Cadastros() {
         reader.onload = () => {
             setForm(prev => ({ ...prev, [fieldName]: file, [`${fieldName}Preview`]: reader.result }))
         };
-        reader.readAsDataURL(file)
+        reader.readAsDataURL(file);
+
     };
+
+    const computeAvailableCovas = (quadraId, tituloPosse) => {
+        if (!quadraId) return [];
+        const list = covas.filter(c => {
+            const key = String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "");
+            return String(key) === String(quadraId);
+        });
+
+        let out = list;
+        if (String(tituloPosse ?? "").toLowerCase() === "sim") {
+            out = out.filter(c => !!(c.concessao && c.concessao.ativa));
+        }
+        out = out.filter(isCovaAvailable);
+        return out;
+    };
+
+    useEffect(() => {
+        setAvailableCovas(computeAvailableCovas(form.quadra_sep, form.titulo_posse));
+    }, [form.quadra_sep, form.titulo_posse, covas]);
+
+    const tipoCovaSelecionada = useMemo(()=>{
+        if(!form.quadra_sep || !form.num_sepultura) return "";
+        const byNumber = (list) => list.find(c=>
+            String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "") === String(form.num_sepultura_sep)
+        );
+        let found = byNumber(availableCovas || []);
+        if (!found){
+            found = covas.find(c=>
+            (String(c.quadra_cova ?? c.quadra ?? c.quadra_sep ?? "")===String(form.quadra_sep)) &&
+            (String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "")===String(form.num_sepultura_sep)) 
+            );
+        }
+        return found?.tipo_cova ?? "";
+
+    }, [form.quadra_sep, form.num_sepultura_sep, covas, availableCovas]);
+
+    
 
 
     return (
@@ -505,19 +538,35 @@ export default function Cadastros() {
                                 <>
                                     <ColumnLeft>
                                         <Field>
-                                            <label >Nome do falecido</label>
+                                            <label>Nome do falecido</label>
                                             <div style={{ position: "relative" }}>
-                                                <input type="text"
+                                                <Input
+                                                    type="text"
                                                     placeholder="Digite o nome do falecido..."
                                                     value={searchFal || (form.nome_sep || "")}
                                                     onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); }}
                                                     onFocus={() => setShowFalList(true)}
                                                     onBlur={() => setTimeout(() => setShowFalList(false), 150)}
-                                                    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}                                           }
-                                            />
+                                                    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+                                                />
                                                 {showFalList && filteredFalecidos.length > 0 && (
-                                                    <ul style={{position:"absolute"}}></ul>
-                                           )}
+                                                    <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", zIndex: 50, background: "#fff", borderRadius: "16px", border: "1px solid #191970", maxHeight: 220, overflow: "auto", margin: 0, padding: 0, listStyle: "none" }}>
+                                                        {filteredFalecidos.map((f) => (
+                                                            <li key={f.id} style={{
+                                                                padding: 8, cursor: "pointer", borderBottom: "1px solid #f1f1f1",
+                                                            }}
+                                                                onMouseDown={(ev) => {
+                                                                    ev.preventDefault();
+                                                                    handleSelectFalecido(String(f.id));
+                                                                    setSearchFal(f.nome_fal || f.nome || "");
+                                                                    setShowFalList(false);
+                                                                }}>
+                                                                {f.nome_fal || f.nome}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </div>
                                         </Field>
 
                                         <TwoCols>
@@ -536,20 +585,10 @@ export default function Cadastros() {
                                             <Field>
                                                 <label>Possui título de posse?</label>
                                                 <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
-                                                    <option value="">Selecione o tipo de sepultura </option>
-                                                    <option value="Sim">Sim</option>
                                                     <option value="Não">Não</option>
+                                                    <option value="Sim">Sim</option>
                                                 </Select>
-                                            </Field>
-
-                                            <Field>
-                                                <label>Tipo de sepultura</label>
-                                                <Select name="tipo_sep" value={form.tipo_sep} onChange={handleChange}>
-                                                    <option value="">Selecione o tipo de sepultura </option>
-                                                    <option value="Cova">Cova</option>
-                                                    <option value="Gaveta">Gaveta</option>
-                                                </Select>
-                                            </Field>
+                                            </Field>                                           
 
 
                                         </TwoCols>
@@ -569,13 +608,17 @@ export default function Cadastros() {
                                             <Field>
                                                 <label>Nº da sepultura</label>
                                                 <Select name="num_sepultura_sep" value={form.num_sepultura_sep ?? ""} onChange={handleChange}>
-                                                    <option value="">Selecione a quadra</option>
+                                                    <option value="">Selecione a sepultura</option>
                                                     {availableCovas.map(c => (
                                                         <option key={String(c.id ?? `${c.quadra_cova}-${c.num_cova}`)} value={String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "")}>
                                                             {c.num_cova ?? c.numero ?? c.num_sepultura ?? ""}
                                                         </option>
                                                     ))}
                                                 </Select>
+                                            </Field>
+                                            <label>Tipo de sepultura: </label>
+                                            <Field>
+                                                    <Input readOnly value={tipoCovaSelecionada || "-"} />
                                             </Field>
 
                                         </TwoCols>

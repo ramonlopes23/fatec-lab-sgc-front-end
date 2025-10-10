@@ -251,7 +251,8 @@
       "id": "5aae",
       "quadra_cova": "e6c1",
       "num_cova": "1",
-      "status": "livre",
+      "tipo_cova": "gaveta",
+      "status": "ocupada",
       "capacidade": "1",
       "concessao": {
         "ativa": false,
@@ -266,6 +267,7 @@
       "id": "04d6",
       "quadra_cova": "2dc1",
       "num_cova": "75",
+      "tipo_cova": "cova",
       "status": "livre",
       "capacidade": "1",
       "concessao": {
@@ -281,6 +283,7 @@
       "id": "8d19",
       "quadra_cova": "e6c1",
       "num_cova": "2",
+      "tipo_cova": "cova",
       "status": "livre",
       "capacidade": "1",
       "concessao": {
@@ -296,6 +299,7 @@
       "id": "a58e",
       "quadra_cova": "e6c1",
       "num_cova": "3",
+      "tipo_cova": "gaveta",
       "status": "reservada",
       "capacidade": "1",
       "concessao": {
@@ -311,6 +315,7 @@
       "id": "5d57",
       "quadra_cova": "ca1e",
       "num_cova": "56",
+      "tipo_cova": "cova",
       "status": "livre",
       "capacidade": "2",
       "concessao": {
@@ -326,7 +331,7 @@
       "id": "3246",
       "quadra_cova": "2dc1",
       "num_cova": "45",
-      "tipo_cova": "",
+      "tipo_cova": "gaveta",
       "status": "livre",
       "capacidade": "1",
       "concessao": {
@@ -367,6 +372,22 @@
         "prazo_anos": 0,
         "data_inicio": "",
         "data_fim": ""
+      },
+      "obs": "teste"
+    },
+    {
+      "id": "9b98",
+      "quadra_cova": "e6c1",
+      "num_cova": "4",
+      "tipo_cova": "gaveta",
+      "status": "reservada",
+      "capacidade": "3",
+      "concessao": {
+        "ativa": true,
+        "responsavel": "joao filho",
+        "prazo_anos": 2,
+        "data_inicio": "2025-10-10",
+        "data_fim": "2027-10-10"
       },
       "obs": "teste"
     }

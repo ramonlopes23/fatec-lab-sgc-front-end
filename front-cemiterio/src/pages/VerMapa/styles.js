@@ -173,3 +173,16 @@ export const BtnAdd = styled.button`
   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 
+export const BtnPrimaryClose = styled.button`
+  background: #e6e6f1ff;
+  color: #191970;
+  border-color:#191970;
+  border: 2px;
+  padding: 12px 28px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.7; }
+`;
