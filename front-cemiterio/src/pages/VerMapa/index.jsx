@@ -5,7 +5,7 @@ import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnPrimaryClose } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose,Input,Label, ModalOverlay, Textarea } from "./styles"
 
 
 export default function VerMapa() {
@@ -26,7 +26,7 @@ export default function VerMapa() {
     const [formCova, setFormCova] = useState({
         quadra_cova: "",
         num_cova: "",
-        tipo_cova: "",
+        tipo_cova: "cova",
         status: "",
         capacidade: "",
         concessao: {
@@ -77,7 +77,7 @@ export default function VerMapa() {
         setFormCova({
             quadra_cova: "",
             num_cova: "",
-            tipo_cova: "",
+            tipo_cova: "cova",
             status: "disponivel",
             capacidade: "",
             concessao: {
@@ -220,7 +220,7 @@ export default function VerMapa() {
         const payload = {
             quadra_cova: quadra,
             num_cova: num,
-            tipo_cova: tipo,
+            tipo_cova: tipo || "cova",
             status: normalizeStatus(formCova.status),
             capacidade: formCova.capacidade || "",
             concessao: {
@@ -519,6 +519,7 @@ export default function VerMapa() {
                 </LegendRow>
 
                 {modalAddQuadraOpen && (
+                    <ModalOverlay>
                     <div style={{
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddQuadraModal(); }}>
@@ -526,34 +527,36 @@ export default function VerMapa() {
                             <h3 style={{ marginTop: 0 }}>Criar quadra</h3>
                             <div style={{ display: "flex", gap: 12 }}>
                                 <div style={{ flex: 1 }}>
-                                    <label>Nº da quadra</label>
-                                    <input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
+                                    <Label>Nº da quadra: </Label>
+                                    <Input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label>Máximo de covas</label>
-                                    <input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
+                                    <Label>Máximo de covas: </Label>
+                                    <Input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
                                 </div>
                             </div>
                             <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
                                 <div style={{ flex: 1 }}>
-                                    <label>Status</label>
-                                    <select name="status" value={formQuadra.status} onChange={handleQuadraChange}>
+                                    <Label>Status: </Label>
+                                    <SmallSelect name="status" value={formQuadra.status} onChange={handleQuadraChange}>
                                         <option value="ativa">Ativa</option>
                                         <option value="desativada">Desativada</option>
-                                    </select>
+                                    </SmallSelect>
                                 </div>
                             </div>
                             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                <button type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</button>
-                                <button type="submit" style={{ padding: "8px 10px" }}>Criar</button>
+                                <BtnClose type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
+                                <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
 
                             </div>
 
                         </form>
                     </div>
+                    </ModalOverlay>
                 )}
 
                 {modalAddCovaOpen && (
+                    <ModalOverlay>
                     <div style={{
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddCovaModal(); }}>
@@ -561,8 +564,8 @@ export default function VerMapa() {
                             <h3 style={{ marginTop: 0 }}>Criar sepultura</h3>
                             <div style={{ display: "flex", gap: 12 }}>
                                 <div style={{ flex: 1 }}>
-                                    <label>Quadra</label>
-                                    <select name="quadra_cova" value={formCova.quadra_cova} onChange={handleCovaChange}>
+                                    <Label>Quadra</Label>
+                                    <SmallSelect name="quadra_cova" value={formCova.quadra_cova} onChange={handleCovaChange}>
                                         <option value="">Selecione a quadra</option>
                                         {quadras.map(q => {
                                             const used = Array.isArray(q.covas) ? q.covas.length : getCovasCount(q.num_quadra ?? q.id);
@@ -574,81 +577,82 @@ export default function VerMapa() {
                                                 </option>
                                             )
                                         })}
-                                    </select>
+                                    </SmallSelect>
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <label>Número</label>
-                                    <input name="num_cova" value={formCova.num_cova} onChange={handleCovaChange} />
+                                    <Label>Número</Label>
+                                    <Input name="num_cova" value={formCova.num_cova} onChange={handleCovaChange} />
                                 </div>
                             </div>
 
                             <div style={{ marginTop: 10 }}>
-                                <label>Tipo</label>
-                                <select name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
+                                <Label>Tipo</Label>
+                                <SmallSelect name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
                                     <option value="cova">Cova</option>
                                     <option value="gaveta">Gaveta</option>
                                     <option value="nicho">Nicho</option>
-                                </select>
+                                </SmallSelect>
                             </div>
 
                             <div style={{ marginTop: 10 }}>
-                                <label>Status</label>
-                                <select name="status" value={formCova.status} onChange={handleCovaChange}>
+                                <Label>Status</Label>
+                                <SmallSelect name="status" value={formCova.status} onChange={handleCovaChange}>
                                     <option value="livre">Disponível</option>
                                     <option value="reservada">Reservada</option>
                                     <option value="indisponível">Indisponível</option>
                                     <option value="ocupada">Ocupada</option>
-                                </select>
+                                </SmallSelect>
                             </div>
 
                             <div style={{ marginTop: 10 }}>
-                                <label>Capacidade</label>
-                                <input type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
+                                <Label>Capacidade</Label>
+                                <Input type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
                             </div>
 
 
 
                             <div style={{ marginTop: 10 }}>
-                                <label>
-                                    <input type="checkbox" name="concessao.ativa" checked={!!formCova.concessao?.ativa} onChange={handleCovaChange} />Possui título de posse?
-                                </label>
+                                <Label>
+                                    <Input type="checkbox" name="concessao.ativa" checked={!!formCova.concessao?.ativa} onChange={handleCovaChange} />Possui título de posse?
+                                </Label>
                             </div>
                             {formCova.concessao?.ativa ? (
                                 <>
                                     <div style={{ marginTop: 8 }}>
-                                        <label>Responsável</label>
-                                        <input name="concessao.responsavel" value={formCova.concessao?.responsavel || ""} onChange={handleCovaChange} />
+                                        <Label>Responsável</Label>
+                                        <Input name="concessao.responsavel" value={formCova.concessao?.responsavel || ""} onChange={handleCovaChange} />
 
                                     </div>
                                     <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                                         <div style={{ flex: 1 }}>
-                                            <label>Prazo (anos)</label>
-                                            <input type="number" name="concessao.prazo_anos" value={formCova.concessao?.prazo_anos || 0} onChange={handleCovaChange} />
+                                            <Label>Prazo (anos)</Label>
+                                            <Input type="number" name="concessao.prazo_anos" value={formCova.concessao?.prazo_anos || 0} onChange={handleCovaChange} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <label>Data Início</label>
-                                            <input type="date" name="concessao.data_inicio" value={formCova.concessao?.data_inicio || ""} onChange={handleCovaChange} />
+                                            <Label>Data Início</Label>
+                                            <Input type="date" name="concessao.data_inicio" value={formCova.concessao?.data_inicio || ""} onChange={handleCovaChange} />
                                         </div>
                                         <div style={{ flex: 1 }}>
-                                            <label>Data Fim</label>
-                                            <input type="date" name="concessao.data_fim" value={formCova.concessao?.data_fim || ""} onChange={handleCovaChange} />
+                                            <Label>Data Fim</Label>
+                                            <Input type="date" name="concessao.data_fim" value={formCova.concessao?.data_fim || ""} onChange={handleCovaChange} />
                                         </div>
                                     </div>
                                 </>
                             ) : null}
 
                             <div style={{ marginTop: 10 }}>
-                                <label>Observações</label>
-                                <textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></textarea>
+                                <Label>Observações</Label>
+                                <Textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></Textarea>
                             </div>
 
                             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                <button type="button" onClick={handleCloseAddCovaModal} style={{ padding: "8px 10px" }}>Cancelar</button>
-                                <button type="submit" style={{ padding: "8px 10px" }}>Criar</button>
+                                <BtnClose type="button" onClick={handleCloseAddCovaModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
+                                <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
                             </div>
                         </form>
 
                     </div>
+                    </ModalOverlay>
                 )}
 
                 {modalOpen && selectedCova && (

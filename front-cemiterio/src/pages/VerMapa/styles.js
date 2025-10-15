@@ -173,6 +173,25 @@ export const BtnAdd = styled.button`
   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 
+export const BtnClose = styled.button`
+  display:flex;
+  gap:8px;
+  font-size:15px;
+  align-items:center;
+  margin-left: 370px; 
+  background: #e6e6f1ff;
+  color: #191970;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+  position: static; 
+  right: auto;
+  &:hover { opacity: 0.7; transform: translateY(-1px); }
+`;
+
 export const BtnPrimaryClose = styled.button`
   background: #e6e6f1ff;
   color: #191970;
@@ -187,3 +206,60 @@ export const BtnPrimaryClose = styled.button`
   &:hover { opacity: 0.7; }
 `;
 
+export const ModalOverlay = styled.div`
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.5);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 1000;
+`;
+
+const baseInput = `
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid #d6d9e6;
+  background: #fff;
+  outline: none;
+  font-size: 14px;
+  color: #222;
+`;
+
+export const Input = styled.input`
+  ${baseInput}
+  &:focus {
+    border-color: #7b63ff;
+    box-shadow: 0 2px 8px rgba(123,99,255,0.08);
+  }
+`;
+
+export const Label = styled.label`
+  font-weight: normal;
+  margin-left: 5px;
+`;
+
+export const Textarea = styled.textarea`
+  ${baseInput}
+  min-height: 82px;
+  border-radius: 12px;
+  resize: vertical;
+  padding-top: 10px;
+  &:focus {
+    border-color: #191970;
+    box-shadow: 0 2px 8px rgba(123,99,255,0.08);
+  }
+`;
+
+
+export const ModalGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom:20px;
+`;
