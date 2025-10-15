@@ -117,6 +117,7 @@ export default function Cadastros() {
     useEffect(() => {
         if (!searchFal) {
             setFilteredFalecidos([]);
+            setForm(prev=>({...prev,  falecido_id: "", falecido: "", nome_sep: "" }));
             return;
         }
         const s = String(searchFal).toLowerCase();
@@ -545,7 +546,7 @@ export default function Cadastros() {
                                                 <Input
                                                     type="text"
                                                     placeholder="Digite o nome do falecido..."
-                                                    value={searchFal || (form.nome_sep || "")}
+                                                    value={searchFal}
                                                     onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); }}
                                                     onFocus={() => setShowFalList(true)}
                                                     onBlur={() => setTimeout(() => setShowFalList(false), 150)}

@@ -476,14 +476,14 @@ export default function VerMapa() {
                 <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
                     <label style={{ fontWeight: 600, color: "#171770" }}>Quadra: </label>
 
-                    <select value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
+                    <SmallSelect value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
                         <option value="">Selecione o número da quadra </option>
                         {quadras.map(q => (
                             <option key={String(q.id)} value={String(q.id)}>
                                 {q.num_quadra ? `${q.num_quadra}` : q.nome || `${q.id}`}
                             </option>
                         ))}
-                    </select>
+                    </SmallSelect>
                 </div>
 
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>

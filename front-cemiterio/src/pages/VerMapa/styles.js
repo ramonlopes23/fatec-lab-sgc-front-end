@@ -186,3 +186,4 @@ export const BtnPrimaryClose = styled.button`
 
   &:hover { opacity: 0.7; }
 `;
+
