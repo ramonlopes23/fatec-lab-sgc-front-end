@@ -426,35 +426,32 @@ export default function Registros() {
               <ModalContent>
                 <Title>INFORMAÇÕES DO FALECIDO</Title>
                 <ModalGrid>
-                  <Label>Nome: <Input value={modalForm.nome_fal || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_fal", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Idade: <Input value={modalForm.idade || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("idade", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Sexo: <Input value={modalForm.sexo || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("sexo", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Cor: <Input value={modalForm.cor || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("cor", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Data de nascimento: <Input type="date" value={modalForm.data_nasc || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("data_nasc", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Data e hora de falecimento: <Input type="datetime-local" value={modalForm.dh_falec || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("dh_falec", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Data de sepultamento: <Input type="date" value={modalForm.dh_sep || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("dh_sep", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Filiação pai: <Input value={modalForm.filiacao_pai || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("filiacao_pai", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Filiação mãe: <Input value={modalForm.filiacao_mae || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("filiacao_mae", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>CPF: <Input value={modalForm.cpf || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("cpf", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Profissão: <Input value={modalForm.profissao || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("profissao", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Estado civil: <Input value={modalForm.estado_civil || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("estado_civil", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Nacionalidade: <Input value={modalForm.nacionalidade || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nacionalidade", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Causa mortis: <Input value={modalForm.causa_mortis || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("causa_mortis", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Nome do doutor: <Input value={modalForm.nome_doutor || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_doutor", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Certidão de óbito: <Input value={modalForm.certidao_obito || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("certidao_obito", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Comprovante de residência: <Input value={modalForm.residenciaPreview || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("residenciaPreview", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Responsável: <Input value={modalForm.nome_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_resp", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Contato do responsável: <Input value={modalForm.tel_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("tel_resp", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Endereço do responsável: <Input value={modalForm.endereco_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("endereco_resp", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>CPF do responsável: <Input value={modalForm.doc_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("doc_resp", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Quadra: <Input value={modalForm.quadra_num ?? modalForm.quadra_sep ?? ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("quadra_sep", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Nº da sepultura: <Input value={modalForm.num_sepultura_sep || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("num_sepultura_sep", e.target.value)} style={{ width: "100%" }}></Input></Label>
-                  <Label>Tipo de sepultura: <Input value={modalForm.tipo_sep || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("tipo_sep", e.target.value)} style={{ width: "100%" }}></Input></Label>
+                  <Label>Nome: <Input value={modalForm.nome_fal || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_fal", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Idade: <Input value={modalForm.idade || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("idade", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Sexo: <Input value={modalForm.sexo || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("sexo", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Cor: <Input value={modalForm.cor || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("cor", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Data de nascimento: <Input type="date" value={modalForm.data_nasc || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("data_nasc", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Filiação pai: <Input value={modalForm.filiacao_pai || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("filiacao_pai", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Filiação mãe: <Input value={modalForm.filiacao_mae || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("filiacao_mae", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>CPF: <Input value={modalForm.cpf || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("cpf", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Profissão: <Input value={modalForm.profissao || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("profissao", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Estado civil: <Input value={modalForm.estado_civil || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("estado_civil", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Nacionalidade: <Input value={modalForm.nacionalidade || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nacionalidade", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Causa mortis: <Input value={modalForm.causa_mortis || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("causa_mortis", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Nome do doutor: <Input value={modalForm.nome_doutor || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_doutor", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Certidão de óbito: <Input value={modalForm.certidao_obito || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("certidao_obito", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Comprovante de residência: <Input value={modalForm.residenciaPreview || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("residenciaPreview", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Responsável: <Input value={modalForm.nome_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("nome_resp", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Contato do responsável: <Input value={modalForm.tel_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("tel_resp", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Endereço do responsável: <Input value={modalForm.endereco_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("endereco_resp", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>CPF do responsável: <Input value={modalForm.doc_resp || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("doc_resp", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Quadra: <Input value={modalForm.quadra_num ?? modalForm.quadra_sep ?? ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("quadra_sep", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Nº da sepultura: <Input value={modalForm.num_sepultura_sep || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("num_sepultura_sep", e.target.value)} style={{ width: "100%" }} /></Label>
+                  <Label>Tipo de sepultura: <Input value={modalForm.tipo_sep || ""} readOnly={!isEditing} onChange={(e) => handleChangeModal("tipo_sep", e.target.value)} style={{ width: "100%" }} /></Label>
                 </ModalGrid>
                 <BtnPrimary type="button" onClick={() => setIsEditing(true)}>Editar</BtnPrimary>
                 <BtnPrimarySave type="button" onClick={handleSave} disabled={!isEditing}>Salvar</BtnPrimarySave>
-                <BtnPrimaryClose type="button" onClick={() => { setModalOpen(false); setIsEditing(false) }}>Fechar</BtnPrimaryClose>
-
+                <BtnPrimaryClose type="button" onClick={() => { setModalOpen(false); setIsEditing(false); }}>Fechar</BtnPrimaryClose>
               </ModalContent>
             </ModalOverlay>
           )}

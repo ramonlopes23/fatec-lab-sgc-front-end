@@ -174,12 +174,10 @@ export const BtnAdd = styled.button`
 `;
 
 export const BtnClose = styled.button`
-  display:flex;
   gap:8px;
   font-size:15px;
-  align-items:center;
-  margin-left: 370px; 
   background: #e6e6f1ff;
+  margin-left:370px;
   color: #191970;
   border: none;
   padding: 8px 16px;
@@ -187,9 +185,14 @@ export const BtnClose = styled.button`
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(15,13,58,0.18);
-  position: static; 
-  right: auto;
   &:hover { opacity: 0.7; transform: translateY(-1px); }
+`;
+
+export const ButtonsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
 `;
 
 export const BtnPrimaryClose = styled.button`
@@ -256,10 +259,56 @@ export const Textarea = styled.textarea`
   }
 `;
 
+export const FormStyled = styled.form`
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(22,28,70,0.06);
+  border: 1px solid #eee;
+`;
 
-export const ModalGrid = styled.div`
+export const FormGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom:20px;
+  gap: 32px;
+  align-items: start;
+
+  @media (max-width: 880px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const ColumnLeft = styled.div`
+  padding-right: 24px;
+  border-right: 1px solid #e6e8f2;
+
+  @media (max-width: 880px) {
+    padding-right: 0;
+    border-right: none;
+  }
+`;
+
+export const ColumnRight = styled.div`
+  padding-left: 24px;
+
+  @media (max-width: 880px) {
+    padding-left: 0;
+  }
+`;
+
+export const Field = styled.div`
+  margin-bottom: 14px;
+
+  label {
+    display: block;
+    font-size: 14px;
+    color: #6b6f85;
+    margin-bottom: 6px;
+  }
+`;
+
+export const TwoCols = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 `;

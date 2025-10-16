@@ -1,16 +1,24 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
-import { useLocation } from "react-router-dom";
+import { Form, useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose,Input,Label, ModalOverlay, Textarea } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols } from "./styles"
 
 
 export default function VerMapa() {
 
     const [quadras, setQuadras] = useState([]);
+    const quadrasDesc = useMemo(() => {
+        return [...quadras].sort((a, b) => {
+            const av = Number(a?.num_quadra);
+            const bv = Number(b?.num_quadra);
+            if (!Number.isNaN(av) && !Number.isNaN(bv)) return av - bv;
+        })
+    }, [quadras]);
+
     const [selectedQuadraId, setSelectedQuadraId] = useState(null);
     const [selectedCova, setSelectedCova] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -61,19 +69,6 @@ export default function VerMapa() {
 
 
     const handleAddCova = () => {
-        const quadra = selectedQuadraId;
-        const qObj = quadras.find(q => String(q.id) === String(quadra) || String(q.num_quadra) === String(quadra) || String(q.nome).endsWith(String(quadra)));
-        if (!qObj) {
-            alert("Quadra selecionada inválida");
-            return;
-        }
-
-        const used = Array.isArray(qObj.covas) ? qObj.covas.length : getCovasCount(qObj.num_quadra ?? qObj.id);
-        const max = Number(qObj.max_covas || 0);
-        if (max > 0 && used >= max) {
-            alert(`Não é possivel criar cova: quadra ${qObj.num_quadra} atingiu o limite de ${max} covas. `);
-            return;
-        }
         setFormCova({
             quadra_cova: "",
             num_cova: "",
@@ -217,6 +212,17 @@ export default function VerMapa() {
             alert("Informe quadra e número da cova");
             return;
         }
+
+        /* const qObj = quadras.find(q => String(q.id) === String(quadra) || String(q.num_quadra) === String(quadra) || String(q.nome).endsWith(String(quadra)));
+        if (qObj) {
+            const used = Array.isArray(qObj.covas) ? qObj.covas.length : getCovasCount(qObj.num_quadra ?? qObj.id);
+            const max = Number(qObj.max_covas || 0);
+            if (max > 0 && used >= max) {
+                alert(`Não é possivel criar cova: quadra ${qObj.num_quadra} atingiu o limite de ${max} covas. `);
+                return;
+            }
+        } */
+
         const payload = {
             quadra_cova: quadra,
             num_cova: num,
@@ -347,7 +353,7 @@ export default function VerMapa() {
 
             const quadrasArr = Array.from(quadraMap.values()).sort((a, b) => String(a.id).localeCompare(String(b.id)));
             setQuadras(quadrasArr);
-            if (quadrasArr.length) setSelectedQuadraId(quadrasArr[0].id);
+            if (quadrasArr.length) setSelectedQuadraId(null);
 
             const qs = new URLSearchParams(location.search);
             const sepId = qs.get("sepId") || qs.get("sepultamentoId");
@@ -383,7 +389,7 @@ export default function VerMapa() {
     }, [loadMapData]);
 
 
-    const quadraSelecionada = quadras.find(q => String(q.id) === String(selectedQuadraId)) || quadras[0] || { covas: [] };
+    const quadraSelecionada = quadras.find(q => String(q.id) === String(selectedQuadraId)) || { covas: [] };
 
     const handleSelectQuadra = (e) => {
         const v = e?.target?.value;
@@ -478,7 +484,7 @@ export default function VerMapa() {
 
                     <SmallSelect value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
                         <option value="">Selecione o número da quadra </option>
-                        {quadras.map(q => (
+                        {quadrasDesc.map(q => (
                             <option key={String(q.id)} value={String(q.id)}>
                                 {q.num_quadra ? `${q.num_quadra}` : q.nome || `${q.id}`}
                             </option>
@@ -520,138 +526,147 @@ export default function VerMapa() {
 
                 {modalAddQuadraOpen && (
                     <ModalOverlay>
-                    <div style={{
-                        position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
-                    }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddQuadraModal(); }}>
-                        <form onSubmit={handleCreateQuadra} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
-                            <h3 style={{ marginTop: 0 }}>Criar quadra</h3>
-                            <div style={{ display: "flex", gap: 12 }}>
-                                <div style={{ flex: 1 }}>
-                                    <Label>Nº da quadra: </Label>
-                                    <Input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <Label>Máximo de covas: </Label>
-                                    <Input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
-                                </div>
-                            </div>
-                            <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-                                <div style={{ flex: 1 }}>
-                                    <Label>Status: </Label>
-                                    <SmallSelect name="status" value={formQuadra.status} onChange={handleQuadraChange}>
-                                        <option value="ativa">Ativa</option>
-                                        <option value="desativada">Desativada</option>
-                                    </SmallSelect>
-                                </div>
-                            </div>
-                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
-                                <BtnClose type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
-                                <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
+                        <div style={{
+                            position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+                        }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddQuadraModal(); }}>
+                            <form onSubmit={handleCreateQuadra} style={{ color: "#171770", width: 400, background: "#fff", padding: 18, borderRadius: 8 }}>
+                                <h3 style={{ marginTop: 0 }}>Criar quadra</h3>
+                                <div style={{ display: "flex", gap: 12 }}>
 
-                            </div>
+                                    <Field>
+                                        <Label>Nº da quadra: </Label>
+                                        <Input name="num_quadra" value={formQuadra.num_quadra} onChange={handleQuadraChange} />
+                                    </Field>
 
-                        </form>
-                    </div>
+                                    <Field>
+                                        <Label>Máximo de covas: </Label>
+                                        <Input type="number" name="max_covas" value={formQuadra.max_covas} onChange={handleQuadraChange} />
+                                    </Field>
+                                </div>
+                                <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
+                                    <div style={{ flex: 1 }}>
+                                        <Field>
+                                            <Label>Status: </Label>
+                                            <SmallSelect name="status" value={formQuadra.status} onChange={handleQuadraChange}>
+                                                <option value="ativa">Ativa</option>
+                                                <option value="desativada">Desativada</option>
+                                            </SmallSelect>
+                                        </Field>
+                                    </div>
+                                </div>
+                                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                                    <BtnClose type="button" onClick={handleCloseAddQuadraModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
+                                    <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
+
+                                </div>
+
+                            </form>
+                        </div>
                     </ModalOverlay>
                 )}
 
+
                 {modalAddCovaOpen && (
                     <ModalOverlay>
-                    <div style={{
-                        position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
-                    }} onMouseDown={(e) => { if (e.target === e.currentTarget) handleCloseAddCovaModal(); }}>
-                        <form onSubmit={handleCreateCova} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
-                            <h3 style={{ marginTop: 0 }}>Criar sepultura</h3>
-                            <div style={{ display: "flex", gap: 12 }}>
-                                <div style={{ flex: 1 }}>
-                                    <Label>Quadra</Label>
-                                    <SmallSelect name="quadra_cova" value={formCova.quadra_cova} onChange={handleCovaChange}>
-                                        <option value="">Selecione a quadra</option>
-                                        {quadras.map(q => {
-                                            const used = Array.isArray(q.covas) ? q.covas.length : getCovasCount(q.num_quadra ?? q.id);
-                                            const max = Number(q.max_covas || 0);
-                                            const full = max > 0 && used >= max;
-                                            return (
-                                                <option key={String(q.id)} value={String(q.id)} disabled={full}>
-                                                    {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`} {full ? `(lotada)` : ''}
-                                                </option>
-                                            )
-                                        })}
-                                    </SmallSelect>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <Label>Número</Label>
-                                    <Input name="num_cova" value={formCova.num_cova} onChange={handleCovaChange} />
-                                </div>
-                            </div>
+                        <FormStyled onSubmit={handleCreateCova} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
+                            <h3 style={{ marginTop: 0 }} >Criar sepultura</h3>
 
-                            <div style={{ marginTop: 10 }}>
-                                <Label>Tipo</Label>
-                                <SmallSelect name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
-                                    <option value="cova">Cova</option>
-                                    <option value="gaveta">Gaveta</option>
-                                    <option value="nicho">Nicho</option>
-                                </SmallSelect>
-                            </div>
+                            <FormGrid >
+                                <ColumnLeft>
+                                    <Field>
+                                        <Label>Quadra: </Label>
+                                        <SmallSelect style={{ width: 200 }} name="quadra_cova" value={formCova.quadra_cova} onChange={handleCovaChange}>
+                                            <option value="">Selecione a quadra</option>
+                                            {quadrasDesc.map(q => {
+                                                const used = Array.isArray(q.covas) ? q.covas.length : getCovasCount(q.num_quadra ?? q.id);
+                                                const max = Number(q.max_covas || 0);
+                                                const full = max > 0 && used >= max;
+                                                return (
+                                                    <option key={String(q.id)} value={String(q.id)} disabled={full}>
+                                                        {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`} {full ? `(lotada)` : ''}
+                                                    </option>
+                                                )
+                                            })}
+                                        </SmallSelect>
+                                    </Field>
 
-                            <div style={{ marginTop: 10 }}>
-                                <Label>Status</Label>
-                                <SmallSelect name="status" value={formCova.status} onChange={handleCovaChange}>
-                                    <option value="livre">Disponível</option>
-                                    <option value="reservada">Reservada</option>
-                                    <option value="indisponível">Indisponível</option>
-                                    <option value="ocupada">Ocupada</option>
-                                </SmallSelect>
-                            </div>
+                                    <Field>
+                                        <Label>Status: </Label>
+                                        <SmallSelect style={{ width: 200 }} name="status" value={formCova.status} onChange={handleCovaChange}>
+                                            <option value="livre">Disponível</option>
+                                            <option value="reservada">Reservada</option>
+                                            <option value="indisponível">Indisponível</option>
+                                            <option value="ocupada">Ocupada</option>
+                                        </SmallSelect>
+                                    </Field>
 
-                            <div style={{ marginTop: 10 }}>
-                                <Label>Capacidade</Label>
-                                <Input type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
-                            </div>
+                                    <TwoCols>
+                                        <Field>
+                                            <Label>Número: </Label>
+                                            <Input style={{ width: 70 }} name="num_cova" value={formCova.num_cova} onChange={handleCovaChange} />
+                                        </Field>
+
+                                        <Field>
+                                            <Label>Tipo: </Label>
+                                            <SmallSelect style={{ width: 80 }} name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
+                                                <option value="cova">Cova</option>
+                                                <option value="gaveta">Gaveta</option>
+                                                <option value="nicho">Nicho</option>
+                                            </SmallSelect>
+                                        </Field>
+                                    </TwoCols>
+
+                                    <Field>
+                                        <Label>Capacidade: </Label>
+                                        <Input style={{ width: 200 }} type="number" name="capacidade" value={formCova.capacidade} onChange={handleCovaChange} />
+                                    </Field>
 
 
+                                </ColumnLeft>
 
-                            <div style={{ marginTop: 10 }}>
-                                <Label>
-                                    <Input type="checkbox" name="concessao.ativa" checked={!!formCova.concessao?.ativa} onChange={handleCovaChange} />Possui título de posse?
-                                </Label>
-                            </div>
-                            {formCova.concessao?.ativa ? (
-                                <>
-                                    <div style={{ marginTop: 8 }}>
-                                        <Label>Responsável</Label>
-                                        <Input name="concessao.responsavel" value={formCova.concessao?.responsavel || ""} onChange={handleCovaChange} />
+                                <ColumnRight>
 
-                                    </div>
-                                    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                                        <div style={{ flex: 1 }}>
-                                            <Label>Prazo (anos)</Label>
-                                            <Input type="number" name="concessao.prazo_anos" value={formCova.concessao?.prazo_anos || 0} onChange={handleCovaChange} />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <Label>Data Início</Label>
-                                            <Input type="date" name="concessao.data_inicio" value={formCova.concessao?.data_inicio || ""} onChange={handleCovaChange} />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <Label>Data Fim</Label>
-                                            <Input type="date" name="concessao.data_fim" value={formCova.concessao?.data_fim || ""} onChange={handleCovaChange} />
-                                        </div>
-                                    </div>
-                                </>
-                            ) : null}
+                                    <Field>
+                                        <Label>
+                                            Possui título de posse?<input type="checkbox" name="concessao.ativa" checked={!!formCova.concessao?.ativa} onChange={handleCovaChange} />
+                                        </Label>
+                                    </Field>
 
-                            <div style={{ marginTop: 10 }}>
-                                <Label>Observações</Label>
-                                <Textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></Textarea>
-                            </div>
+                                    {formCova.concessao?.ativa ? (
+                                        <>
+                                            <Field>
+                                                <Label>Responsável: </Label>
+                                                <Input name="concessao.responsavel" value={formCova.concessao?.responsavel || ""} onChange={handleCovaChange} />
+                                            </Field>
+                                            <Field>
+                                                <Label>Prazo (anos): </Label>
+                                                <Input type="number" name="concessao.prazo_anos" value={formCova.concessao?.prazo_anos || 0} onChange={handleCovaChange} />
+                                            </Field>
+                                            <Field>
+                                                <Label>Data Início: </Label>
+                                                <Input type="date" name="concessao.data_inicio" value={formCova.concessao?.data_inicio || ""} onChange={handleCovaChange} />
+                                            </Field>
 
-                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                                            <Field>
+                                                <Label>Data Fim: </Label>
+                                                <Input type="date" name="concessao.data_fim" value={formCova.concessao?.data_fim || ""} onChange={handleCovaChange} />
+                                            </Field>
+                                        </>
+                                    ) : null}
+
+                                    <Field>
+                                        <Label>Observações: </Label>
+                                        <Textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></Textarea>
+                                    </Field>
+                                </ColumnRight>
+
+
+                            </FormGrid>
+                            <ButtonsRow>
                                 <BtnClose type="button" onClick={handleCloseAddCovaModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
                                 <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
-                            </div>
-                        </form>
-
-                    </div>
+                            </ButtonsRow>
+                        </FormStyled>
                     </ModalOverlay>
                 )}
 
@@ -683,10 +698,10 @@ export default function VerMapa() {
 
                         </div>
                     </div>
-                    )}
+                )}
 
-            </Container>
+            </Container >
 
-        </MainLayout><Footer /></>
+        </MainLayout > <Footer /></>
     )
 }
