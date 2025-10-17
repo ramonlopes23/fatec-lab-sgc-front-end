@@ -72,26 +72,35 @@ export const CovaItem = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 44px;
-  border-radius: 6px;
-  border: none;
+  width: 54px;
+  height: 54px;
+  border-radius: 8px;
   cursor: pointer;
-  color: #fff;
-  font-weight: 700;
-  background-color: ${({ status }) => statusColors[status] || statusColors.default};
-  box-shadow: 0 2px 0 rgba(0,0,0,0.12);
-  transition: transform 120ms ease, box-shadow 120ms ease;
-  position:relative;
+  box-sizing: border-box;
 
+  background: ${p => {
+    const s = String(p.status || "").toLowerCase();
+    if (s === "reservada") return "#d2b24a";      /* amarelo para reservada */
+    if (s === "ocupada") return "#000";           /* preto para ocupada */
+    if (s === "reservada_ocupada") return "#000"; /* preto quando reservada+ocupada (borda amarilla) */
+    if (s === "disponível" || s === "livre" || s === "livre") return "#fff";
+    return "#fff";
+  }};
 
-  &:hover { transform: translateY(-2px); }
-  &:focus { outline: 2px solid #222; }
+  color: ${p => {
+    const s = String(p.status || "").toLowerCase();
+    return (s === "reservada" ? "#000" : "#fff"); /* texto preto em amarelo, branco em preto/normal */
+  }};
 
-  /* small number badge*/
-  &::after{
-    content: "";
-    display:block;
+  border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "none")};
+  svg { width: 22px; height: 22px; }
+  & .cova-number {
+    margin-left: 6px;
+    font-weight: 600;
+    font-size: 12px;
   }
+
+  &:hover { transform: translateY(-2px); transition: .12s; }
 `;
 
 export const LegendRow = styled.div`
@@ -107,16 +116,19 @@ export const LegendItem = styled.div`
   gap:8px;
   align-items:center;
   font-size:13px;
-  color:#222;
+  background:transparent;
+  box-sizing:border-box;
 
   & > span.color {
     width:18px;
     height:18px;
     border-radius:4px;
     background: ${({ color }) => color || "#ccc"};
-    border: 1px solid rgba(0,0,0,0.06);
+    border: ${({ borderColor, borderWidth }) => borderColor ? `${borderWidth ?? 2}px solid ${borderColor}` : "none"};
+    box-sizing: border-box;
   }
 `;
+
 
 export const SmallSelect = styled.select`
   padding: 8px 12px;
@@ -312,3 +324,5 @@ export const TwoCols = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 `;
+
+

@@ -462,6 +462,7 @@ export default function VerMapa() {
         { key: "disponível", label: "Disponível", color: "#9e9e9e" },
         { key: "indisponível", label: "Indisponível", color: "#c55" },
         { key: "reservada", label: "Reservada", color: "#d2b24a" },
+        { key: "reservada_ocupada", label: "Reservada e ocupada", color: "#000", borderColor:"#d2b24a", borderWidth:3}
     ];
 
     const sepDataForModal = modalForm ?? selectedCova?.sep ?? null;
@@ -499,19 +500,33 @@ export default function VerMapa() {
                     </QuadraInfo>
                     <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
                     <CovaGrid>
-                        {quadraSelecionada.covas.map((cova) => (
-                            <CovaItem key={cova.id} status={cova.status} onClick={() => handleClickCova(cova)} title={`Cova ${cova.numero} - ${cova.status}`}>
+                        {quadraSelecionada.covas.map((cova) => {
+                            const s = String(cova.status || "").toLowerCase();
+                            const isOcupada = s.includes("ocup");
+                            const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
+                            const displayStatus = (isOcupada && hasTitulo) ? "reservada_ocupada" : cova.status;
+
+                            return(
+                            <CovaItem 
+                                key={cova.id} 
+                                status={displayStatus} 
+                                borderColor={displayStatus==="reservada_ocupada" ? "#d2b24a" : undefined} 
+                                borderWidth={displayStatus === "reservada_ocupada" ? 5 : undefined} 
+                                onClick={() => handleClickCova(cova)} 
+                                title={`Cova ${cova.numero} - ${displayStatus}`}
+                            >
                                 <GiCoffin aria-hidden="true" />
                                 <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
                             </CovaItem>
-                        ))}
+                            )
+                        })}
                     </CovaGrid>
                 </QuadraWrapper>
 
 
                 <LegendRow>
                     {statusList.map(s => (
-                        <LegendItem key={s.key} color={s.color}>
+                        <LegendItem key={s.key} color={s.color} borderColor={s.borderColor} borderWidth={s.borderWidth}>
                             <span className="color" />
                             <span>{s.label}</span>
                         </LegendItem>
