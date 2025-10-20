@@ -118,11 +118,13 @@ export default function Registros() {
     const nomeField = String(item?.nome_fal || item?.nome_sep || "");
     const searchMatch = !searchNormalized || nomeField.toLowerCase().includes(searchNormalized);
 
-    const itemTipo = String(item?.tipo || item?.tipo_sep || "").toLowerCase();
-    const tipoMatch = filters.tipo ? itemTipo === String(filters.tipo).toLowerCase() : true;
+    const itemTipo = String(item?.tipo_cova || item?.tipo || item?.tipo_sep || item?.tipo_sepultura || "").toLowerCase();
+    const tipoFilter = String(filters.tipo_cova || "").trim().toLowerCase();
+    const tipoMatch = tipoFilter ? itemTipo.includes(tipoFilter) : true;
 
-    const itemQuadra = String(item?.quadra_sep ?? item?.quadra ?? "").trim();
-    const quadraMatch = filters.quadra ? itemQuadra === String(filters.quadra).trim() : true;
+    const itemQuadra = String(item?.quadra_num ?? item?.quadra_sep ?? item?.quadra ?? "").trim();
+    const quadraFilter = String(filters.quadra ?? "").trim();
+    const quadraMatch = quadraFilter ? itemQuadra === quadraFilter : true;
 
     const itemSepultura = String(item?.num_sepultura_sep ?? item?.num_sepultura ?? item?.sepultura ?? "").trim();
     const sepulturaMatch = filters.sepultura ? itemSepultura === String(filters.sepultura).trim() : true;
@@ -141,8 +143,6 @@ export default function Registros() {
     setModalForm(merged);
     setIsEditing(false);
     setModalOpen(true);
-
-
 
   };
 
@@ -301,6 +301,7 @@ export default function Registros() {
                 <option value="">Selecione o tipo de sepultura</option>
                 <option value="Cova">Cova</option>
                 <option value="Gaveta">Gaveta</option>
+                <option value="Nicho">Nicho</option>
               </SmallSelect>
             </TwoCols>
 

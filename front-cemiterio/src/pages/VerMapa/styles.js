@@ -80,16 +80,16 @@ export const CovaItem = styled.button`
 
   background: ${p => {
     const s = String(p.status || "").toLowerCase();
-    if (s === "reservada") return "#d2b24a";      /* amarelo para reservada */
-    if (s === "ocupada") return "#000";           /* preto para ocupada */
-    if (s === "reservada_ocupada") return "#000"; /* preto quando reservada+ocupada (borda amarilla) */
-    if (s === "disponível" || s === "livre" || s === "livre") return "#fff";
+    if (s === "reservada") return "#d2b24a";      
+    if (s === "ocupada") return "#000";           
+    if (s === "reservada_ocupada") return "#000"; 
+    if (s === "disponível" || s === "livre" || s === "livre") return "#9e9e9e";
     return "#fff";
   }};
 
   color: ${p => {
     const s = String(p.status || "").toLowerCase();
-    return (s === "reservada" ? "#000" : "#fff"); /* texto preto em amarelo, branco em preto/normal */
+    return (s === "reservada" ? "#000" : "#fff"); 
   }};
 
   border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "none")};
