@@ -11,6 +11,7 @@ export const Card = styled.div`
 export const CardHeader = styled.div`
   padding: 12px 16px;
   font-weight: 700;
+  align-items:center;
   color: #1b1b4a;
   border-bottom: 1px solid #f0f0f5;
   background: linear-gradient(180deg, rgba(246,246,252,0.6), transparent);
@@ -20,14 +21,12 @@ export const CardBody = styled.div`
   padding: 12px 16px;
 `;
 
-/* grade do calendário */
 export const CalendarGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 `;
 
-/* célula do dia */
 export const DayCell = styled.div`
   min-height: 90px;
   border: 1px solid #e6e6e6;
@@ -37,7 +36,6 @@ export const DayCell = styled.div`
   box-sizing: border-box;
 `;
 
-/* botão interno do dia (full area) */
 export const DayButton = styled.button`
   width: 100%;
   text-align: left;
@@ -47,7 +45,6 @@ export const DayButton = styled.button`
   cursor: pointer;
 `;
 
-/* legenda simples */
 export const Legend = styled.div`
   display: flex;
   gap: 12px;

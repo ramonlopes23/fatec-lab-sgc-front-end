@@ -5,12 +5,14 @@ import Cadastros from "../pages/Cadastros";
 import Configurar from "../pages/Configurar";
 import Registros from "../pages/Registros";
 import VerMapa from "../pages/VerMapa";
+import Calendario from "../pages/Calendario";
 
 export default function AppRoutes(){
     return(
         <Routes>
             <Route path='/' element={<Navigate to="/home" />} />
             <Route path='/home' element={<Home />} />
+            <Route path='/calendario' element={<Calendario />} />
             <Route path='/cadastros' element={<Cadastros />} />
             <Route path='/configurar' element={<Configurar />} />
             <Route path='/registros' element={<Registros />} />

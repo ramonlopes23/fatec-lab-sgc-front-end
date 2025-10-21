@@ -120,7 +120,7 @@ export default function Calendar({ processos = [] }) {
             <Btn onClick={avancarMes} aria-label="Próximo mês">▶</Btn>
           </div>
 
-          <Legend>
+         {/*  <Legend>
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <div style={{ width: 12, height: 12, background: '#A9A9A9' }} /> <small>Disponível</small>
             </div>
@@ -130,7 +130,7 @@ export default function Calendar({ processos = [] }) {
             <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <div style={{ width: 12, height: 12, background: '#FFD700' }} /> <small>Reservada</small>
             </div>
-          </Legend>
+          </Legend> */}
         </div>
 
         <CalendarGrid>
