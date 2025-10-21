@@ -148,7 +148,7 @@ export default function Dashboard() {
     return (
         <DashboardWrapper>
             <Card>
-                <CardHeader>PRÓXIMOS PROCESSOS AGENDADOS</CardHeader>
+                <CardHeader>PRÓXIMOS PROCESSOS</CardHeader>
                 <CardBody>
                     {processosHoje.length ? processosHoje.map((p) => (
                         <ProcessItem key={`${p._type}-${p.id}`}>

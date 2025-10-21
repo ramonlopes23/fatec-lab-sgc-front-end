@@ -469,7 +469,7 @@ export default function VerMapa() {
     const isOccupiedForModal = String(selectedCova?.status || "").toLowerCase().includes("ocup") || !!sepDataForModal;
     const tipoForModal = selectedCova?.tipo_cova ?? selectedCova?.cova?.tipo_cova ?? sepDataForModal?.tipo_cova ?? sepDataForModal?.tipo_sep ?? "-";
     const capacidadeForModal = selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? sepDataForModal?.capacidade ?? "-";
-    const observacoesForModal = selectedCova?.obs ?? selectedCova.cova?.obs ?? "-";
+    const observacoesForModal = selectedCova?.obs ?? selectedCova?.cova?.obs ?? "-";
     const numeroForModal = sepDataForModal?.num_sepultura_sep ?? sepDataForModal?.num_sepultura ?? sepDataForModal?.numero ?? selectedCova?.numero ?? "-";
     /* const nomeSepForModal = sepDataForModal?.nome_sep ?? sepDataForModal?.falecido?.nome_fal ?? sepDataForModal?.falecido?.nome ?? null; */
 
@@ -670,7 +670,7 @@ export default function VerMapa() {
                                     ) : null}
 
                                     <Field>
-                                        <Label>Observações</Label>
+                                        <Label>Observações: </Label>
                                         <Textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></Textarea>
                                     </Field>
                                 </ColumnRight>

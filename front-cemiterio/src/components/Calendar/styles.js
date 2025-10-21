@@ -1,0 +1,55 @@
+import styled from "styled-components";
+
+export const Card = styled.div`
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(15,13,58,0.06);
+  overflow: hidden;
+  border: 1px solid #ececec;
+`;
+
+export const CardHeader = styled.div`
+  padding: 12px 16px;
+  font-weight: 700;
+  color: #1b1b4a;
+  border-bottom: 1px solid #f0f0f5;
+  background: linear-gradient(180deg, rgba(246,246,252,0.6), transparent);
+`;
+
+export const CardBody = styled.div`
+  padding: 12px 16px;
+`;
+
+/* grade do calendário */
+export const CalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+`;
+
+/* célula do dia */
+export const DayCell = styled.div`
+  min-height: 90px;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  padding: 6px;
+  background: ${p => (p.isCurrentMonth ? "#fff" : "#fafafa")};
+  box-sizing: border-box;
+`;
+
+/* botão interno do dia (full area) */
+export const DayButton = styled.button`
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+`;
+
+/* legenda simples */
+export const Legend = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+`;

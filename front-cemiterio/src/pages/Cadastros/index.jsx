@@ -624,7 +624,7 @@ export default function Cadastros() {
                                                         const isReserved = String(c.status ?? "").toLowerCase().includes("reserv");
                                                         return (
                                                             <option key={String(c.id ?? `${c.quadra_cova}-${c.num_cova}`)} value={val}>
-                                                                {val}{isReserved}{isReserved ? "(Reservada)" : ""}
+                                                                {val}{isReserved}{isReserved ? "(Particular)" : ""}
                                                             </option>
                                                         )
                                                     })}
