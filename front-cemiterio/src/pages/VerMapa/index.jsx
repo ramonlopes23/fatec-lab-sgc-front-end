@@ -461,14 +461,15 @@ export default function VerMapa() {
         { key: "ocupada", label: "Ocupada", color: "#000" },
         { key: "disponível", label: "Disponível", color: "#9e9e9e" },
         { key: "indisponível", label: "Indisponível", color: "#c55" },
-        { key: "reservada", label: "Reservada", color: "#d2b24a" },
-        { key: "reservada_ocupada", label: "Reservada e ocupada", color: "#000", borderColor:"#d2b24a", borderWidth:3}
+        { key: "particular", label: "Particular", color: "#d2b24a" },
+        { key: "particular_ocupada", label: "Particular e ocupada", color: "#000", borderColor:"#d2b24a", borderWidth:3}
     ];
 
     const sepDataForModal = modalForm ?? selectedCova?.sep ?? null;
     const isOccupiedForModal = String(selectedCova?.status || "").toLowerCase().includes("ocup") || !!sepDataForModal;
     const tipoForModal = selectedCova?.tipo_cova ?? selectedCova?.cova?.tipo_cova ?? sepDataForModal?.tipo_cova ?? sepDataForModal?.tipo_sep ?? "-";
     const capacidadeForModal = selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? sepDataForModal?.capacidade ?? "-";
+    const observacoesForModal = selectedCova?.obs ?? selectedCova?.cova?.obs ?? "-";
     const numeroForModal = sepDataForModal?.num_sepultura_sep ?? sepDataForModal?.num_sepultura ?? sepDataForModal?.numero ?? selectedCova?.numero ?? "-";
     /* const nomeSepForModal = sepDataForModal?.nome_sep ?? sepDataForModal?.falecido?.nome_fal ?? sepDataForModal?.falecido?.nome ?? null; */
 
@@ -609,9 +610,8 @@ export default function VerMapa() {
                                         <Label>Status: </Label>
                                         <SmallSelect style={{ width: 200 }} name="status" value={formCova.status} onChange={handleCovaChange}>
                                             <option value="livre">Disponível</option>
-                                            <option value="reservada">Reservada</option>
+                                            <option value="reservada">Particular</option>
                                             <option value="indisponível">Indisponível</option>
-                                            <option value="ocupada">Ocupada</option>
                                         </SmallSelect>
                                     </Field>
 
@@ -697,6 +697,7 @@ export default function VerMapa() {
                             <p><strong>Status:</strong> {selectedCova.status ?? (isOccupiedForModal ? "ocupada" : "-")}</p>
                             <p><strong>Tipo:</strong> {tipoForModal}</p>
                             <p><strong>Capacidade da sepultura:</strong> {capacidadeForModal}</p>
+                            <p><strong>Observações:</strong> {observacoesForModal}</p>
 
                             {sepDataForModal ? (
                                 <>

@@ -82,6 +82,7 @@ export const CovaItem = styled.button`
     const s = String(p.status || "").toLowerCase();
     if (s === "reservada") return "#d2b24a";      
     if (s === "ocupada") return "#000";           
+    if (s === "indisponível") return "#c55";           
     if (s === "reservada_ocupada") return "#000"; 
     if (s === "disponível" || s === "livre" || s === "livre") return "#9e9e9e";
     return "#fff";
