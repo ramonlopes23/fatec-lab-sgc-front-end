@@ -4,6 +4,7 @@ import { FaCross } from "react-icons/fa";
 import { FaSkullCrossbones } from "react-icons/fa";
 import { FaTools } from "react-icons/fa";
 import api from "../../services/api";
+import Calendar from "../Calendar";
 
 export default function Dashboard() {
 
@@ -62,7 +63,7 @@ export default function Dashboard() {
             const active = all.filter(it => {
                 const st = String(it.status ?? "").toLowerCase();
                 const confirmed = it.confirmado === true || it.confirmado === "true";
-                return !(st === "concluido" || confirmed);
+                return !(st === "Concluído" || confirmed);
             })
             setProcessos(active.sort((a, b) => (a.dh_sep || a.data_velorio || a.dh_exu || "").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
         } catch (err) {
@@ -83,21 +84,22 @@ export default function Dashboard() {
     const getScheduledDate = (item) => {
         const raw = item.dh_sep || item.data_velorio || item.dh_exu || item.data || item.horario || "";
         if (!raw) return null;
-
         if (typeof raw === "number") return new Date(raw);
-
         const s = String(raw).trim();
 
-        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-            return new Date(`${s}T00:00:00`);
+        if (/^\d{4}-\d{2}-\d{2}([T\s].*)?$/.test(s)) {
+            const iso = s.includes("T") ? s : `${s}T00:00:00`;
+            const parsed = new Date(iso);
+            return isNaN(parsed) ? null : parsed;
         }
 
-        if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
-            const [day, month, rest] = s.split("/");
-            const yearAndMaybeTime = rest;
-            const [year, time] = yearAndMaybeTime.includes("") ? yearAndMaybeTime.split("") : [yearAndMaybeTime, "00:00:00"];
-            const timePart = time.includes(":") ? time : "00:00:00";
-            return new Date(`${year}-${month}-${day}T${timePart}`);
+        const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}:\d{2}(?::\d{2})?))?$/);
+        if (m) {
+            const [, day, month, year, time] = m;
+            const timePart = time || "00:00:00";
+            const iso = `${year}-${month}-${day}T${timePart}`;
+            const parsed = new Date(iso);
+            return isNaN(parsed) ? null : parsed;
         }
 
         const parsed = new Date(s);
@@ -123,11 +125,11 @@ export default function Dashboard() {
         try {
             setProcessos(prev => prev.filter(p => !(p._type === item._type && p.id === item.id)));
             if (item._type === "Velório") {
-                await api.patch(`/velorios/${item.id}`, { status: "concluido", confirmado: true }).catch(() => { });
+                await api.patch(`/velorios/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
             } else if (item._type === "Sepultamento") {
-                await api.patch(`/sepultamentos/${item.id}`, { status: "concluido", confirmado: true }).catch(() => { });
+                await api.patch(`/sepultamentos/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
             } else if (item._type === "Exumação") {
-                await api.patch(`/exumacoes/${item.id}`, { status: "concluido", confirmado: true }).catch(() => { });
+                await api.patch(`/exumacoes/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
             }
 
             await loadProcessos();

@@ -497,7 +497,9 @@ export default function VerMapa() {
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
                     <QuadraInfo key={String(quadraSelecionada.id)}>
                         <InfoPill>Capacidade máxima: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
-                        <InfoPill>Número de sepulturas atuais: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
+                        <InfoPill>Número atual de sepulturas: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
+                        <InfoPill>Número atual de sepultados: 15</InfoPill>
+                        
                     </QuadraInfo>
                     <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
                     <CovaGrid>

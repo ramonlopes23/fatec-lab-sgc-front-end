@@ -17,6 +17,15 @@ export const CardHeader = styled.div`
   background: linear-gradient(180deg, rgba(246,246,252,0.6), transparent);
 `;
 
+export const Title = styled.h3`
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
+  color:#191970;
+  padding-bottom: 0.5rem;
+`
+
 export const CardBody = styled.div`
   padding: 12px 16px;
 `;
@@ -50,3 +59,18 @@ export const Legend = styled.div`
   gap: 12px;
   align-items: center;
 `;
+
+export const Btn = styled.button`
+  background: #191970;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 10px;
+  border:5px;
+  border-color:#000;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+
+  &:hover { opacity: 0.5; }
+`;
+

@@ -331,6 +331,21 @@
       "obs_sep": "teste",
       "falecido_id": "0db6",
       "falecido": "0db6"
+    },
+    {
+      "id": "4361",
+      "nome_sep": "lucio silva",
+      "data_obito_sep": "2025-10-24",
+      "dh_sep": "2025-10-24T14:25",
+      "titulo_posse": "Não",
+      "quadra_sep": "e6c1",
+      "num_sepultura_sep": "2",
+      "coveiro_sep": "ze",
+      "obs_sep": "teste",
+      "falecido_id": "e641",
+      "falecido": "e641",
+      "status": "Concluído",
+      "confirmado": true
     }
   ],
   "quadras": [
