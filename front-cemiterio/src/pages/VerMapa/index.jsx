@@ -11,6 +11,8 @@ import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, 
 export default function VerMapa() {
 
     const [quadras, setQuadras] = useState([]);
+    const [sepultamentosAll, setSepultamentosAll] = useState([]);
+    const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
     const quadrasDesc = useMemo(() => {
         return [...quadras].sort((a, b) => {
             const av = Number(a?.num_quadra);
@@ -67,6 +69,32 @@ export default function VerMapa() {
         return q && Array.isArray(q.covas) ? q.covas.length : 0;
     }
 
+    /* const getSepultamentosCount = (quadraNum) =>{
+        if(!quadraNum) return 0;
+        const s = sepultamentosAll.find(sq =>String(sq.id) === String(quadraNum));
+        return s && Array.isArray(s.sepultamentos) ? s.sepultamentos.length : 0;
+    } */
+
+    const getSepultadosCount = (quadraOrId) => {
+        const quadraNum = (quadraOrId && typeof quadraOrId === "object") ? (quadraOrId.num_quadra ?? quadraOrId.id) : quadraOrId;
+        if (quadraNum === null || quadraNum === undefined || quadraNum === "") return 0;
+        const qStr = String(quadraNum);
+
+        if (sepCountsByQuadra && Object.prototype.hasOwnProperty.call(sepCountsByQuadra, qStr)) {
+            return Number(sepCountsByQuadra[qStr] || 0);
+        }
+
+        const ids = new Set();
+        (sepultamentosAll || []).forEach(s => {
+            const sQ = s.quadra_sep ?? s.quadra ?? "";
+            if (String(sQ) === qStr) {
+                const id = s.id ?? s._id ?? null;
+                if (id != null) ids.add(String(id));
+                else ids.add(`${qStr}-${s.num_sepultura_sep ?? s.num_sepultura ?? ""}-${s.dh_sep ?? s.data_obito_sep ?? ""}`);
+            }
+        });
+        return ids.size;
+    }
 
     const handleAddCova = () => {
         setFormCova({
@@ -272,9 +300,24 @@ export default function VerMapa() {
             const [rCovas, rSep, rQuadras] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras")]);
             const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
             const sepData = Array.isArray(rSep.data) ? rSep.data : [];
+            setSepultamentosAll(sepData);
+            const covaIdToQuadra = Object.fromEntries((covasData || []).map(c => [String(c.id), String(c.quadra_cova ?? c.quadra ?? "")]));
+            const tmp = {};
             const quadrasData = Array.isArray(rQuadras.data) ? rQuadras.data : [];
-
             const quadraMap = new Map();
+
+            (sepData || []).forEach(sep => {
+                const sepId = sep.id ?? sep._id ?? null;
+                const quadraKey = String(sep.quadra_sep ?? sep.quadra ?? covaIdToQuadra[String(sep.covaId ?? sep.cova_id ?? sep.cova ?? "")] ?? "0");
+                if (!tmp[quadraKey]) tmp[quadraKey] = new Set();
+                if (sepId != null) tmp[quadraKey].add(String(sepId));
+                else {
+                    tmp[quadraKey].add(`${quadraKey}-${sep.num_sepultura_sep ?? sep.num_sepultura ?? ""}-${sep.dh_sep ?? sep.data_obito_sep ?? ""}`);
+                }
+            })
+            const countsObj = {};
+            Object.keys(tmp).forEach(k => countsObj[k] = tmp[k].size);
+            setSepCountsByQuadra(countsObj);
 
 
             const normalizeCovaStatus = (s) => {
@@ -462,7 +505,7 @@ export default function VerMapa() {
         { key: "disponível", label: "Disponível", color: "#9e9e9e" },
         { key: "indisponível", label: "Indisponível", color: "#c55" },
         { key: "particular", label: "Particular", color: "#d2b24a" },
-        { key: "particular_ocupada", label: "Particular e ocupada", color: "#000", borderColor:"#d2b24a", borderWidth:3}
+        { key: "particular_ocupada", label: "Particular e ocupada", color: "#000", borderColor: "#d2b24a", borderWidth: 3 }
     ];
 
     const sepDataForModal = modalForm ?? selectedCova?.sep ?? null;
@@ -480,7 +523,6 @@ export default function VerMapa() {
                 <Title>CONTROLE DE SEPULTURAS</Title>
 
 
-
                 <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
                     <label style={{ fontWeight: 600, color: "#171770" }}>Quadra: </label>
 
@@ -496,10 +538,10 @@ export default function VerMapa() {
 
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
                     <QuadraInfo key={String(quadraSelecionada.id)}>
-                        <InfoPill>Capacidade máxima: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
+                        <InfoPill>Capacidade máxima de sepulturas: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>
                         <InfoPill>Número atual de sepulturas: {Array.isArray(quadraSelecionada.covas) ? quadraSelecionada.covas.length : getCovasCount?.(quadraSelecionada.num_quadra ?? quadraSelecionada.id) ?? 0}</InfoPill>
-                        <InfoPill>Número atual de sepultados: 15</InfoPill>
-                        
+                        <InfoPill>Número atual de sepultados: {getSepultadosCount(quadraSelecionada.id ?? quadraSelecionada.num_quadra ?? selectedQuadraId)}</InfoPill>
+
                     </QuadraInfo>
                     <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
                     <CovaGrid>
@@ -509,18 +551,18 @@ export default function VerMapa() {
                             const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
                             const displayStatus = (isOcupada && hasTitulo) ? "reservada_ocupada" : cova.status;
 
-                            return(
-                            <CovaItem 
-                                key={cova.id} 
-                                status={displayStatus} 
-                                borderColor={displayStatus==="reservada_ocupada" ? "#d2b24a" : undefined} 
-                                borderWidth={displayStatus === "reservada_ocupada" ? 5 : undefined} 
-                                onClick={() => handleClickCova(cova)} 
-                                title={`Cova ${cova.numero} - ${displayStatus}`}
-                            >
-                                <GiCoffin aria-hidden="true" />
-                                <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
-                            </CovaItem>
+                            return (
+                                <CovaItem
+                                    key={cova.id}
+                                    status={displayStatus}
+                                    borderColor={displayStatus === "reservada_ocupada" ? "#d2b24a" : undefined}
+                                    borderWidth={displayStatus === "reservada_ocupada" ? 5 : undefined}
+                                    onClick={() => handleClickCova(cova)}
+                                    title={`Cova ${cova.numero} - ${displayStatus}`}
+                                >
+                                    <GiCoffin aria-hidden="true" />
+                                    <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
+                                </CovaItem>
                             )
                         })}
                     </CovaGrid>
