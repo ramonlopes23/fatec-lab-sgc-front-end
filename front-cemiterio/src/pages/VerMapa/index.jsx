@@ -5,7 +5,7 @@ import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
 
 
 export default function VerMapa() {
@@ -13,6 +13,8 @@ export default function VerMapa() {
     const [quadras, setQuadras] = useState([]);
     const [sepultamentosAll, setSepultamentosAll] = useState([]);
     const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
+    const [modalSepList, setModalSepList] = useState([]);
+    const [modalExpandedIndex, setModalExpandedIndex] = useState(null);
     const quadrasDesc = useMemo(() => {
         return [...quadras].sort((a, b) => {
             const av = Number(a?.num_quadra);
@@ -446,8 +448,20 @@ export default function VerMapa() {
 
     const handleClickCova = (cova) => {
         setSelectedCova(cova);
-        if (cova.sep) {
-            (async () => {
+        const quadraKey = String(selectedQuadraId ?? cova.cova?.quadra_cova ?? cova.quadra_cova ?? cova.quadra_sep ?? cova.sep?.quadra_sep ?? "");
+        const numero = String(cova.numero ?? cova.num_cova ?? cova.num_sepultura_sep ?? "");
+        const list = (sepultamentosAll || []).filter(s => {
+            const sQuadra = String(s.quadra_sep ?? s.quadra ?? "");
+            const sNum = String(s.num_sepultura_sep ?? s.num_sepultura ?? s.numero ?? "");
+            return sQuadra === quadraKey && sNum === numero;
+        });
+
+        if (cova.sep && !list.find(s => String(s.id) === String(cova.sep.id))) list.unshift(cova.sep);
+        setModalSepList(list);
+        setModalExpandedIndex(0);
+        (async () => {
+            const first = list[0] ?? cova.sep ?? null;
+            if (first) {
                 const falId = cova.sep?.falecido ?? cova.sep?.falecido_id ?? cova.sep?.falecidoId;
                 let fal = null;
                 if (falId) {
@@ -458,12 +472,13 @@ export default function VerMapa() {
                         console.error("Erro", e)
                     };
                 }
-                setModalForm({ ...cova.sep, falecido: fal || null });
-            })();
-        } else {
-            setModalForm(null);
-        }
-        setModalOpen(true)
+                setModalForm({ ...first, falecido: fal || null });
+            } else {
+                setModalForm(null);
+            }
+            setModalOpen(true);
+        })();
+
     };
 
     const handleOpenDetails = async () => {
@@ -735,7 +750,7 @@ export default function VerMapa() {
                         position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
                         display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
                     }} onMouseDown={(e) => { if (e.target === e.currentTarget) { setModalOpen(false); setSelectedCova(null); setModalForm(null); } }}>
-                        <div style={{ color: "#171770", width: 420, background: "#fff", padding: 18, borderRadius: 8 }}>
+                        <ModalContent>
 
                             <p><strong>Nº da sepultura:</strong> {numeroForModal}</p>
                             <p><strong>Status:</strong> {selectedCova.status ?? (isOccupiedForModal ? "ocupada" : "-")}</p>
@@ -743,20 +758,97 @@ export default function VerMapa() {
                             <p><strong>Capacidade da sepultura:</strong> {capacidadeForModal}</p>
                             <p><strong>Observações:</strong> {observacoesForModal}</p>
 
-                            {sepDataForModal ? (
+                            {(modalSepList && modalSepList.length > 0) ? (
                                 <>
-                                    <hr />
-                                    <p><strong>Nome do sepultado: </strong>{sepDataForModal.nomeSep || sepDataForModal.falecido?.nome_fal || sepDataForModal.falecido?.nome || "-"}</p>
-                                    <p><strong>Data e hora do sepultamento: </strong>{sepDataForModal.dh_sep || sepDataForModal.data_hora || sepDataForModal.data_obito_sep || "-"}</p>
-                                    <p><strong>Data do óbito: </strong>{sepDataForModal.data_obito || sepDataForModal.data_obito_sep || "-"}</p>
+                                    <SepDivider />
+                                    <SepHeader>
+                                        <strong>Sepultamentos({modalSepList.length})</strong>
+                                    </SepHeader>
+                                    <SepList>
+                                        {modalSepList.map((s, idx) => {
+                                            const expanded = modalExpandedIndex === idx;
+                                            return (
+                                                <div key={s.id ?? idx}>
+                                                    <SepItemRow>
+                                                        <SepItemButton
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setModalExpandedIndex(expanded ? null : idx);
+                                                                if (!expanded) {
+                                                                    (async () => {
+                                                                        const falId = s?.falecido ?? s?.falecido_id ?? s?.falecidoId;
+                                                                        let fall = null;
+                                                                        if (falId) {
+                                                                            try {
+                                                                                const rf = await api.get(`/falecidos/${falId}`);
+                                                                                fall = rf.data;
+                                                                            } catch (e) {
+                                                                                console.error("Erro ", e)
+                                                                            }
+                                                                        }
+                                                                        setModalForm({ ...s, falecido: fall || null });
+                                                                    })();
+                                                                }
+                                                            }}
+                                                        >
+                                                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                                                                <SepItemName>{s.nome_sep || s.falecido || "-"}</SepItemName>
+                                                            </div>
+                                                        </SepItemButton>
+                                                        <SepToggle
+                                                            aria-expanded={expanded}
+                                                            onClick={() => {
+                                                                const willExpand = !expanded;
+                                                                setModalExpandedIndex(willExpand ? idx : null);
+                                                                if (willExpand) {
+                                                                    (async () => {
+                                                                        const falId = s?.falecido ?? s?.falecido_id ?? s?.falecidoId;
+                                                                        let fall = null;
+                                                                        if (falId) {
+                                                                            try {
+                                                                                const rf = await api.get(`/falecidos/${falId}`);
+                                                                                fall = rf.data;
+                                                                            } catch (e) {
+                                                                                console.error("Erro ", e)
+                                                                            }
+                                                                        }
+                                                                        setModalForm({ ...s, falecido: fall || null });
+                                                                    })();
+                                                                }
+                                                            }}
+                                                        >
+                                                            {expanded ? "▾" : "▸"}
+                                                        </SepToggle>
+                                                    </SepItemRow>
+                                                    {expanded && modalForm && modalForm.id === (s.id ?? modalForm.id) ? (
+                                                        <div style={{ padding: "8px 12px 12px", borderLeft: "3px solid #eef0ff", background: "#fff" }}>
+                                                            <p style={{ margin: "6px 0" }}><strong>Nome do sepultado: </strong>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
+                                                            <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
+                                                            <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            );
+                                        })}
+                                    </SepList>
                                 </>
-                            ) : null}
-                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                            ) : (
+                                sepDataForModal ? (
+                                    <>
+                                        <p><strong>Nome do sepultado: </strong> {modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
+                                        <p><strong>Data e hora do sepultamento: </strong> {modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
+                                        <p><strong>Data do óbito: </strong> {modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
+                                    </>
+                                ) : null
+
+                            )}
+
+                            <ModalButtonsRow>
                                 {sepDataForModal ? <Button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver Detalhes</Button> : null}
                                 <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
-                            </div>
+                            </ModalButtonsRow>
 
-                        </div>
+                        </ModalContent>
                     </div>
                 )}
 

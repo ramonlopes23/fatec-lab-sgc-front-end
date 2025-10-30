@@ -326,4 +326,82 @@ export const TwoCols = styled.div`
   gap: 12px;
 `;
 
+export const ModalContent = styled.div`
+  color: #171770;
+  width: 420px;
+  background: #fff;
+  padding: 18px;
+  border-radius: 8px;
+  box-sizing: border-box;
+`;
 
+export const SepDivider = styled.hr`
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 12px 0;
+`;
+
+export const SepHeader = styled.div`
+  margin-bottom: 8px;
+  font-weight: 600;
+`;
+
+export const SepList = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+`;
+
+export const SepItemButton = styled.button`
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: ${p => (p.active ? "2px solid #27348E" : "1px solid #ddd")};
+  background: ${p => (p.active ? "#f4f7ff" : "#fff")};
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`;
+
+export const SepItemName = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #171770;
+`;
+
+export const SepItemDate = styled.div`
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+`;
+
+export const SepItemRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  &:not(:last-child) { margin-bottom: 6px; }
+`;
+
+export const SepToggle = styled.button`
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #27348E;
+  font-size: 14px;
+`;
+
+export const ModalButtonsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+`;
