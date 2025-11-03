@@ -16,6 +16,22 @@ export default function VerMapa() {
     const [modalSepList, setModalSepList] = useState([]);
     const [modalExpandedIndex, setModalExpandedIndex] = useState(null);
     const [exumacoesPending, setExumacoesPending] = useState({});
+    const [exumacoesModalIsOpen, setExumacoesModalIsOpen] = useState(false);
+    const [exumacoesForm, setExumacoesForm] = useState({
+        sepultamentoId: null,
+        nome_sep: "",
+        quadra_sep: "",
+        num_sepultura_sep: "",
+        dh_exu: "",
+        motivo: "",
+        destino: "",
+        coveiro: "",
+        obs_exu: "",
+        status: "pendente",
+        confirmacao: false,
+        origem: "frontend",
+    });
+
     const quadrasDesc = useMemo(() => {
         return [...quadras].sort((a, b) => {
             const av = Number(a?.num_quadra);
@@ -65,59 +81,85 @@ export default function VerMapa() {
         setModalAddQuadraOpen(true)
     };
 
-    const startExumacao = async (sep)=>{
-        if(!sep || !sep.id) return alert("Sepultamento inválido");
+    const openExumacaoForm = (sep) => {
+        if (!sep) return;
         const key = String(sep.id);
-        if (exumacoesPending[key]) return alert("Exumação já iniciada para este registro.");
-        if(!confirm(`Iniciar exumação para ${sep.nome_fal || sep.nome_sep || "este registro"}?`)) return;
+        if (exumacoesPending[key]) {
+            alert("Já existe uma exumação para esse registro");
+        }
 
-        const payload ={
-            sepultamentoId:sep.id,
-            nome_sep:sep.nome_sep ?? sep.falecido ?? null,
-            quadra_sep: sep.quadra_sep ?? selectedCova?.cova?.quadra_cova ?? selectedCova?.quadra_cova ?? selectedQuadraId ?? null,
-            num_sepultura_sep: sep.num_sepultura_sep ?? sep.num_sepultura ?? selectedCova?.numero ?? null,
-            dh_exu: new Date().toISOString(),
-            destino:"",
-            coveiro:"",
-            obs_exu:"",
-            status:"pendente",
-            confirmacao:false,
-            origem:"frontend"
-        };
+        const sepQuadraKey = sep.quadra_sep ?? sep.quadra ?? (selectedCova?.cova?.quadra_cova ?? selectedCova?.quadra_cova) ?? selectedQuadraId ?? "";
 
-        try{
+        const quadraObj = (quadras || []).find(q =>
+            String(q.id) === String(sepQuadraKey) ||
+            String(q.num_quadra) === String(sepQuadraKey) ||
+            String(q.nome || "").endsWith(String(sepQuadraKey))
+        );
+
+        const quadraNum = quadraObj?.num_quadra ?? sepQuadraKey;
+
+        setExumacoesForm({
+            sepultamentoId: sep.id,
+            nome_sep: sep.nome_sep,
+            quadra_sep: String(quadraNum ?? ""),
+            num_sepultura_sep: sep.num_sepultura_sep,
+            dh_exu: new Date().toISOString().slice(0, 16),
+            motivo: "",
+            destino: "",
+            coveiro: "",
+            obs_exu: "",
+            status: "pendente",
+            confirmacao: false,
+            origem: "frontend"
+        })
+        setExumacoesModalIsOpen(true);
+    }
+
+
+    const handleExumacaoField = (name, value) => {
+        setExumacoesForm(prev => ({ ...prev, [name]: value }));
+    }
+
+    const submitExumacao = async (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        if (!exumacoesForm || !exumacoesForm.sepultamentoId) return alert("Dados inválidos");
+        const key = String(exumacoesForm[key])
+        if (exumacoesPending[key]) return alert("Já existe uma exumação pendente para este registro.");
+        try {
+            const payload = { ...exumacoesForm, dh_exu: (exumacoesForm.dh_exu ? new Date(exumacoesForm.dh_exu).toISOString() : new Date().toISOString()) }
             const res = await api.post("/exumacoes", payload);
             const created = res?.data ?? null;
-            setExumacoesPending(prev => ({...prev, [key]:created}));
-            alert ("Exumação iniciada (aguardando confirmação).");
-        } catch(err){
-            console.error("Erro ao iniciar exumação", err);
-            alert("Erro ao iniciar exumação");
+            setExumacoesPending(prev => ({ ...prev, [key]: created }));
+            setExumacoesModalIsOpen(false);
+            alert("Exumação cadastrada e aguardando confirmação. ");
+        } catch (err) {
+            console.error("Erro ao enviar exumação", err);
+            alert("Erro ao cadastrar exumação");
         }
     }
 
-    const cancelExumacao = async (sep) =>{
-        if(!sep || !sep.id) return alert("Sepultamento inválido");
-        const key = String(sep.id);
-        const ex = exumacoesPending[key];
-        if(!ex || !ex.id){
-            return alert ("Nenhuma exumação pendente para este registro");
-        }
-        if(!confirm("Cancelar exumação pendente?"))return;
-        try{
-            await api.delete(`/exumacoes/${ex.id}`);
-            setExumacoesPending(prev=>{
-                const clone = {...prev};
-                delete clone[key];
-                return clone;
-            });
-            alert ("Exumação cancelada. ");            
-        } catch(err){
-            console.error("Erro ao cancelar exumação", err);
-            alert("Erro ao cancelar exumação");
 
-        }
-    }
+    /*  const cancelExumacao = async (sep) => {
+         if (!sep || !sep.id) return alert("Sepultamento inválido");
+         const key = String(sep.id);
+         const ex = exumacoesPending[key];
+         if (!ex || !ex.id) {
+             return alert("Nenhuma exumação pendente para este registro");
+         }
+         if (!confirm("Cancelar exumação pendente?")) return;
+         try {
+             await api.delete(`/exumacoes/${ex.id}`);
+             setExumacoesPending(prev => {
+                 const clone = { ...prev };
+                 delete clone[key];
+                 return clone;
+             });
+             alert("Exumação cancelada. ");
+         } catch (err) {
+             console.error("Erro ao cancelar exumação", err);
+             alert("Erro ao cancelar exumação");
+         }
+     } */
 
     const getCovasCount = (quadraNum) => {
         if (!quadraNum) return 0;
@@ -534,7 +576,7 @@ export default function VerMapa() {
         })();
 
     };
-    
+
 
     const statusList = [
         { key: "ocupada", label: "Ocupada", color: "#000" },
@@ -814,10 +856,10 @@ export default function VerMapa() {
                                                         >
                                                             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                                                                 <SepItemName>{s.nome_sep || s.falecido || "-"}</SepItemName>
-                                                                
+
                                                             </div>
                                                         </SepItemButton>
-                                                        
+
                                                         <SepToggle
                                                             aria-expanded={expanded}
                                                             onClick={() => {
@@ -848,6 +890,7 @@ export default function VerMapa() {
                                                             <p style={{ margin: "6px 0" }}><strong>Nome do sepultado: </strong>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
+                                                            <BtnAdd type="button" disabled={!!exumacoesPending[String(s.id)]} onClick={() => { openExumacaoForm(s); setModalOpen(false) }}>Iniciar exumação</BtnAdd>
                                                         </div>
                                                     ) : null}
                                                 </div>
@@ -865,7 +908,6 @@ export default function VerMapa() {
                                 ) : null
 
                             )}
-
                             <ModalButtonsRow>
                                 <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
                             </ModalButtonsRow>
@@ -873,6 +915,61 @@ export default function VerMapa() {
                         </ModalContent>
                     </div>
                 )}
+
+                {exumacoesModalIsOpen && exumacoesForm && (
+                    <ModalOverlay>
+                        <form onSubmit={submitExumacao} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
+                            <h3 style={{ marginTop: 0 }}>Iniciar exumação</h3>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                                <div>
+                                    <Label>Quadra</Label>
+                                    <Input readOnly value={exumacoesForm.quadra_sep || ""} />
+                                </div>
+
+                                <div>
+                                    <Label>Sepultura</Label>
+                                    <Input readOnly value={exumacoesForm.num_sepultura_sep || ""} />
+                                </div>
+
+                                <div style={{ gridColumn: "span 2" }}>
+                                    <Label>Nome do sepultado</Label>
+                                    <Input readOnly value={exumacoesForm.nome_sep || ""} />
+                                </div>
+
+                                <div>
+                                    <Label>Data e hora</Label>
+                                    <Input type="datetime-local" value={exumacoesForm.dh_exu || ""} onChange={(ev) => handleExumacaoField("dh_exu", ev.target.value)} />
+                                </div>
+
+                                <div>
+                                    <Label>Motivo</Label>
+                                    <Input value={exumacoesForm.motivo || ""} onChange={(ev) => handleExumacaoField("motivo", ev.target.value)} />
+                                </div>
+
+                                <div>
+                                    <Label>Destino</Label>
+                                    <Input value={exumacoesForm.destino || ""} onChange={(ev) => handleExumacaoField("destino", ev.target.value)} />
+                                </div>
+
+                                <div>
+                                    <Label>Coveiro</Label>
+                                    <Input value={exumacoesForm.coveiro || ""} onChange={(ev) => handleExumacaoField("coveiro", ev.target.value)} />
+                                </div>
+
+                                <div>
+                                    <Label>Observações</Label>
+                                    <Textarea value={exumacoesForm.obs_exu || ""} onChange={(ev) => handleExumacaoField("obs_exu", ev.target.value)} />
+                                </div>
+                            </div>
+                            <div>
+                                <button type="button" onClick={() => setExumacoesModalIsOpen(false)}>Cancelar</button>
+                                <BtnAdd type="submit">Confirmar</BtnAdd>
+                            </div>
+                        </form>
+                    </ModalOverlay>
+                )}
+
+
 
             </Container >
 
