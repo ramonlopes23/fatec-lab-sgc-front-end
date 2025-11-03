@@ -6,21 +6,6 @@ import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, For
 
 export default function Cadastros() {
 
-    const velorio = {
-        nome_vel: "",
-        data_velorio: "",
-        hora_inicio: "",
-        hora_fim: "",
-        sala: "",
-        responsavel_familia: "",
-        funeraria: "",
-        funcionario: "",
-        servico_religioso: false,
-        ornamentacao: false,
-        musica: false,
-        obs_vel: "",
-    }
-
     const falecido = {
         nome_fal: "",
         idade: "",
@@ -46,20 +31,6 @@ export default function Cadastros() {
         tel_resp: "",
         endereco_resp: "",
     };
-
-    const exumacao = {
-        nome_exu: "",
-        data_obito: "",
-        data_sepultamento: "",
-        quadra: "",
-        num_sepultura: "",
-        tipo: "",
-        dh_exu: "",
-        motivo_exu: "",
-        destino: "",
-        coveiro_exu: "",
-        obs_exu: "",
-    }
 
     const sepultamento = {
         nome_sep: "",
@@ -161,9 +132,7 @@ export default function Cadastros() {
     const handleProcessChange = (e) => {
         const val = e.target.value;
         setProcessType(val);
-        if (val === "Cadastro de velório") setForm(velorio);
-        else if (val === "Cadastro de exumação") setForm(exumacao);
-        else if (val === "Cadastro de sepultamento") setForm(sepultamento)
+        if (val === "Cadastro de sepultamento") setForm(sepultamento);
         else setForm(falecido)
     };
 
@@ -235,8 +204,6 @@ export default function Cadastros() {
 
         let requiredTemplate = {};
         if (processType === "Cadastro de falecido") requiredTemplate = falecido;
-        else if (processType === "Cadastro de velório") requiredTemplate = velorio;
-        else if (processType === "Cadastro de exumação") requiredTemplate = exumacao;
         else if (processType === "Cadastro de sepultamento") requiredTemplate = sepultamento;
 
 
@@ -267,20 +234,6 @@ export default function Cadastros() {
                 alert("Falecido cadastrado");
                 setForm(falecido);
 
-            }
-            else if (processType === "Cadastro de velório") {
-
-                await api.post("/velorios", form);
-
-                alert("Velorio cadastrado");
-                setForm(velorio);
-            }
-            else if (processType === "Cadastro de exumação") {
-
-                await api.post("/exumacoes", form);
-
-                alert("Exumação cadastrada");
-                setForm(exumacao);
             }
             else if (processType === "Cadastro de sepultamento") {
 
@@ -391,15 +344,12 @@ export default function Cadastros() {
                             <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
                             <SelectTop name="processo" value={processType} onChange={handleProcessChange}>
                                 <option>Cadastro de falecido</option>
-                                <option>Cadastro de velório</option>
-                                <option>Cadastro de exumação</option>
                                 <option>Cadastro de sepultamento</option>
-
                             </SelectTop>
                         </FormTop>
 
                         <FormGrid>
-                            {processType === "Cadastro de velório" ? (
+                            {/* {processType === "Cadastro de velório" ? (
                                 <>
                                     <ColumnLeft>
                                         <Field>
@@ -475,75 +425,8 @@ export default function Cadastros() {
                                             <BtnPrimary type="submit">Salvar</BtnPrimary>
                                         </FormActions>
                                     </ColumnRight>
-                                </>
-                            ) : processType === "Cadastro de exumação" ? (
-                                <>
-                                    <ColumnLeft>
-                                        <Field>
-                                            <label>Nome do falecido</label>
-                                            <Input name="nome_exu" value={form.nome_exu} onChange={handleChange} placeholder="Nome do falecido" />
-                                        </Field>
-
-                                        <TwoCols>
-                                            <Field>
-                                                <label>Data do óbito</label>
-                                                <Input type="date" name="data_obito" value={form.data_obito} onChange={handleChange} />
-                                            </Field>
-                                            <Field>
-                                                <label>Data do sepultamento</label>
-                                                <Input type="date" name="data_sepultamento" value={form.data_sepultamento} onChange={handleChange} />
-                                            </Field>
-                                        </TwoCols>
-
-                                        <Field>
-                                            <label>Quadra</label>
-                                            <Input name="quadra" value={form.quadra} onChange={handleChange} placeholder="Quadra" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Nº da sepultura</label>
-                                            <Input name="num_sepultura" value={form.num_sepultura} onChange={handleChange} placeholder="Número da sepultura" />
-                                        </Field>
-                                    </ColumnLeft>
-
-                                    <ColumnRight>
-                                        <Field>
-                                            <label>Tipo</label>
-                                            <Input name="tipo" value={form.tipo} onChange={handleChange} placeholder="Ex.: simples / coletiva" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Data/Hora exumação</label>
-                                            <Input type="datetime-local" name="dh_exu" value={form.dh_exu} onChange={handleChange} />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Motivo da exumação</label>
-                                            <Input name="motivo_exu" value={form.motivo_exu} onChange={handleChange} placeholder="Motivo" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Destino</label>
-                                            <Input name="destino" value={form.destino} onChange={handleChange} placeholder="Destino do material" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Coveiro responsável</label>
-                                            <Input name="coveiro_exu" value={form.coveiro_exu} onChange={handleChange} placeholder="Nome do coveiro" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Observações</label>
-                                            <Textarea name="obs_exu" value={form.obs_exu} onChange={handleChange} placeholder="Observações..." />
-                                        </Field>
-
-                                        <FormActions>
-                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                        </FormActions>
-                                    </ColumnRight>
-                                </>
-
-                            ) : processType === "Cadastro de sepultamento" ? (
+                                </> */}
+                            {processType === "Cadastro de sepultamento" ? (
                                 <>
                                     <ColumnLeft>
                                         <Field>

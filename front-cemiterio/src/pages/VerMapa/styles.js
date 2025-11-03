@@ -348,20 +348,23 @@ export const SepHeader = styled.div`
 
 export const SepList = styled.div`
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  flex-direction:column;
+  gap: 2px;
+  width:100%;
   margin-bottom: 10px;
 `;
 
 export const SepItemButton = styled.button`
-  padding: 6px 10px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: ${p => (p.active ? "2px solid #27348E" : "1px solid #ddd")};
   background: ${p => (p.active ? "#f4f7ff" : "#fff")};
   cursor: pointer;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  width:100%;
+  gap:12px;
+  text-align:left;
 `;
 
 export const SepItemName = styled.div`
@@ -380,11 +383,9 @@ export const SepItemRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  &:not(:last-child) { margin-bottom: 6px; }
+  /* gap: 12px; */
+  padding: 6px 0px;
+  width:100%;
 `;
 
 export const SepToggle = styled.button`
@@ -396,7 +397,7 @@ export const SepToggle = styled.button`
   align-items: center;
   justify-content: center;
   color: #27348E;
-  font-size: 14px;
+  font-size: 16px;
 `;
 
 export const ModalButtonsRow = styled.div`

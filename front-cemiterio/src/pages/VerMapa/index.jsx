@@ -15,6 +15,7 @@ export default function VerMapa() {
     const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
     const [modalSepList, setModalSepList] = useState([]);
     const [modalExpandedIndex, setModalExpandedIndex] = useState(null);
+    const [exumacoesPending, setExumacoesPending] = useState({});
     const quadrasDesc = useMemo(() => {
         return [...quadras].sort((a, b) => {
             const av = Number(a?.num_quadra);
@@ -22,7 +23,6 @@ export default function VerMapa() {
             if (!Number.isNaN(av) && !Number.isNaN(bv)) return av - bv;
         })
     }, [quadras]);
-
     const [selectedQuadraId, setSelectedQuadraId] = useState(null);
     const [selectedCova, setSelectedCova] = useState(null);
     const [modalOpen, setModalOpen] = useState(false);
@@ -64,6 +64,60 @@ export default function VerMapa() {
         });
         setModalAddQuadraOpen(true)
     };
+
+    const startExumacao = async (sep)=>{
+        if(!sep || !sep.id) return alert("Sepultamento inválido");
+        const key = String(sep.id);
+        if (exumacoesPending[key]) return alert("Exumação já iniciada para este registro.");
+        if(!confirm(`Iniciar exumação para ${sep.nome_fal || sep.nome_sep || "este registro"}?`)) return;
+
+        const payload ={
+            sepultamentoId:sep.id,
+            nome_sep:sep.nome_sep ?? sep.falecido ?? null,
+            quadra_sep: sep.quadra_sep ?? selectedCova?.cova?.quadra_cova ?? selectedCova?.quadra_cova ?? selectedQuadraId ?? null,
+            num_sepultura_sep: sep.num_sepultura_sep ?? sep.num_sepultura ?? selectedCova?.numero ?? null,
+            dh_exu: new Date().toISOString(),
+            destino:"",
+            coveiro:"",
+            obs_exu:"",
+            status:"pendente",
+            confirmacao:false,
+            origem:"frontend"
+        };
+
+        try{
+            const res = await api.post("/exumacoes", payload);
+            const created = res?.data ?? null;
+            setExumacoesPending(prev => ({...prev, [key]:created}));
+            alert ("Exumação iniciada (aguardando confirmação).");
+        } catch(err){
+            console.error("Erro ao iniciar exumação", err);
+            alert("Erro ao iniciar exumação");
+        }
+    }
+
+    const cancelExumacao = async (sep) =>{
+        if(!sep || !sep.id) return alert("Sepultamento inválido");
+        const key = String(sep.id);
+        const ex = exumacoesPending[key];
+        if(!ex || !ex.id){
+            return alert ("Nenhuma exumação pendente para este registro");
+        }
+        if(!confirm("Cancelar exumação pendente?"))return;
+        try{
+            await api.delete(`/exumacoes/${ex.id}`);
+            setExumacoesPending(prev=>{
+                const clone = {...prev};
+                delete clone[key];
+                return clone;
+            });
+            alert ("Exumação cancelada. ");            
+        } catch(err){
+            console.error("Erro ao cancelar exumação", err);
+            alert("Erro ao cancelar exumação");
+
+        }
+    }
 
     const getCovasCount = (quadraNum) => {
         if (!quadraNum) return 0;
@@ -480,40 +534,7 @@ export default function VerMapa() {
         })();
 
     };
-
-    const handleOpenDetails = async () => {
-        if (!selectedCova) return alert("Selecione uma cova")
-        try {
-            const params = {};
-            if (selectedQuadraId !== null && selectedQuadraId !== undefined) params.quadra_sep = String(selectedQuadraId);
-            params.num_sepultura_sep = String(selectedCova.numero || selectedCova);
-
-            const res = await api.get("/sepultamentos", { params });
-            const results = Array.isArray(res.data) ? res.data : [];
-            const sep = results[0] || null;
-            if (!sep) {
-                alert("Nenhum sepultamento cadastrado")
-                return;
-            }
-
-            const falId = sep?.falecido ?? sep?.falecidoId ?? sep?.falecido_id;
-            let fal = null;
-            if (falId) {
-                try {
-                    const rf = await api.get(`/falecidos/${falId}`);
-                    fal = rf.data;
-                } catch (err) {
-                    console.warn("Erro ao carregar falecido vinculado", err);
-                }
-            }
-
-            setModalForm({ ...sep, falecido: fal || null });
-            setModalOpen(true);
-        } catch (err) {
-            console.error("Erro ao carregar detalhes do sepultamento", err)
-            alert("Erro ao carregar detalhes ");
-        }
-    };
+    
 
     const statusList = [
         { key: "ocupada", label: "Ocupada", color: "#000" },
@@ -793,8 +814,10 @@ export default function VerMapa() {
                                                         >
                                                             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
                                                                 <SepItemName>{s.nome_sep || s.falecido || "-"}</SepItemName>
+                                                                
                                                             </div>
                                                         </SepItemButton>
+                                                        
                                                         <SepToggle
                                                             aria-expanded={expanded}
                                                             onClick={() => {
@@ -844,7 +867,6 @@ export default function VerMapa() {
                             )}
 
                             <ModalButtonsRow>
-                                {sepDataForModal ? <Button onClick={handleOpenDetails} style={{ padding: "8px 10px" }}>Ver Detalhes</Button> : null}
                                 <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
                             </ModalButtonsRow>
 
