@@ -63,7 +63,7 @@ export default function Dashboard() {
             const active = all.filter(it => {
                 const st = String(it.status ?? "").toLowerCase();
                 const confirmed = it.confirmado === true || it.confirmado === "true";
-                return !(st === "Concluído" || confirmed);
+                return !(st === "concluído" || confirmed);
             })
             setProcessos(active.sort((a, b) => (a.dh_sep || a.data_velorio || a.dh_exu || "").localeCompare(b.dh_sep || b.data_velorio || b.dh_exu || "")));
         } catch (err) {
@@ -130,6 +130,17 @@ export default function Dashboard() {
                 await api.patch(`/sepultamentos/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
             } else if (item._type === "Exumação") {
                 await api.patch(`/exumacoes/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
+            
+                const sepId = item.sepultamentoId ?? item.sepultamentoId ?? item.sepultamento ?? item.falecido_id ?? null;
+                if(sepId){
+                    try{
+                       
+                        await api.delete(`/sepultamentos/${sepId}`);
+                    } catch (delErr){
+                        console.warn("Erro ao deletar sepultamento vinculado à exumação: ", delErr);
+
+                    }
+                }
             }
 
             await loadProcessos();

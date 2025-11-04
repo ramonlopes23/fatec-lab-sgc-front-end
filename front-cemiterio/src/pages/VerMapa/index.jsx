@@ -5,7 +5,7 @@ import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
 import api from "../../services/api";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
+import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "../../routes/styles"
 
 
 export default function VerMapa() {
@@ -123,13 +123,17 @@ export default function VerMapa() {
     const submitExumacao = async (e) => {
         if (e && e.preventDefault) e.preventDefault();
         if (!exumacoesForm || !exumacoesForm.sepultamentoId) return alert("Dados inválidos");
-        const key = String(exumacoesForm[key])
+        const key = String(exumacoesForm.sepultamentoId)
         if (exumacoesPending[key]) return alert("Já existe uma exumação pendente para este registro.");
         try {
             const payload = { ...exumacoesForm, dh_exu: (exumacoesForm.dh_exu ? new Date(exumacoesForm.dh_exu).toISOString() : new Date().toISOString()) }
             const res = await api.post("/exumacoes", payload);
             const created = res?.data ?? null;
+
             setExumacoesPending(prev => ({ ...prev, [key]: created }));
+
+            try { window.dispatchEvent(new CustomEvent("processoCriado", { detail: created })); } catch (e) { e };
+
             setExumacoesModalIsOpen(false);
             alert("Exumação cadastrada e aguardando confirmação. ");
         } catch (err) {
@@ -139,27 +143,28 @@ export default function VerMapa() {
     }
 
 
-    /*  const cancelExumacao = async (sep) => {
-         if (!sep || !sep.id) return alert("Sepultamento inválido");
-         const key = String(sep.id);
-         const ex = exumacoesPending[key];
-         if (!ex || !ex.id) {
-             return alert("Nenhuma exumação pendente para este registro");
-         }
-         if (!confirm("Cancelar exumação pendente?")) return;
-         try {
-             await api.delete(`/exumacoes/${ex.id}`);
-             setExumacoesPending(prev => {
-                 const clone = { ...prev };
-                 delete clone[key];
-                 return clone;
-             });
-             alert("Exumação cancelada. ");
-         } catch (err) {
-             console.error("Erro ao cancelar exumação", err);
-             alert("Erro ao cancelar exumação");
-         }
-     } */
+    const cancelExumacao = async (sep) => {
+        if (!sep || !sep.id) return alert("Sepultamento inválido");
+        const key = String(sep.id);
+        const ex = exumacoesPending[key];
+        if (!ex || !ex.id) {
+            return alert("Nenhuma exumação pendente para este registro");
+        }
+        if (!confirm(`Cancelar exumação pendente para ${sep.nome_sep || "este registro"}?`)) return;
+        try {
+            await api.delete(`/exumacoes/${ex.id}`);
+            setExumacoesPending(prev => {
+                const clone = { ...prev };
+                delete clone[key];
+                return clone;
+            });
+            try { window.dispatchEvent(new CustomEvent("processoCancelado", { detail: ex })); } catch (e) { e };
+            alert("Exumação cancelada. ");
+        } catch (err) {
+            console.error("Erro ao cancelar exumação", err);
+            alert("Erro ao cancelar exumação");
+        }
+    }
 
     const getCovasCount = (quadraNum) => {
         if (!quadraNum) return 0;
@@ -621,7 +626,7 @@ export default function VerMapa() {
                         <InfoPill>Número atual de sepultados: {getSepultadosCount(quadraSelecionada.id ?? quadraSelecionada.num_quadra ?? selectedQuadraId)}</InfoPill>
 
                     </QuadraInfo>
-                    <QuadraTitle>{quadraSelecionada.nome || "Preview de quadra"}</QuadraTitle>
+                    <QuadraTitle>{quadraSelecionada.nome || "Nenhuma quadra selecionada"}</QuadraTitle>
                     <CovaGrid>
                         {quadraSelecionada.covas.map((cova) => {
                             const s = String(cova.status || "").toLowerCase();
@@ -797,7 +802,6 @@ export default function VerMapa() {
                                     </Field>
                                 </ColumnRight>
 
-
                             </FormGrid>
                             <ButtonsRow>
                                 <BtnClose type="button" onClick={handleCloseAddCovaModal} style={{ padding: "8px 10px" }}>Cancelar</BtnClose>
@@ -890,7 +894,11 @@ export default function VerMapa() {
                                                             <p style={{ margin: "6px 0" }}><strong>Nome do sepultado: </strong>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
-                                                            <BtnAdd type="button" disabled={!!exumacoesPending[String(s.id)]} onClick={() => { openExumacaoForm(s); setModalOpen(false) }}>Iniciar exumação</BtnAdd>
+                                                            {exumacoesPending[String(s.id)]?(
+                                                                <BtnClose type="button" onClick={()=>cancelExumacao(s)}>Cancelar exumação</BtnClose>
+                                                            ):(
+                                                                <BtnAdd type="button" onClick={()=>{openExumacaoForm(s); setModalOpen(false); }}>Iniciar exumação</BtnAdd>
+                                                            )}
                                                         </div>
                                                     ) : null}
                                                 </div>
@@ -961,10 +969,13 @@ export default function VerMapa() {
                                     <Textarea value={exumacoesForm.obs_exu || ""} onChange={(ev) => handleExumacaoField("obs_exu", ev.target.value)} />
                                 </div>
                             </div>
-                            <div>
-                                <button type="button" onClick={() => setExumacoesModalIsOpen(false)}>Cancelar</button>
+
+
+                            <ButtonsRow style={{ marginTop: 12 }}>
+                                <BtnClose type="button" onClick={() => setExumacoesModalIsOpen(false)}>Cancelar</BtnClose>
                                 <BtnAdd type="submit">Confirmar</BtnAdd>
-                            </div>
+                            </ButtonsRow>
+
                         </form>
                     </ModalOverlay>
                 )}
