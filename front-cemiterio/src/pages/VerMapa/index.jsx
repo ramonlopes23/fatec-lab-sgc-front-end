@@ -123,22 +123,31 @@ export default function VerMapa() {
     const submitExumacao = async (e) => {
         if (e && e.preventDefault) e.preventDefault();
         if (!exumacoesForm || !exumacoesForm.sepultamentoId) return alert("Dados inválidos");
+
         const key = String(exumacoesForm.sepultamentoId)
         if (exumacoesPending[key]) return alert("Já existe uma exumação pendente para este registro.");
+
         try {
-            const payload = { ...exumacoesForm, dh_exu: (exumacoesForm.dh_exu ? new Date(exumacoesForm.dh_exu).toISOString() : new Date().toISOString()) }
+            const payload = { ...exumacoesForm, status: "pendente", confirmado: false };
             const res = await api.post("/exumacoes", payload);
             const created = res?.data ?? null;
+            if (!created) throw new Error("Resposta inválida do servidot ao criar exumação");
+
 
             setExumacoesPending(prev => ({ ...prev, [key]: created }));
 
-            try { window.dispatchEvent(new CustomEvent("processoCriado", { detail: created })); } catch (e) { e };
+            try {
+                window.dispatchEvent(new CustomEvent("processoCriado", { detail: created }));
+            }
+            catch (evErr) {
+                console.warn("Erro ao dispatch processoCriado", evErr);
+            };
 
             setExumacoesModalIsOpen(false);
             alert("Exumação cadastrada e aguardando confirmação. ");
         } catch (err) {
             console.error("Erro ao enviar exumação", err);
-            alert("Erro ao cadastrar exumação");
+            alert("Erro ao cadastrar exumação" + (err?.message || ""));
         }
     }
 
@@ -189,6 +198,7 @@ export default function VerMapa() {
 
         const ids = new Set();
         (sepultamentosAll || []).forEach(s => {
+            if(s.foi_exumado) return;
             const sQ = s.quadra_sep ?? s.quadra ?? "";
             if (String(sQ) === qStr) {
                 const id = s.id ?? s._id ?? null;
@@ -403,13 +413,16 @@ export default function VerMapa() {
             const [rCovas, rSep, rQuadras] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras")]);
             const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
             const sepData = Array.isArray(rSep.data) ? rSep.data : [];
+
             setSepultamentosAll(sepData);
+            const visibleSepData = (sepData || []).filter(s=> !s.foi_exumado);
+
             const covaIdToQuadra = Object.fromEntries((covasData || []).map(c => [String(c.id), String(c.quadra_cova ?? c.quadra ?? "")]));
             const tmp = {};
             const quadrasData = Array.isArray(rQuadras.data) ? rQuadras.data : [];
             const quadraMap = new Map();
 
-            (sepData || []).forEach(sep => {
+            (visibleSepData || []).forEach(sep => {
                 const sepId = sep.id ?? sep._id ?? null;
                 const quadraKey = String(sep.quadra_sep ?? sep.quadra ?? covaIdToQuadra[String(sep.covaId ?? sep.cova_id ?? sep.cova ?? "")] ?? "0");
                 if (!tmp[quadraKey]) tmp[quadraKey] = new Set();
@@ -464,7 +477,7 @@ export default function VerMapa() {
                 });
             });
 
-            sepData.forEach(sep => {
+            (visibleSepData || []).forEach(sep => {
                 const qKey = sep.quadra_sep ?? sep.quadra ?? "0";
                 const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);
                 if (!quadraMap.has(qId)) quadraMap.set(qId, { id: qId, nome: `Quadra ${qId}`, covas: [] });
@@ -534,6 +547,61 @@ export default function VerMapa() {
         loadMapData();
     }, [loadMapData]);
 
+    useEffect(() => {
+        const onCriado = (ev) => {
+            const ex = ev?.detail;
+            if (!ex) return;
+            const sepId = ex.sepultamentoId ?? ex.sepultamentoId ?? ex.sepultamento ?? null;
+            if (sepId != null) {
+                setExumacoesPending(prev => ({ ...prev, [String(sepId)]: ex }));
+            }
+        };
+
+        const onCancelado = (ev) => {
+            const ex = ev?.detail;
+            if (!ex) return;
+            setExumacoesPending(prev => {
+                const clone = { ...prev };
+                Object.keys(clone).forEach(k => {
+                    const val = clone[k];
+                    if (!val) return;
+                    if (String(val.id) === String(ex.id) || String(k) === String(ex.sepultamentoId) || String(val.sepultamentoId) === String(ex.sepultamentoId)) {
+                        delete clone[k];
+                    }
+                });
+                return clone;
+            });
+        };
+
+        const onConfirmado = (ev) => {
+            const detail = ev?.detail;
+            if (!detail) return;
+            if (String(detail.type).toLowerCase().includes("exum")) {
+                const exId = detail.id;
+                setExumacoesPending(prev => {
+                    const clone = { ...prev };
+                    Object.keys(clone).forEach(k => {
+                        const val = clone[k];
+                        if (!val) return;
+                        if (String(val.id) === String(exId) || String(val.sepultamentoId) === String(detail.sepultamentoId) || String(k) === String(detail.sepultamentoId)) {
+                            delete clone[k];
+                        }
+                    });
+                    return clone;
+                });
+                try { loadMapData(); } catch (e) { e }
+            }
+        };
+        window.addEventListener("processoCriado", onCriado);
+        window.addEventListener("processoCancelado", onCancelado);
+        window.addEventListener("processoConfirmado", onConfirmado);
+        return () => {
+            window.removeEventListener("processoCriado", onCriado);
+            window.removeEventListener("processoCancelado", onCancelado);
+            window.removeEventListener("processoConfirmado", onConfirmado);
+        };
+    }, [loadMapData]);
+
 
     const quadraSelecionada = quadras.find(q => String(q.id) === String(selectedQuadraId)) || { covas: [] };
 
@@ -552,6 +620,7 @@ export default function VerMapa() {
         const quadraKey = String(selectedQuadraId ?? cova.cova?.quadra_cova ?? cova.quadra_cova ?? cova.quadra_sep ?? cova.sep?.quadra_sep ?? "");
         const numero = String(cova.numero ?? cova.num_cova ?? cova.num_sepultura_sep ?? "");
         const list = (sepultamentosAll || []).filter(s => {
+            if(s.foi_exumado) return false;
             const sQuadra = String(s.quadra_sep ?? s.quadra ?? "");
             const sNum = String(s.num_sepultura_sep ?? s.num_sepultura ?? s.numero ?? "");
             return sQuadra === quadraKey && sNum === numero;
@@ -894,10 +963,10 @@ export default function VerMapa() {
                                                             <p style={{ margin: "6px 0" }}><strong>Nome do sepultado: </strong>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
-                                                            {exumacoesPending[String(s.id)]?(
-                                                                <BtnClose type="button" onClick={()=>cancelExumacao(s)}>Cancelar exumação</BtnClose>
-                                                            ):(
-                                                                <BtnAdd type="button" onClick={()=>{openExumacaoForm(s); setModalOpen(false); }}>Iniciar exumação</BtnAdd>
+                                                            {exumacoesPending[String(s.id)] ? (
+                                                                <BtnAdd style={{backgroundColor:"#cf142b"}} type="button" onClick={() => cancelExumacao(s)}>Cancelar exumação</BtnAdd>
+                                                            ) : (
+                                                                <BtnAdd type="button" onClick={() => { openExumacaoForm(s); setModalOpen(false); }}>Iniciar exumação</BtnAdd>
                                                             )}
                                                         </div>
                                                     ) : null}

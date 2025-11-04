@@ -133,11 +133,10 @@ export default function Dashboard() {
             
                 const sepId = item.sepultamentoId ?? item.sepultamentoId ?? item.sepultamento ?? item.falecido_id ?? null;
                 if(sepId){
-                    try{
-                       
-                        await api.delete(`/sepultamentos/${sepId}`);
-                    } catch (delErr){
-                        console.warn("Erro ao deletar sepultamento vinculado à exumação: ", delErr);
+                    try{                       
+                        await api.patch(`/sepultamentos/${sepId}`, {foi_exumado:true}).catch(()=>{});
+                    } catch (patchErr){
+                        console.warn("Erro ao marcar sepultamento como exumado: ", patchErr);
 
                     }
                 }

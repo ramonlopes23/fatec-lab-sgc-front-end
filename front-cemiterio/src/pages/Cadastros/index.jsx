@@ -41,6 +41,7 @@ export default function Cadastros() {
         num_sepultura_sep: "",
         coveiro_sep: "",
         obs_sep: "",
+        foi_exumado:false
     }
 
     const cpfMask = value => {
@@ -243,6 +244,7 @@ export default function Cadastros() {
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
 
+                payload.foi_exumado = false;
                 /*                 const res = await api.post("/sepultamentos", payload);
                  */
 
