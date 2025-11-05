@@ -5,6 +5,7 @@ import Calendar from "../../components/Calendar";
 
 export default function Calendario() {
   const [sepultamentos, setSepultamentos] = useState([]);
+  const [exumacoes, setExumacoes] = useState([]);
   const [quadras, setQuadras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +19,7 @@ export default function Calendario() {
       })
       .then((data) => {
         setSepultamentos(data.sepultamentos || []);
+        setExumacoes(data.exumacoes || []);
         setQuadras(data.quadras || []);
       })
       .catch((err) => {
@@ -35,7 +37,7 @@ export default function Calendario() {
         ) : error ? (
           <div>Erro ao carregar dados do calendário.</div>
         ) : (
-          <Calendar sepultamentos={sepultamentos} quadras={quadras} />
+          <Calendar sepultamentos={sepultamentos} exumacoes={exumacoes} quadras={quadras} />
         )}
       </MainLayout>
       <Footer />
