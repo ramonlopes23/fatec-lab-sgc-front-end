@@ -121,23 +121,99 @@ export default function Dashboard() {
     });
 
     const handleConfirm = async (item) => {
-
+        let sepId = null;
         try {
             setProcessos(prev => prev.filter(p => !(p._type === item._type && p.id === item.id)));
             if (item._type === "Velório") {
                 await api.patch(`/velorios/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
             } else if (item._type === "Sepultamento") {
                 await api.patch(`/sepultamentos/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
+                sepId = item.id;
+
+                try {
+                    const rSep = await api.get(`/sepultamentos/${item.id}`).catch(() => null);
+                    const sep = rSep?.data ?? null;
+                    if (sep) {
+                        const quadra = sep.quadra_sep;
+                        const num = sep.num_sepultura_sep;
+                        if (quadra != null && num != null) {
+                            const rc = await api.get("/covas", { params: { quadra_cova: quadra, num_cova: num } }).catch(() => null);
+                            const found = rc && Array.isArray(rc.data) && rc.data.length ? rc.data[0] : null;
+                            if (found && found.id != null) {
+                                const curCap = Number(found.capacidade ?? 0);
+                                const newCap = Math.max(0, curCap - 1);
+                                let newStatus;
+
+                                try {
+                                    const rS = await api.get("/sepultamentos", { params: { quadra_sep: quadra, num_sepultura_sep: num } }).catch(() => null);
+                                    const seps = rS?.data ?? [];
+                                    const activeSeps = (seps || []).filter(s => !(s.foi_exumado === true || String(s.status ?? "").toLowerCase() === "exumado"));
+
+                                    if (activeSeps.length === 0) {
+                                        newStatus = newCap > 0 ? "disponível" : "lotada";
+                                    } else {
+                                        newStatus = newCap <= 0 ? "lotada" : "ocupada";
+                                    }
+                                } catch (e) {
+                                    newStatus = newCap <= 0 ? "lotada" : "ocupada";
+                                    { e }
+                                }
+
+                                await api.patch(`/covas/${found.id}`, { capacidade: newCap, status: newStatus }).catch(() => { });
+                                try { window.dispatchEvent(new CustomEvent("covaCapacidadeAlterada", { detail: { covaId: found.id, capacidade: newCap } })); } catch (e) { e }
+                            }
+                        }
+                    }
+                } catch (capErr) {
+                    console.warn("Erro ao decrementar capacidade de cova ao confirmar sepultamento:", capErr)
+                }
+
             } else if (item._type === "Exumação") {
                 await api.patch(`/exumacoes/${item.id}`, { status: "Concluído", confirmado: true }).catch(() => { });
-            
-                const sepId = item.sepultamentoId ?? item.sepultamentoId ?? item.sepultamento ?? item.falecido_id ?? null;
-                if(sepId){
-                    try{                       
-                        await api.patch(`/sepultamentos/${sepId}`, {foi_exumado:true}).catch(()=>{});
-                    } catch (patchErr){
-                        console.warn("Erro ao marcar sepultamento como exumado: ", patchErr);
 
+                sepId = item.sepultamentoId ?? item.sepultamento ?? item.falecido_id ?? null;
+                if (sepId) {
+                    try {
+                        await api.patch(`/sepultamentos/${sepId}`, { foi_exumado: true }).catch(() => { });
+                    } catch (patchErr) {
+                        console.warn("Erro ao marcar sepultamento como exumado:", patchErr);
+                    }
+
+                    try {
+                        const rSep = await api.get(`/sepultamentos/${sepId}`).catch(() => null);
+                        const sep = rSep?.data ?? null;
+                        if (sep) {
+                            const quadra = sep.quadra_sep ?? sep.quadra;
+                            const num = sep.num_sepultura_sep ?? sep.num_sepultura ?? sep.numero;
+                            if (quadra != null && num != null) {
+                                const rc = await api.get("/covas", { params: { quadra_cova: quadra, num_cova: num } }).catch(() => null);
+                                const found = rc && Array.isArray(rc.data) && rc.data.length ? rc.data[0] : null;
+                                if (found && found.id != null) {
+                                    const curCap = Number(found.capacidade ?? 0);
+                                    const newCap = curCap + 1;
+
+                                    let newStatus;
+                                    try {
+                                        const rS = await api.get("/sepultamentos", { params: { quadra_sep: quadra, num_sepultura_sep: num } }).catch(() => null);
+                                        const seps = rS?.data ?? [];
+                                        const activeSeps = (seps || []).filter(s => !(s.foi_exumado === true || String(s.status ?? "").toLowerCase() === "exumado"));
+                                        if (activeSeps.length === 0) {
+                                            newStatus = newCap > 0 ? "disponível" : "lotada";
+                                        } else {
+                                            newStatus = newCap <= 0 ? "lotada" : "ocupada";
+                                        }
+                                    } catch (e) {
+                                        newStatus = newCap > 0 ? "disponível" : "lotada";
+                                        { e };
+                                    }
+
+                                    await api.patch(`/covas/${found.id}`, { capacidade: newCap, status: newStatus }).catch(() => { });
+                                    try { window.dispatchEvent(new CustomEvent("covaCapacidadeAlterada", { detail: { covaId: found.id, capacidade: newCap } })); } catch (e) { e }
+                                }
+                            }
+                        }
+                    } catch (capErr) {
+                        console.warn("Erro ao restaurar capacidade de cova ao confirmar exumação:", capErr);
                     }
                 }
             }

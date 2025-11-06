@@ -469,10 +469,17 @@ export default function VerMapa() {
                 if (!quadraMap.has(qId)) quadraMap.set(qId, { id: qId, nome: `Quadra ${qId}`, covas: [] });
                 const quadraObj = quadraMap.get(qId);
                 const numero = cova.num_cova ?? cova.num_sepultura ?? cova.numero ?? "";
+                
+                const cap = (cova.capacidade == null)? null:Number(cova.capacidade);
+                const normalizedStatus =(()=>{
+                    if(cap !==null && !Number.isNaN(cap)&& cap <= 0) return "lotada";
+                    return normalizeCovaStatus(cova.status);
+                })();
                 quadraObj.covas.push({
                     id: cova.id ?? `${qId}-${numero}`,
                     numero,
-                    status: normalizeCovaStatus(cova.status),
+                    status: normalizedStatus,
+                    capacidade:cap,
                     cova
                 });
             });
