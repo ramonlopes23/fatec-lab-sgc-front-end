@@ -41,7 +41,7 @@ export default function Cadastros() {
         num_sepultura_sep: "",
         coveiro_sep: "",
         obs_sep: "",
-        foi_exumado:false
+        foi_exumado: false
     }
 
     const cpfMask = value => {
@@ -236,6 +236,7 @@ export default function Cadastros() {
                 setForm(falecido);
 
             }
+
             else if (processType === "Cadastro de sepultamento") {
 
                 const payload = { ...form };
@@ -249,34 +250,57 @@ export default function Cadastros() {
                  */
 
                 try {
-                    await api.post("/sepultamentos", payload);
-                    const params = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura, num_cova1: payload.num_sepultura_sep } };
-                    const r = await api.get("/covas", params);
-                    const found = Array.isArray(r.data) && r.data.length ? r.data[0] : null;
-                    if (found && found.id != null) {
-/*                         await api.patch(`/covas/${found.id}`, { status: "ocupada" });
- */                        setCovas(prev => prev.map(c => c.id === found.id ? { ...c, status: "ocupada" } : c));
-                        setAvailableCovas(prev => prev.filter(c => String(c.id) !== String(found.id)));
+
+                    const paramsCheck = { params: { quadra_cova: payload.quadra_sep, num_cova: payload.num_sepultura_sep } }
+                    const rCheck = await api.get("/covas", paramsCheck).catch(() => null);
+                    const foundCheck = rCheck && Array.isArray(rCheck.data) && rCheck.data.length ? rCheck.data[0] : null;
+                    if (foundCheck && foundCheck.id != null) {
+                        const cap = Number(foundCheck.capacidade ?? 0);
+                        if (cap <= 0) {
+                            try {
+
+                                const localId = `local-sep-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+                                const local = {
+                                    _type: "Sepultamento",
+                                    id: localId,
+                                    local: true,
+                                    nome_fal: payload.nome_sep,
+                                    data: payload.dh_sep,
+                                    payload: payload,
+                                    status: "Pendente"
+                                };
+
+                                setRegistros(prev => ([...prev, { processType, data: payload }]));
+
+                                try { window.dispatchEvent(new CustomEvent("processoCriadoLocal", { detail: local })); } catch (e) { e };
+
+                                alert("Sepultamento gerado. Confirme na Dashboard para efetivar.");
+                                setForm(sepultamento);
+                            } catch (err) {
+                                console.warn("Erro ao salvar sepultamento", err)
+                                alert("Erro ao salvar sepultamento")
+                            }
+
+                        }
+                        else {
+                            alert("Tipo de processo inválido")
+                        }
                     }
 
-                } catch (err) {
-                    console.warn("Erro ao atualizar status da cova: ", err)
+                    setRegistros(prev => ([...prev, { processType, data: form }]));
                 }
-                alert("Sepultamento cadastrado");
-                setForm(sepultamento)
-            }
-            else {
-                alert("Tipo de processo inválido")
-            }
+                catch (err) {
+                    console.error(err);
+                    alert(`Erro ao cadastrar processo ${processType}`);
 
-            setRegistros(prev => ([...prev, { processType, data: form }]));
-        }
-        catch (err) {
-            console.error(err);
-            alert(`Erro ao cadastrar processo ${processType}`);
-        }
 
-    };
+                }
+            }
+        }
+        catch (e) {
+            e
+        }
+    }
 
     const handleFileChange = (e, fieldName) => {
         const file = e.target.files && e.target.files[0];

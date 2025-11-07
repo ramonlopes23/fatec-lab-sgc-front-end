@@ -237,7 +237,6 @@ export default function Calendar({ sepultamentos = [], quadras = [], exumacoes =
                                 <Btn onClick={() => setOpen(false)}>Fechar</Btn>
                             </div>
                             <div style={{ marginTop: 12 }}>
-                                <h2 style={{color:"#000"}}>Sepultamentos</h2>
                                 {sepultamentosDia.length === 0 ? (
                                     <div style={{ color: '#666' }}>Nenhum sepultamento ou exumação registrado neste dia.</div>
                                 ) : sepultamentosDia.map(s => (
