@@ -4,7 +4,6 @@ import { FaCross } from "react-icons/fa";
 import { FaSkullCrossbones } from "react-icons/fa";
 import { FaTools } from "react-icons/fa";
 import api from "../../services/api";
-import Calendar from "../Calendar";
 
 export default function Dashboard() {
 
@@ -75,10 +74,39 @@ export default function Dashboard() {
         mountedRef.current = true;
         window._loadDashboardProcessos = loadProcessos;
         loadProcessos();
+
+        try {
+            const saved = JSON.parse(localStorage.getItem("local_processos") || "[]");
+            if (Array.isArray(saved) && saved.length) {
+                setProcessos(prev => [...saved, ...prev]);
+            }
+        } catch (e) {
+            console.warn("Erro ao ler local_processos", e)
+        }
+
+        const onCreated = (ev) => {
+            const item = ev?.detail;
+            if (!item) return;
+            setProcessos(prev => [item, ...prev]);
+
+        }
+
+        const onLocal = (ev) => {
+            const item = ev?.detail;
+            if (!item) return;
+            setProcessos(prev => [item, ...prev]);
+        };
+
+        window.addEventListener("processoCriado", onCreated);
+        window.addEventListener("processoCriadoLocal", onLocal);
+
         return () => {
             mountedRef.current = false;
-        };
+            window.removeEventListener("processoCriado", onCreated)
+            window.removeEventListener("processoCriadoLocal", onLocal)
+        }
     }, []);
+  
 
 
     const getScheduledDate = (item) => {

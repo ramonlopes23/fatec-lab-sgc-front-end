@@ -4,6 +4,7 @@ import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles"
 
+
 export default function Cadastros() {
 
     const falecido = {
@@ -245,9 +246,8 @@ export default function Cadastros() {
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
 
-                payload.foi_exumado = false;
-                /*                 const res = await api.post("/sepultamentos", payload);
-                 */
+                payload.foi_exumado = false;               
+
 
                 try {
 
@@ -256,8 +256,25 @@ export default function Cadastros() {
                     const foundCheck = rCheck && Array.isArray(rCheck.data) && rCheck.data.length ? rCheck.data[0] : null;
                     if (foundCheck && foundCheck.id != null) {
                         const cap = Number(foundCheck.capacidade ?? 0);
-                        if (cap <= 0) {
+                        if (cap > 0) {
                             try {
+
+
+                                const res = await api.post("/sepultamentos", payload);
+                                const created = res?.data ?? null;
+
+                                try{
+                                    if(created) 
+                                        window.dispatchEvent(new CustomEvent("processoCriado", {detail:created}));
+
+                                }catch(e){
+                                    {e}
+                                }
+                                setRegistros(prev=>([...prev, {processType,data:payload}]));
+                                alert("Sepultamento cadastrado (pendente). Confirme na Dashboard para concluir.");
+                                setForm(sepultamento);
+
+                                /* await api.post("/sepultamentos", payload);
 
                                 const localId = `local-sep-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
                                 const local = {
@@ -270,12 +287,19 @@ export default function Cadastros() {
                                     status: "Pendente"
                                 };
 
+                                try {
+                                    const exisiting = JSON.parse(localStorage.getItem("local_processos") || "[]");
+                                    localStorage.setItem("local_processos", JSON.stringify([local, ...exisiting]));
+                                } catch (e) {
+                                    console.warn("Erro ao salvar rascunho no localStorage", e)
+                                }
+
                                 setRegistros(prev => ([...prev, { processType, data: payload }]));
 
                                 try { window.dispatchEvent(new CustomEvent("processoCriadoLocal", { detail: local })); } catch (e) { e };
 
                                 alert("Sepultamento gerado. Confirme na Dashboard para efetivar.");
-                                setForm(sepultamento);
+                                setForm(sepultamento); */
                             } catch (err) {
                                 console.warn("Erro ao salvar sepultamento", err)
                                 alert("Erro ao salvar sepultamento")

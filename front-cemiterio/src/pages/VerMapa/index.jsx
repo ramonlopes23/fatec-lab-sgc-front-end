@@ -410,9 +410,26 @@ export default function VerMapa() {
 
     const loadMapData = useCallback(async () => {
         try {
-            const [rCovas, rSep, rQuadras] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras")]);
+            const [rCovas, rSep, rQuadras, rExu] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras"), api.get("/exumacoes")]);
             const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
             const sepData = Array.isArray(rSep.data) ? rSep.data : [];
+
+            try{
+                const exuData = Array.isArray(rExu.data) ? rExu.data : [];
+                const pendingMap = {};
+                exuData.forEach(ex=>{
+                    const statusRaw = String(ex.status ?? "").toLowerCase();
+                    const isPending = statusRaw.includes("pend") || ex.confirmado === false || ex.confirmado === null || ex.confirmado === undefined;
+                    if(!isPending) return;
+                    const sepId = ex.sepultamentoId ?? null;
+                    if (sepId !=null) pendingMap[String(sepId)] = ex;
+
+                })
+                setExumacoesPending(pendingMap);
+            }catch(e){
+                console.warn("Erro ao carregar exumações", e)
+            }
+            
 
             setSepultamentosAll(sepData);
             const visibleSepData = (sepData || []).filter(s=> !s.foi_exumado);
@@ -898,7 +915,7 @@ export default function VerMapa() {
                             <p><strong>Nº da sepultura:</strong> {numeroForModal}</p>
                             <p><strong>Status:</strong> {selectedCova.status ?? (isOccupiedForModal ? "ocupada" : "-")}</p>
                             <p><strong>Tipo:</strong> {tipoForModal}</p>
-                            <p><strong>Capacidade da sepultura:</strong> {capacidadeForModal}</p>
+                            <p><strong>Espaços disponíveis na sepultura:</strong> {capacidadeForModal}</p>
                             <p><strong>Observações:</strong> {observacoesForModal}</p>
 
                             {(modalSepList && modalSepList.length > 0) ? (
