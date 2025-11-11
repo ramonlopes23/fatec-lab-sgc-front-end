@@ -101,9 +101,13 @@ export default function Cadastros() {
     const [quadras, setQuadras] = useState([]);
     const [covas, setCovas] = useState([]);
     const [availableCovas, setAvailableCovas] = useState([]);
+
     const isCovaAvailable = c => {
+        const cap = Number(c?.capacidade ?? 0);
+        if (cap <= 0) return false;
         const s = String(c?.status ?? "").toLowerCase();
-        return !(s.includes("ocup") || s.includes("indispon"));
+        if (s.includes("lotad") || s.includes("indispon") || s.includes("reserv") || s.includes("particular")) return false;
+        return true;
     };
 
     useEffect(() => {
@@ -246,7 +250,7 @@ export default function Cadastros() {
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
 
-                payload.foi_exumado = false;               
+                payload.foi_exumado = false;
 
 
                 try {
@@ -258,48 +262,20 @@ export default function Cadastros() {
                         const cap = Number(foundCheck.capacidade ?? 0);
                         if (cap > 0) {
                             try {
-
-
                                 const res = await api.post("/sepultamentos", payload);
                                 const created = res?.data ?? null;
 
-                                try{
-                                    if(created) 
-                                        window.dispatchEvent(new CustomEvent("processoCriado", {detail:created}));
+                                try {
+                                    if (created)
+                                        window.dispatchEvent(new CustomEvent("processoCriado", { detail: created }));
 
-                                }catch(e){
-                                    {e}
+                                } catch (e) {
+                                    { e }
                                 }
-                                setRegistros(prev=>([...prev, {processType,data:payload}]));
+                                setRegistros(prev => ([...prev, { processType, data: payload }]));
                                 alert("Sepultamento cadastrado (pendente). Confirme na Dashboard para concluir.");
                                 setForm(sepultamento);
 
-                                /* await api.post("/sepultamentos", payload);
-
-                                const localId = `local-sep-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-                                const local = {
-                                    _type: "Sepultamento",
-                                    id: localId,
-                                    local: true,
-                                    nome_fal: payload.nome_sep,
-                                    data: payload.dh_sep,
-                                    payload: payload,
-                                    status: "Pendente"
-                                };
-
-                                try {
-                                    const exisiting = JSON.parse(localStorage.getItem("local_processos") || "[]");
-                                    localStorage.setItem("local_processos", JSON.stringify([local, ...exisiting]));
-                                } catch (e) {
-                                    console.warn("Erro ao salvar rascunho no localStorage", e)
-                                }
-
-                                setRegistros(prev => ([...prev, { processType, data: payload }]));
-
-                                try { window.dispatchEvent(new CustomEvent("processoCriadoLocal", { detail: local })); } catch (e) { e };
-
-                                alert("Sepultamento gerado. Confirme na Dashboard para efetivar.");
-                                setForm(sepultamento); */
                             } catch (err) {
                                 console.warn("Erro ao salvar sepultamento", err)
                                 alert("Erro ao salvar sepultamento")
