@@ -189,7 +189,7 @@ export default function Calendar({ sepultamentos = [], quadras = [], exumacoes =
 
     return (
         <Card style={{ marginTop: 16 }}>
-            <CardHeader>CALENDÁRIO DE SEPULTAMENTOS</CardHeader>
+            <CardHeader>CALENDÁRIO DE SEPULTAMENTOS E EXUMAÇÕES</CardHeader>
             <CardBody>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center" }}>

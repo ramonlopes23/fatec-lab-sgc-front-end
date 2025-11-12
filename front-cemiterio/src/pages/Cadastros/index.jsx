@@ -20,7 +20,7 @@ export default function Cadastros() {
         rg: "",
         profissao: "",
         estado_civil: "",
-        nacionalidade: "",
+        naturalidade: "",
         causa_mortis: "",
         nome_doutor: "",
         certidao_obito: "",
@@ -45,14 +45,51 @@ export default function Cadastros() {
         foi_exumado: false
     }
 
+    const [form, setForm] = useState(falecido);
+    const [processType, setProcessType] = useState("Cadastro de falecido");
+    const [registros, setRegistros] = useState([]);
+    const [falecidos, setFalecidos] = useState([]);
+    /* const [cpf, setCpf] = useState(value || "");
+    const [erro, setErro] = useState(""); */
+    const [searchFal, setSearchFal] = useState("");
+    const [filteredFalecidos, setFilteredFalecidos] = useState([]);
+    const [showFalList, setShowFalList] = useState(false);
+    const [busca, setBusca] = useState('');
+    const [cidades, setCidades] = useState([]);
+
+    useEffect(() => {
+        fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios')
+            .then(res => res.json())
+            .then(data => setCidades(data));
+    }, [])
+
+    const resultados = cidades.filter(c =>
+        c.nome.toLowerCase().includes(busca.toLowerCase())
+    )
+
     const cpfMask = value => {
-        return String(value || '')
-            .replace(/\D/g, '')
-            .slice(0, 11)
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-            .replace(/(-\d{2})\d?$/, '$1')
+        const cpf = String(value || '').replace(/\D/g, '');
+
+        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+        let soma = 0;
+        for (let i = 0; i < 9; i++) {
+            soma += parseInt(cpf[i]) * (10 - i);
+        }
+        let resto = (soma * 10) % 11;
+        if (resto === 10) resto = 0;
+        if (resto !== parseInt(cpf[9])) return false;
+
+        soma = 0;
+        for (let i = 0; i < 10; i++) {
+            soma += parseInt(cpf[i]) * (11 - i);
+        }
+        resto = (soma * 10) % 11
+        if (resto === 10) resto = 0;
+        if (resto !== parseInt(cpf[10])) return false;
+
+        return true;
+
     };
 
     const rgMask = value => {
@@ -76,16 +113,6 @@ export default function Cadastros() {
         return out;
     };
 
-
-
-    const [form, setForm] = useState(falecido);
-    const [processType, setProcessType] = useState("Cadastro de falecido");
-    const [registros, setRegistros] = useState([]);
-    const [falecidos, setFalecidos] = useState([]);
-
-    const [searchFal, setSearchFal] = useState("");
-    const [filteredFalecidos, setFilteredFalecidos] = useState([]);
-    const [showFalList, setShowFalList] = useState(false);
 
     useEffect(() => {
         if (!searchFal) {
@@ -130,7 +157,7 @@ export default function Cadastros() {
     }, []);
 
     const handleQuadraSepChange = (val) => {
-        setForm(prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
+        (prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
         setAvailableCovas(computeAvailableCovas(val, form.titulo_posse));
     };
 
@@ -165,11 +192,19 @@ export default function Cadastros() {
         const { name, value, type, checked } = e.target;
         const incoming = type === "checkbox" ? checked : value;
 
-        if (name === "cpf") {
+        const cpfFields = ["cpf", "doc_resp"];
+
+        if (cpfFields.includes(name)) {
             const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
-            updateFieldByName("cpf", digitsOnly)
+
+            const maskedCpf = digitsOnly
+                .replace(/^(\d{3})(\d)/, "$1.$2")
+                .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+                .replace(/\.(\d{3})(\d)/, ".$1-$2");
+            updateFieldByName(name, maskedCpf);
             return;
         }
+
         if (name === "rg") {
             const masked = rgMask(value);
             updateFieldByName("rg", masked)
@@ -643,8 +678,13 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
-                                            <label>Nacionalidade</label>
-                                            <Input name="nacionalidade" value={form.nacionalidade} onChange={handleChange} placeholder="Digite a nacionalidade do falecido" />
+                                            <label>Naturalidade</label>
+                                            <Input name="naturalidade" value={busca.nacionalidade} onChange={e => setBusca(e.target.value)} list="lista-cidades" placeholder="Digite a naturalidade do falecido" />
+                                            <datalist id="lista-cidades">
+                                                {resultados.map(c => (
+                                                    <option key={c.id} value={`${c.nome} - ${c?.microrregiao?.mesorregiao?.UF?.sigla || ''}`} />
+                                                ))}
+                                            </datalist>
                                         </Field>
 
                                         <Field>
@@ -678,7 +718,10 @@ export default function Cadastros() {
 
                                         <Field>
                                             <label>CPF do falecido</label>
-                                            <Input name="cpf" value={cpfMask(form.cpf)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
+                                            <Input name="cpf" value={form.cpf || ""} onChange={handleChange} onBlur={() => {
+                                                const cpfLimpo = form.cpf.replace(/\D/g, '');
+                                                if (!cpfMask(cpfLimpo)) alert("CPF do falecido inválido")
+                                            }} placeholder="000.000.000-00" />
                                         </Field>
 
                                         <Field>
@@ -703,7 +746,10 @@ export default function Cadastros() {
 
                                         <Field>
                                             <label>CPF do responsável</label>
-                                            <Input name="doc_resp" value={cpfMask(form.doc_resp)} onChange={handleChange} placeholder="000.000.000-00" maxLength={14} />
+                                            <Input name="doc_resp" value={form.doc_resp || ""} onChange={handleChange} onBlur={() => {
+                                                const cpfLimpo = form.doc_resp.replace(/\D/g, '');
+                                                if (!cpfMask(cpfLimpo)) alert("CPF do responsável inválido")
+                                            }} placeholder="000.000.000-00" />
                                         </Field>
 
                                         <Field>
