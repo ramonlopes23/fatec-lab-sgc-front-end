@@ -113,6 +113,21 @@ export default function Cadastros() {
         return out;
     };
 
+    const phoneMask = (value) => {
+        const digits = value.replace(/\D/g, '').slice(0, 11)
+
+        if (digits.length <= 10) {
+            return digits
+                .replace(/^(\d{2})(\d)/g, "($1) $2")
+                .replace(/(\d{4})(\d)/, "$1-$2")
+        } else {
+            return digits
+                .replace(/^(\d{2})(\d)/g, "($1) $2")
+                .replace()
+        }
+    }
+
+
 
     useEffect(() => {
         if (!searchFal) {
@@ -203,6 +218,13 @@ export default function Cadastros() {
                 .replace(/\.(\d{3})(\d)/, ".$1-$2");
             updateFieldByName(name, maskedCpf);
             return;
+        }
+
+        const phoneFields = ["tel_resp"];
+        if(phoneFields.includes(name)){
+            const masked = phoneMask(value);
+            updateFieldByName(name, masked);
+            return
         }
 
         if (name === "rg") {
@@ -327,7 +349,6 @@ export default function Cadastros() {
                 catch (err) {
                     console.error(err);
                     alert(`Erro ao cadastrar processo ${processType}`);
-
 
                 }
             }
@@ -754,7 +775,7 @@ export default function Cadastros() {
 
                                         <Field>
                                             <label>Contato do responsável</label>
-                                            <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" maxLength={14} />
+                                            <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" />
                                         </Field>
 
                                         <Field>

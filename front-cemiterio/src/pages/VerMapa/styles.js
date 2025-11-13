@@ -18,7 +18,7 @@ export const Title = styled.h2`
 `;
 
 export const QuadraWrapper = styled.div`
-  border: 1px solid #ddd;
+  border: 1px solid rgba(25,25,112,0.2);
   border-radius: 10px;
   padding: 14px;
   margin-top: 8px;

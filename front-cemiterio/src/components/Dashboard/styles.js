@@ -8,7 +8,7 @@ export const DashboardWrapper = styled.div`
 
 export const Card = styled.div`
   background-color: #fff;
-  border: 1px solid #d1d5db;
+  border: 1px solid rgba(25,25,112,0.2);
   border-radius: 12px;
   padding: 1rem;
   width: 100%;
