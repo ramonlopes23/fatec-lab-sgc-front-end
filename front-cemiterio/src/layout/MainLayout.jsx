@@ -19,8 +19,8 @@ export default function MainLayout ({children}){
             </SidebarContainer>
             <Content isSidebarOpen={isSidebarOpen}>
                 <Header userName="Ramon" onMenuClick={toggleSidebarMenu} />
-                <PageContent>{children}</PageContent>
-               
+{                <PageContent>{children}</PageContent>
+}               
             </Content>
       
         </LayoutContainer>
