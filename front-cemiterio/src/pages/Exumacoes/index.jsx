@@ -31,7 +31,7 @@ export default function Exumacoes() {
 
     return (
         <div>
-            <MainLayout />
+            <MainLayout>
             <Container>
                 <FormStyled>
                     <Title>BUSCAR EXUMAÇÕES</Title>
@@ -50,9 +50,6 @@ export default function Exumacoes() {
                             <SmallSelect value={filters.quadra} onChange={(e) => setFilters(prev => ({ ...prev, quadra: e.target.value }))}>
                                 <option value="">Selecione a quadra</option>
                             </SmallSelect>
-                        </ColumnLeft>
-
-                        <ColumnLeft style={{ flex: 1 }}>
                             <SmallSelect value={filters.tipo_sep} onChange={(e) => setFilters(prev => ({ ...prev, tipo_sep: e.target.value }))}>
                                 <option value="">Selecione o tipo de sepultura</option>
                                 <option value="cova">Cova</option>
@@ -65,8 +62,8 @@ export default function Exumacoes() {
 
                     <TwoCols style={{ marginTop: 12 }}>
                         <Field style={{ display: "flex", gap: 8 }}>
-                            <SmallInput type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
-                            <SmallInput type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
+                            <SmallInput style={{width:110}} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
+                            <SmallInput style={{width:110}} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
 
                         </Field>
                         <Field
@@ -136,6 +133,7 @@ export default function Exumacoes() {
 
                 </FormStyled>
             </Container>
+            </MainLayout >
             <Footer />
         </div>
     )

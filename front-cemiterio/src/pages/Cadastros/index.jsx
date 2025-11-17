@@ -172,7 +172,7 @@ export default function Cadastros() {
     }, []);
 
     const handleQuadraSepChange = (val) => {
-        (prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
+        setForm(prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
         setAvailableCovas(computeAvailableCovas(val, form.titulo_posse));
     };
 
@@ -580,6 +580,7 @@ export default function Cadastros() {
                                                     ))}
                                                 </Select>
                                             </Field>
+                                            
                                             <Field>
                                                 <label>Nº da sepultura</label>
                                                 <Select name="num_sepultura_sep" value={form.num_sepultura_sep ?? ""} onChange={handleChange}>
