@@ -197,6 +197,7 @@ export default function Exumacoes() {
                                     {quadras.map(q=>(
                                         <option key={String(q.id)} value={String(q.id)}>{q.num_quadra ? `Quadra ${q.num_quadra}`:q.nome||`Quadra ${q.id}`}</option>
                                     ))}
+                                    {/*A fazer*/}
                                 </SmallSelect>
                                 <SmallSelect value={filters.tipo_sep} onChange={(e) => setFilters(prev => ({ ...prev, tipo_sep: e.target.value }))}>
                                     <option value="">Selecione o tipo de sepultura</option>
