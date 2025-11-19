@@ -6,7 +6,7 @@ import Configurar from "../pages/Configurar";
 import Registros from "../pages/Registros";
 import VerMapa from "../pages/VerMapa";
 import Calendario from "../pages/Calendario";
-import Exumacoes from "../pages/Exumacoes";
+import Relatorios from "../pages/Relatorios";
 
 export default function AppRoutes(){
     return(
@@ -18,7 +18,7 @@ export default function AppRoutes(){
             <Route path='/configurar' element={<Configurar />} />
             <Route path='/registros' element={<Registros />} />
             <Route path='/vermapa' element={<VerMapa />} />
-            <Route path='/exumacoes' element={<Exumacoes />} />
+            <Route path='/relatorios' element={<Relatorios />} />
         </Routes>
     );
 }

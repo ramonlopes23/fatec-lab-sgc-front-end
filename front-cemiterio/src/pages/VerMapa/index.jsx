@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import MainLayout from "../../layout/MainLayout";
-import Footer from "../../components/Footer";
+import MainLayout from "../../../layout/MainLayout";
+import Footer from "../../../components/Footer";
 import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
-import api from "../../services/api";
+import api from "../../../services/api";
 import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
 
 

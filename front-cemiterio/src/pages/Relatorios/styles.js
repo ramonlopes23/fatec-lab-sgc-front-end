@@ -280,3 +280,34 @@ export const Input = styled.input`
     box-shadow: 0 2px 8px rgba(123,99,255,0.08);
   }
 `;
+
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background: rgba(0,0,0,0.5);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background: #fff;
+  padding: 20px;
+  height:42vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  width: 500px;
+`;
+
+export const ModalGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom:20px;
+`;
+

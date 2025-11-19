@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
-import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols } from "./styles"
-import { FaFileCsv, FaFileExcel, FaFilePdf, FaSearch } from "react-icons/fa";
+import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn } from "./styles"
+import { FaFileCsv, FaFileExcel, FaFilePdf, FaSearch, FaEye } from "react-icons/fa";
+import api from "../../services/api";
 
 
 export default function Exumacoes() {
@@ -38,7 +39,7 @@ export default function Exumacoes() {
             ]);
             setExumacoes(Array.isArray(rExu.data) ? rExu.data : []);
             setQuadras(Array.isArray(rQuadras.data) ? rQuadras.data : []);
-            setQuadras(Array.isArray(rCovas.data) ? rCovas.data : []);
+            setCovas(Array.isArray(rCovas.data) ? rCovas.data : []);
             setPage(1);
         } catch (err) {
             console.error("Erro ao carregar exumações/quadras/covas", err);
@@ -66,10 +67,10 @@ export default function Exumacoes() {
 
         return exumacoes.filter(item => {
             const nome = String(item.nome_fal || "").toLowerCase();
-            if (s && !nome.includes(S)) return false;
+            if (s && !nome.includes(s)) return false;
 
             if (filters.quadra) {
-                const q = String(item.num_sepultura_sep ?? "");
+                const q = String(item.quadra_sep ?? "");
                 if (q !== String(filters.quadra)) return false;
             }
 
@@ -115,7 +116,7 @@ export default function Exumacoes() {
     }
 
     const exportCSV = () => {
-        const row = filtered.map(e => ({
+        const rows = filtered.map(e => ({
             Nome: e.nome_fal || "",
             "Data exumação": e.dh_exu || "",
             "Quadra": e.quadra_sep ?? "",
@@ -146,21 +147,22 @@ export default function Exumacoes() {
         <html><head><title>Exumações</title>
         <style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:8px}</style>
         </head><body>
-        <h2>Exumações</h2>
+        <h2>Exumações</h2>        
+        <p>A Secretaria de Serviços Urbanos, por meio da Administração do Cemitério Municipal, informa que foram realizadas exumações no período de [data/período], em conformidade com as normas sanitárias e regulamentações vigentes.
+As exumações têm como objetivo garantir a adequada gestão dos espaços do cemitério, atender solicitações de familiares e cumprir prazos legais para renovação ou liberação de sepulturas.</p>
         <table>
         <thead>
           <tr>
-            <th>Nome</th><th>Data exumação</th><th>Quadra</th><th>Sepultura</th><th>Destinação</th><th>Responsável</th>
+            <th>Nome</th><th>Data exumação</th><th>Quadra</th><th>Sepultura</th><th>Destinação</th>
           </tr>
         </thead>
         <tbody>
         ${filtered.map(e => `<tr>
-            <td>${e.nome_fal || ""}</td>
+            <td>${e.nome_sep || ""}</td>
             <td>${e.dh_exu || ""}</td>
             <td>${e.quadra_sep ?? ""}</td>
             <td>${e.num_sepultura_sep ?? ""}</td>
             <td>${e.destino || ""}</td>
-            <td>${e.coveiro || ""}</td>
             </tr>`).join("")}
         </tbody>
         </table>
@@ -177,9 +179,14 @@ export default function Exumacoes() {
     return (
         <div>
             <MainLayout>
+                <SmallSelect style={{ position: "relative", left: 940, borderRadius: 8 }}>
+                    <option value="falecidos">Lista de sepultamentos </option>
+                    <option value="exumados">Lista de exumações </option>
+                </SmallSelect>
                 <Container>
                     <FormStyled>
-                        <Title>BUSCAR EXUMAÇÕES</Title>
+                        <Title>BUSCAR RELATÓRIOS</Title>
+
                         <SearchBar>
                             <SearchWrapper>
                                 <SearchInput placeholder="Pesquisar por nome do falecido" value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); applyFilters(); }} />
@@ -192,12 +199,12 @@ export default function Exumacoes() {
 
                         <TwoCols style={{ marginTop: 12 }}>
                             <ColumnLeft style={{ flex: 1 }}>
-                                <SmallSelect value={filters.quadra} onChange={(e) => setFilters(prev => ({ ...prev, quadra: e.target.value, sepultura:"" }))}>
+                                <SmallSelect value={filters.quadra} onChange={(e) => setFilters(prev => ({ ...prev, quadra: e.target.value, sepultura: "" }))}>
                                     <option value="">Selecione a quadra</option>
-                                    {quadras.map(q=>(
-                                        <option key={String(q.id)} value={String(q.id)}>{q.num_quadra ? `Quadra ${q.num_quadra}`:q.nome||`Quadra ${q.id}`}</option>
+                                    {quadras.map(q => (
+                                        <option key={String(q.id)} value={String(q.id)}>{q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}</option>
                                     ))}
-                                    {/*A fazer*/}
+
                                 </SmallSelect>
                                 <SmallSelect value={filters.tipo_sep} onChange={(e) => setFilters(prev => ({ ...prev, tipo_sep: e.target.value }))}>
                                     <option value="">Selecione o tipo de sepultura</option>
@@ -217,7 +224,7 @@ export default function Exumacoes() {
                             </Field>
                             <Field
                                 style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-                                <BtnPrimary type="button" onClick={() => { }}>
+                                <BtnPrimary type="button" onClick={() => { applyFilters(); setPage(1); }}>
                                     Aplicar filtros
                                 </BtnPrimary>
                             </Field>
@@ -240,19 +247,21 @@ export default function Exumacoes() {
 
                                         <tr>
                                             <td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#666" }}>
-                                                Nenhuma exumação encontrada.
+                                                {isLoading ? "Carregando..." : "Nenhuma exumação encontrada."}
                                             </td>
                                         </tr>
                                     ) : (
                                         paginated.map((e, i) => (
                                             <tr key={e.id ?? i} style={{ borderBottom: "1px solid #f1f1f1" }}>
-                                                <td style={{ padding: "12px 16px" }}>{e.nome_fal || "-"}</td>
+                                                <td style={{ padding: "12px 16px" }}>{e.nome_sep || "-"}</td>
                                                 <td style={{ padding: "12px 16px" }}>{e.dh_exu ? new Date(e.dh_exu).toLocaleDateString() : "-"}</td>
                                                 <td style={{ padding: "12px 16px" }}>{`${e.quadra_sep ?? e.num_quadra ?? "-"} - ${e.num_sepultura_sep ?? ""}`}</td>
                                                 <td style={{ padding: "12px 16px" }}>{e.destino || "-"}</td>
                                                 <td style={{ padding: "12px 16px" }}>{e.coveiro || "-"}</td>
                                                 <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                                                    <button><FaSearch /></button>
+                                                    <IconBtn type="button" onClick={() => handleView(e)} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
+                                                        <FaEye />
+                                                    </IconBtn>
                                                 </td>
                                             </tr>
 
@@ -263,13 +272,13 @@ export default function Exumacoes() {
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
                             <div style={{ display: "flex", gap: 12 }}>
-                                <button type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#b80000", color: "#fff", border: "none", cursor: "pointer" }}>
+                                <button onClick={exportPDF} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#b80000", color: "#fff", border: "none", cursor: "pointer" }}>
                                     <FaFilePdf />Exportar como PDF
                                 </button>
                                 <button type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#1D6f42", color: "#fff", border: "none", cursor: "pointer" }}>
                                     <FaFileExcel /> Exportar como Excel
                                 </button>
-                                <button type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#0b72d2ff", color: "#fff", border: "none", cursor: "pointer" }}>
+                                <button onClick={exportCSV} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#0b72d2ff", color: "#fff", border: "none", cursor: "pointer" }}>
                                     <FaFileCsv /> Exportar como CSV
                                 </button>
                             </div>
@@ -285,6 +294,29 @@ export default function Exumacoes() {
 
                     </FormStyled>
                 </Container>
+
+                {modalOpen && modalForm && (
+                    <ModalOverlay>
+                        <ModalContent>
+                            <Title>
+                                DETALHES DA EXUMAÇÃO
+                            </Title>
+                            <ModalGrid>
+                                <Label>Nome: <div>{modalForm.nome_sep || "-"}</div></Label>
+                                <Label>Data e hora: <div>{modalForm.dh_exu ? new Date(modalForm.dh_exu).toLocaleString() : "-"}</div></Label>
+                                <Label>Quadra: <div>{modalForm.quadra_sep ?? "-"}</div></Label>
+                                <Label>Sepultura: <div>{modalForm.num_sepultura_sep || "-"}</div></Label>
+                                <Label>Destinação: <div>{modalForm.destino || "-"}</div></Label>
+                                <Label>Responsável: <div>{modalForm.coveiro || "-"}</div></Label>
+                                <Label>Observações: <div>{modalForm.obs_exu || "-"}</div></Label>
+                            </ModalGrid>
+
+                            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+                                <BtnPrimaryClose type="button" onClick={closeModal}>Fechar</BtnPrimaryClose>
+                            </div>
+                        </ModalContent>
+                    </ModalOverlay>
+                )}
             </MainLayout >
             <Footer />
         </div>
