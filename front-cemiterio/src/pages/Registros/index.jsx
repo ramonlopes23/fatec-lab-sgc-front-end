@@ -307,15 +307,22 @@ export default function Registros() {
 
             <TwoCols>
               <Field>
-                <SmallInput style={{width:225}} placeholder="Digite o número da quadra" value={pendingFilters.quadra} onChange={(e) => setPendingFilters(prev => ({ ...prev, quadra: e.target.value }))} />
+                <SmallInput style={{ width: 225 }} placeholder="Digite o número da quadra" value={pendingFilters.quadra} onChange={(e) => setPendingFilters(prev => ({ ...prev, quadra: e.target.value }))} />
 
-                <SmallInput style={{width:225}} placeholder="Digite o número da sepultura" value={pendingFilters.sepultura} onChange={(e) => setPendingFilters(prev => ({ ...prev, sepultura: e.target.value }))} />
-                <BtnPrimary type="button" onClick={() => {
+                <SmallInput style={{ width: 225 }} placeholder="Digite o número da sepultura" value={pendingFilters.sepultura} onChange={(e) => setPendingFilters(prev => ({ ...prev, sepultura: e.target.value }))} />
+
+
+              </Field>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
+                <BtnPrimary style={{marginBottom:10}} type="button" onClick={() => {
                   setFilters(pendingFilters);
                   setPage(1);
                 }}>Aplicar Filtros</BtnPrimary>
-              </Field>
+              </div>
             </TwoCols>
+
+
+
 
             <TableWrapper>
               <TableScroller>

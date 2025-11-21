@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
-import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn } from "./styles"
+import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn, TableWrapper } from "./styles"
 import { FaFileCsv, FaFileExcel, FaFilePdf, FaSearch, FaEye } from "react-icons/fa";
 import api from "../../services/api";
 
 
-export default function Exumacoes() {
+export default function Relatorios() {
 
     const [search, setSearch] = useState("");
     const [filters, setFilters] = useState({
@@ -230,7 +230,7 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                             </Field>
                         </TwoCols>
 
-                        <div style={{ marginTop: 20, borderRadius: 8, background: "#fff", padding: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                        <TableWrapper>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                 <thead style={{ background: "#191970", color: "#fff" }}>
                                     <tr>
@@ -268,7 +268,7 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                         ))
                                     )}</tbody>
                             </table>
-                        </div>
+                        </TableWrapper>
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
                             <div style={{ display: "flex", gap: 12 }}>
@@ -283,16 +283,44 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                 </button>
                             </div>
 
-                            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                                <button type="button" onClick={() => setPage(1)} disabled={currentPage === 1}>«</button>
-                                <button type="button" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>‹</button>
-                                <span style={{ minWidth: 40, textAlign: "center" }}>{currentPage}/{totalPages}</span>
-                                <button type="button" onClick={() => setPage(Math.max(1, currentPage + 1))} disabled={currentPage === totalPages}>›</button>
-                                <button type="button" onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>»</button>
-                            </div>
+
                         </div>
 
                     </FormStyled>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 16 }}>
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(1)} disabled={currentPage === 1}>«</button>
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>‹</button>
+                        {(() => {
+                            const out = [];
+                            const maxButtons = 7;
+                            let start = Math.max(1, page - 3);
+                            let end = Math.min(totalPages, start + maxButtons - 1);
+                            if (end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+
+                            for (let p = start; p <= end; p++) {
+                                out.push(
+                                    <button
+                                        key={p}
+                                        onClick={() => setPage(p)}
+                                        aria-current={p === currentPage ? "page" : undefined}
+                                        style={{
+                                            padding: "8px 10px",
+                                            borderRadius: 8,
+                                            border: p === currentPage ? "2px solid #1b1464" : "1px solid #ddd",
+                                            background: p === currentPage ? "#1b1464" : "#fff",
+                                            color: p === currentPage ? "#fff" : "#222",
+                                            cursor: "pointer"
+                                        }}
+                                    >
+                                        {p}
+                                    </button>
+                                );
+                            }
+                            return out;
+                        })()}
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(Math.max(1, currentPage + 1))} disabled={currentPage === totalPages}>›</button>
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(totalPages)} disabled={currentPage === totalPages}>»</button>
+                    </div>
                 </Container>
 
                 {modalOpen && modalForm && (
