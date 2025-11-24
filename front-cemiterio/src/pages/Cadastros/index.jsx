@@ -42,6 +42,7 @@ export default function Cadastros() {
         num_sepultura_sep: "",
         coveiro_sep: "",
         obs_sep: "",
+        taxa: "",
         foi_exumado: false
     }
 
@@ -221,7 +222,7 @@ export default function Cadastros() {
         }
 
         const phoneFields = ["tel_resp"];
-        if(phoneFields.includes(name)){
+        if (phoneFields.includes(name)) {
             const masked = phoneMask(value);
             updateFieldByName(name, masked);
             return
@@ -580,7 +581,7 @@ export default function Cadastros() {
                                                     ))}
                                                 </Select>
                                             </Field>
-                                            
+
                                             <Field>
                                                 <label>Nº da sepultura</label>
                                                 <Select name="num_sepultura_sep" value={form.num_sepultura_sep ?? ""} onChange={handleChange}>
@@ -600,6 +601,18 @@ export default function Cadastros() {
                                             <Field>
                                                 <label>Tipo de sepultura: </label>
                                                 <InputCova value={tipoCovaSelecionada || "-"} />
+                                            </Field>
+
+                                            <Field>
+                                                <label>Taxa de sepultamento</label>
+                                                <Select name="taxa" value={form.taxa} onChange={handleChange}>
+                                                    <option value="">Selecione o tipo de taxa</option>
+                                                    <option value="crianca">CRIANÇA - R$56,12</option>
+                                                    <option value="crianca_fora">CRIANÇA (FORA DO MUNICÍPIO) - R$224,54</option>
+                                                    <option value="adulto_terra">ADULTO (TERRA) - R$112,27</option>
+                                                    <option value="adulto_fora">ADULTO (FORA DO MUNICÍPIO) - R$430,42</option>
+                                                    <option value="adulto_laje">ADULTO LAJE - R$280,71</option>
+                                                </Select>
                                             </Field>
 
                                         </TwoCols>

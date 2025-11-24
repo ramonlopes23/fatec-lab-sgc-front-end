@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
-import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn, TableWrapper } from "./styles"
+import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn, TableWrapper, Table } from "./styles"
 import { FaFileCsv, FaFileExcel, FaFilePdf, FaSearch, FaEye } from "react-icons/fa";
 import api from "../../services/api";
 
@@ -9,6 +9,7 @@ import api from "../../services/api";
 export default function Relatorios() {
 
     const [search, setSearch] = useState("");
+    const [tipoLista, setTipoLista] = useState("exumacoes");
     const [filters, setFilters] = useState({
         quadra: "",
         sepultura: "",
@@ -17,6 +18,7 @@ export default function Relatorios() {
         data_fim: ""
     });
     const [exumacoes, setExumacoes] = useState([]);
+    const [sepultamentos, setSepultamentos] = useState([]);
     const [page, setPage] = useState(1);
     const [covas, setCovas] = useState([]);
     const [quadras, setQuadras] = useState([])
@@ -32,12 +34,14 @@ export default function Relatorios() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const [rExu, rQuadras, rCovas] = await Promise.all([
+            const [rExu, rSep, rQuadras, rCovas] = await Promise.all([
                 api.get("/exumacoes").catch(() => ({ data: [] })),
+                api.get("/sepultamentos").catch(() => ({ data: [] })),
                 api.get("/quadras").catch(() => ({ data: [] })),
                 api.get("/covas").catch(() => ({ data: [] })),
             ]);
             setExumacoes(Array.isArray(rExu.data) ? rExu.data : []);
+            setSepultamentos(Array.isArray(rSep.data) ? rSep.data : []);
             setQuadras(Array.isArray(rQuadras.data) ? rQuadras.data : []);
             setCovas(Array.isArray(rCovas.data) ? rCovas.data : []);
             setPage(1);
@@ -94,10 +98,40 @@ export default function Relatorios() {
         });
     }, [exumacoes, search, filters]);
 
+    const sepFiltered = useMemo(() => {
+        const s = String(search || "").trim().toLowerCase();
+        const start = filters.data_inicio ? new Date(filters.data_inicio) : null;
+        const end = filters.data_fim ? new Date(filters.data_fim) : null;
+        if (end) {
+            end.setHours(23, 59, 59, 999)
+        }
 
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+        return sepultamentos.filter(item => {
+            const nome = String(item.nome_sep || "").toLowerCase();
+            if (s && !nome.includes(s)) return false;
+            if ((start || end) && item.dh_sep) {
+                const d = new Date(item.dh_sep);
+                if (start && d < start) return false;
+                if (end && d > end) return false;
+            }
+
+            if (filters.quadra) {
+                const q = String(item.quadra_sep ?? "");
+                if (q !== String(filters.quadra)) return false;
+            }
+
+            if (filters.sepultura) {
+                const n = String(item.num_sepultura_sep ?? "");
+                if (n !== String(filters.sepultura)) return false;
+            }
+            return true;
+        })
+    }, [sepultamentos, search, filters]);
+
+
+    const totalPages = Math.max(1, Math.ceil((tipoLista === "exumacoes" ? filtered.length : sepFiltered.length) / PAGE_SIZE));
     const currentPage = Math.min(Math.max(1, Number(page || 1)), totalPages);
-    const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const paginated = (tipoLista === "exumacoes" ? filtered : sepFiltered).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     useEffect(() => {
         if (page > totalPages) setPage(totalPages);
@@ -176,12 +210,13 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
     }
 
 
+    console.log("tipoLista:", tipoLista, "paginated[0]: ", paginated[0]);
     return (
         <div>
             <MainLayout>
-                <SmallSelect style={{ position: "relative", left: 940, borderRadius: 8 }}>
-                    <option value="falecidos">Lista de sepultamentos </option>
-                    <option value="exumados">Lista de exumações </option>
+                <SmallSelect value={tipoLista} onChange={(e) => { setTipoLista(e.target.value); setPage(1) }} style={{ position: "relative", left: 940, borderRadius: 8 }}>
+                    <option value="sepultamentos">Lista de sepultamentos </option>
+                    <option value="exumacoes">Lista de exumações </option>
                 </SmallSelect>
                 <Container>
                     <FormStyled>
@@ -233,53 +268,75 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                         <TableWrapper>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
                                 <thead style={{ background: "#191970", color: "#fff" }}>
-                                    <tr>
-                                        <th style={{ textAlign: "left", padding: "12px 16px" }}>Falecido</th>
-                                        <th style={{ textAlign: "left", padding: "12px 16px" }}>Data da exumação</th>
-                                        <th style={{ textAlign: "left", padding: "12px 16px" }}>Quadra/Sepultura</th>
-                                        <th style={{ textAlign: "left", padding: "12px 16px" }}>Destinação</th>
-                                        <th style={{ textAlign: "left", padding: "12px 16px" }}>Responsável</th>
-                                        <th style={{ textAlign: "center", padding: "12px 16px", width: 80 }}>Ações</th>
-                                    </tr>
+                                    {tipoLista === "exumacoes" ? (
+                                        <tr>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Falecido</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Data da exumação</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Quadra - Sepultura</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Destinação</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Responsável</th>
+                                            <th style={{ textAlign: "center", padding: "12px 16px", width: 80 }}>Ações</th>
+                                        </tr>
+                                    ) : (
+                                        <tr>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Falecido</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Data do Sepultamento</th>
+                                            <th style={{ textAlign: "left", padding: "12px 16px" }}>Taxa</th>
+                                            <th style={{ textAlign: "center", padding: "12px 16px", width: 80 }}>Ações</th>
+                                        </tr>
+                                    )}
                                 </thead>
                                 <tbody>
                                     {paginated.length === 0 ? (
 
                                         <tr>
                                             <td colSpan={6} style={{ padding: 24, textAlign: "center", color: "#666" }}>
-                                                {isLoading ? "Carregando..." : "Nenhuma exumação encontrada."}
+                                                {isLoading ? "Carregando..." : (tipoLista === "exumacoes" ? "Nenhuma exumação encontrada." : "Nenhum sepultamento encontrado.")}
                                             </td>
                                         </tr>
                                     ) : (
                                         paginated.map((e, i) => (
-                                            <tr key={e.id ?? i} style={{ borderBottom: "1px solid #f1f1f1" }}>
-                                                <td style={{ padding: "12px 16px" }}>{e.nome_sep || "-"}</td>
-                                                <td style={{ padding: "12px 16px" }}>{e.dh_exu ? new Date(e.dh_exu).toLocaleDateString() : "-"}</td>
-                                                <td style={{ padding: "12px 16px" }}>{`${e.quadra_sep ?? e.num_quadra ?? "-"} - ${e.num_sepultura_sep ?? ""}`}</td>
-                                                <td style={{ padding: "12px 16px" }}>{e.destino || "-"}</td>
-                                                <td style={{ padding: "12px 16px" }}>{e.coveiro || "-"}</td>
-                                                <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                                                    <IconBtn type="button" onClick={() => handleView(e)} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
-                                                        <FaEye />
-                                                    </IconBtn>
-                                                </td>
-                                            </tr>
+                                            tipoLista === "exumacoes" ? (
+                                                <tr key={e.id ?? `exu-${i}`} style={{ borderBottom: "1px solid #f1f1f1" }}>
+                                                    <td style={{ padding: "12px 16px" }}>{e.nome_sep || "-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{e.dh_exu ? new Date(e.dh_exu).toLocaleDateString() : "-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{`${e.quadra_sep ?? e.num_quadra ?? "-"} - ${e.num_sepultura_sep ?? ""}`}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{e.destino || "-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{e.coveiro || "-"}</td>
+                                                    <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                                                        <IconBtn type="button" onClick={() => handleView(e)}>
+                                                            <FaEye />
+                                                        </IconBtn>
+                                                    </td>
+                                                </tr>
 
-                                        ))
+                                            ) : (
+                                                <tr key={e.id ?? `sep-${i}`} style={{ borderBottom: "1px solid #f1f1f1" }}>
+                                                    <td style={{ padding: "12px 16px" }}>{e.nome_sep || "-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{e.dh_sep ? new Date(e.dh_sep).toLocaleDateString() : "-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{"-"}</td>
+                                                    <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                                                        <IconBtn type="button" onClick={() => handleView(e)}>
+                                                            <FaEye />
+                                                        </IconBtn>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )
                                     )}</tbody>
                             </table>
                         </TableWrapper>
 
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
                             <div style={{ display: "flex", gap: 12 }}>
-                                <button onClick={exportPDF} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#b80000", color: "#fff", border: "none", cursor: "pointer" }}>
-                                    <FaFilePdf />Exportar como PDF
+                                <button title="Exportar como PDF" aria-label="Exportar como PDF" onClick={exportPDF} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#b80000", color: "#fff", border: "none", cursor: "pointer" }}>
+                                    <FaFilePdf />
                                 </button>
-                                <button type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#1D6f42", color: "#fff", border: "none", cursor: "pointer" }}>
-                                    <FaFileExcel /> Exportar como Excel
+                                <button title="Exportar como Excel" aria-label="Exportar como Excel" type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#1D6f42", color: "#fff", border: "none", cursor: "pointer" }}>
+                                    <FaFileExcel />
                                 </button>
-                                <button onClick={exportCSV} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#0b72d2ff", color: "#fff", border: "none", cursor: "pointer" }}>
-                                    <FaFileCsv /> Exportar como CSV
+                                <button title="Exportar como CSV" aria-label="Exportar como CSV" onClick={exportCSV} type="button" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#0b72d2ff", color: "#fff", border: "none", cursor: "pointer" }}>
+                                    <FaFileCsv />
                                 </button>
                             </div>
 

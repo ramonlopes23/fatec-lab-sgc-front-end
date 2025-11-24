@@ -240,7 +240,7 @@ export const IconBtn = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: #fff;
   border: 1px solid rgba(15,13,58,0.08);
   color: #15142e;
   cursor: pointer;
