@@ -105,11 +105,15 @@ export default function Relatorios() {
 
     const filtered = useMemo(() => {
         const s = String(search || "").trim().toLowerCase();
-        const start = filters.data_inicio ? new Date(filters.data_inicio) : null;
-        const end = filters.data_fim ? new Date(filters.data_fim) : null;
-        if (end) {
-            end.setHours(23, 59, 59, 999);
-        }
+        const start = filters.data_inicio ? (() => {
+            const [y, m, d] = String(filters.data_inicio).split("-").map(Number);
+            return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+        })() : null;
+
+        const end = filters.data_fim ? (() => {
+            const [y, m, d] = String(filters.data_fim).split("-").map(Number);
+            return new Date(y, (m || 1) - 1, d || 1, 23, 59, 59, 999);
+        })() : null;
 
         return exumacoes.filter(item => {
             const nome = String(item.nome_fal || "").toLowerCase();
@@ -132,8 +136,9 @@ export default function Relatorios() {
 
             if ((start || end) && item.dh_exu) {
                 const d = new Date(item.dh_exu);
-                if (start && d < start) return false;
-                if (end && d > end) return false
+/*              const itemDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+ */             if (start && d < start) return false;
+                if (end && d > end) return false;
             }
 
             return true;
@@ -142,11 +147,15 @@ export default function Relatorios() {
 
     const sepFiltered = useMemo(() => {
         const s = String(search || "").trim().toLowerCase();
-        const start = filters.data_inicio ? new Date(filters.data_inicio) : null;
-        const end = filters.data_fim ? new Date(filters.data_fim) : null;
-        if (end) {
-            end.setHours(23, 59, 59, 999)
-        }
+        const start = filters.data_inicio ? (() => {
+            const [y, m, d] = String(filters.data_inicio).split("-").map(Number);
+            return new Date(y, (m || 1) - 1, d || 1, 0, 0, 0, 0);
+        })() : null;
+
+        const end = filters.data_fim ? (() => {
+            const [y, m, d] = String(filters.data_fim).split("-").map(Number);
+            return new Date(y, (m || 1) - 1, d || 1, 23, 59, 59, 999);
+        })() : null;
 
         return sepultamentos.filter(item => {
             const nome = String(item.nome_sep || "").toLowerCase();
@@ -292,39 +301,37 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                     <option value="gaveta">Gaveta</option>
                                     <option value="nicho">Nicho</option>
                                 </SmallSelect>
-                            </ColumnLeft>
-                        </TwoCols>
 
 
-                        <TwoCols style={{ marginTop: 12 }}>
-                            <ColumnLeft style={{ flex: 1 }}>
                                 <Field style={{ display: "flex", gap: 8 }}>
                                     <SmallInput style={{ width: 110 }} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
                                     <SmallInput style={{ width: 110 }} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
 
                                 </Field>
+
                             </ColumnLeft>
 
                             <ColumnRight style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-                                <div style={{ background: "#fafafa", border: "1px solid #e6e6e6", padding: 12, borderRadius: 8, minWidth: 350, textAlign: "left" }}>
+                                <div style={{ background: "#fafafa", border: "1px solid #e6e6e6", padding: 12, borderRadius: 8, minWidth: 380, textAlign: "left" }}>
                                     <div style={{ fontSize: 14, color: "#666" }}>Valor total das taxas</div>
                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
                                         <div style={{ fontSize: 25, fontWeight: 600, marginTop: 6, color: "#191970" }}>
                                             {formatCurrency((filters.data_inicio || filters.data_fim) ? taxaSomaPeriodo : taxaSomaTotal)}
                                         </div>
-                                        <div style={{ fontSize: 25, fontWeight: 600, color: "#191970", marginTop:6 }}>
-                                            <div style={{ fontSize: 14, color: "#666" }}>Número de sepultados</div>
+                                        <div style={{ fontSize: 25, fontWeight: 600, color: "#191970", marginTop: 6 }}>
+                                            <div style={{ fontSize: 14, color: "#666", fontWeight: 400 }}>Número de sepultados</div>
                                             {((filters.data_inicio || filters.data_fim) ? sepCountPeriodo : sepCountTotal)} sepultados
                                         </div>
                                     </div>
-                                    
-                                    <div style={{ fontSize: 16, color: "#666", marginTop: 6 }}>
+
+                                    <div style={{ fontSize: 16, color: "#666" }}>
                                         {filters.data_inicio || filters.data_fim ? `Período: ${filters.data_inicio || "..."}->${filters.data_fim || "..."}` : "Período: Total"}
 
                                     </div>
                                 </div>
                             </ColumnRight>
                         </TwoCols>
+
 
                         <TableWrapper>
                             <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -465,6 +472,6 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                 )}
             </MainLayout >
             <Footer />
-        </div>
+        </div >
     )
 }
