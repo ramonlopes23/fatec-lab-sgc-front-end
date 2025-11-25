@@ -42,9 +42,32 @@ export default function Cadastros() {
         num_sepultura_sep: "",
         coveiro_sep: "",
         obs_sep: "",
-        taxa: "",
+        taxa:"",
+        taxa_valor:0,
         foi_exumado: false
     }
+
+    const taxa_map ={
+        crianca:56.12,
+        crianca_fora:224.54,
+        adulto_terra:112.27,
+        adulto_fora:430.42,
+        adulto_laje:280.71
+    }
+
+    const taxa_label = {
+        crianca:"CRIANÇA - R$56,12",
+        crianca_fora:"CRIANÇA (FORA DO MUNICÍPIO) - R$224,54",
+        adulto_terra:"ADULTO (TERRA) - R$112,27",
+        adulto_fora:"ADULTO (FORA DO MUNICÍPIO) - R$430,42",
+        adulto_laje:"ADULTO LAJE - R$280,71"
+    }
+
+    const formatCurrency = (v) =>{
+        if(v == null ) return "-";
+        return Number(v).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+    }
+
 
     const [form, setForm] = useState(falecido);
     const [processType, setProcessType] = useState("Cadastro de falecido");
@@ -221,6 +244,13 @@ export default function Cadastros() {
             return;
         }
 
+        if(name=== "taxa"){
+            const valor = taxa_map[value] ?? 0;
+            updateFieldByName("taxa", value);
+            updateFieldByName("taxa_valor", valor);
+            return;
+        }
+
         const phoneFields = ["tel_resp"];
         if (phoneFields.includes(name)) {
             const masked = phoneMask(value);
@@ -307,6 +337,9 @@ export default function Cadastros() {
                     const f = falecidos.find(x => Number(x.id) === Number(payload.falecido));
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
                 }
+
+                payload.taxa_valor = Number(payload.taxa_valor ?? taxa_map[payload.taxa] ?? 0);
+                payload.taxa_label = taxa_label[payload.taxa] ?? "";    
 
                 payload.foi_exumado = false;
 

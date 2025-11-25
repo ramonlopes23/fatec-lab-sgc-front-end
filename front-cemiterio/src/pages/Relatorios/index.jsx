@@ -27,6 +27,48 @@ export default function Relatorios() {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalForm, setModalForm] = useState(null);
 
+    const formatCurrency = (v) => {
+        const n = Number(v);
+        return new Intl.NumberFormat('pt-br', { style: 'currency', currency: 'BRL' }).format(isNaN(n) ? 0 : n);
+    };
+
+    const taxaSomaTotal = useMemo(() => {
+        return (sepultamentos || []).reduce((acc, it) => acc + (Number(it?.taxa_valor) || 0), 0);
+
+    }, [sepultamentos]);
+
+    const taxaSomaPeriodo = useMemo(() => {
+        const start = filters.data_inicio ? new Date(filters.data_inicio) : null;
+        const end = filters.data_fim ? new Date(filters.data_fim) : null;
+        if (end) end.setHours(23, 59, 59, 999);
+        if (!start && !end) return taxaSomaTotal;
+
+        return (sepultamentos || []).reduce((acc, it) => {
+            if (!it?.dh_sep) return acc;
+            const d = new Date(it.dh_sep);
+            if (start && d < start) return acc;
+            if (end && d > end) return acc;
+            return acc + (Number(it?.taxa_valor) || 0);
+        }, 0)
+    }, [sepultamentos, filters.data_inicio, filters.data_fim, taxaSomaTotal])
+
+    const sepCountTotal = useMemo(() => (sepultamentos || []).length, [sepultamentos]);
+
+    const sepCountPeriodo = useMemo(() => {
+        const start = filters.data_inicio ? new Date(filters.data_inicio) : null;
+        const end = filters.data_fim ? new Date(filters.data_fim) : null;
+        if (end) end.setHours(23, 59, 59, 999);
+        if (!start && !end) return sepCountTotal;
+
+        return (sepultamentos || []).reduce((acc, it) => {
+            if (!it?.dh_sep) return acc;
+            const d = new Date(it.dh_sep);
+            if (start && d < start) return acc;
+            if (end && d > end) return acc;
+            return acc + 1;
+        }, 0);
+    }, [sepultamentos, filters.data_inicio, filters.data_fim, sepCountTotal])
+
     useEffect(() => {
         loadData();
     }, []);
@@ -214,11 +256,14 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
     return (
         <div>
             <MainLayout>
+
                 <SmallSelect value={tipoLista} onChange={(e) => { setTipoLista(e.target.value); setPage(1) }} style={{ position: "relative", left: 940, borderRadius: 8 }}>
-                    <option value="sepultamentos">Lista de sepultamentos </option>
-                    <option value="exumacoes">Lista de exumações </option>
+                    <option value="sepultamentos">LISTA DE SEPULTAMENTOS</option>
+                    <option value="exumacoes">LISTA DE EXUMAÇÕES </option>
                 </SmallSelect>
+
                 <Container>
+
                     <FormStyled>
                         <Title>BUSCAR RELATÓRIOS</Title>
 
@@ -252,17 +297,33 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
 
 
                         <TwoCols style={{ marginTop: 12 }}>
-                            <Field style={{ display: "flex", gap: 8 }}>
-                                <SmallInput style={{ width: 110 }} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
-                                <SmallInput style={{ width: 110 }} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
+                            <ColumnLeft style={{ flex: 1 }}>
+                                <Field style={{ display: "flex", gap: 8 }}>
+                                    <SmallInput style={{ width: 110 }} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
+                                    <SmallInput style={{ width: 110 }} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
 
-                            </Field>
-                            <Field
-                                style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-                                <BtnPrimary type="button" onClick={() => { applyFilters(); setPage(1); }}>
-                                    Aplicar filtros
-                                </BtnPrimary>
-                            </Field>
+                                </Field>
+                            </ColumnLeft>
+
+                            <ColumnRight style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                                <div style={{ background: "#fafafa", border: "1px solid #e6e6e6", padding: 12, borderRadius: 8, minWidth: 350, textAlign: "left" }}>
+                                    <div style={{ fontSize: 14, color: "#666" }}>Valor total das taxas</div>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                                        <div style={{ fontSize: 25, fontWeight: 600, marginTop: 6, color: "#191970" }}>
+                                            {formatCurrency((filters.data_inicio || filters.data_fim) ? taxaSomaPeriodo : taxaSomaTotal)}
+                                        </div>
+                                        <div style={{ fontSize: 25, fontWeight: 600, color: "#191970", marginTop:6 }}>
+                                            <div style={{ fontSize: 14, color: "#666" }}>Número de sepultados</div>
+                                            {((filters.data_inicio || filters.data_fim) ? sepCountPeriodo : sepCountTotal)} sepultados
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ fontSize: 16, color: "#666", marginTop: 6 }}>
+                                        {filters.data_inicio || filters.data_fim ? `Período: ${filters.data_inicio || "..."}->${filters.data_fim || "..."}` : "Período: Total"}
+
+                                    </div>
+                                </div>
+                            </ColumnRight>
                         </TwoCols>
 
                         <TableWrapper>
@@ -314,7 +375,7 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                                 <tr key={e.id ?? `sep-${i}`} style={{ borderBottom: "1px solid #f1f1f1" }}>
                                                     <td style={{ padding: "12px 16px" }}>{e.nome_sep || "-"}</td>
                                                     <td style={{ padding: "12px 16px" }}>{e.dh_sep ? new Date(e.dh_sep).toLocaleDateString() : "-"}</td>
-                                                    <td style={{ padding: "12px 16px" }}>{"-"}</td>
+                                                    <td style={{ padding: "12px 16px" }}>{e.taxa_label ?? "-"}</td>
                                                     <td style={{ padding: "12px 16px", textAlign: "center" }}>
                                                         <IconBtn type="button" onClick={() => handleView(e)}>
                                                             <FaEye />
@@ -345,8 +406,8 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
 
                     </FormStyled>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center", marginTop: 16 }}>
-                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(1)} disabled={currentPage === 1}>«</button>
-                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }} onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>‹</button>
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "pointer" : "not-allowed" }} onClick={() => setPage(1)} disabled={currentPage === 1}>«</button>
+                        <button type="button" style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #ddd", background: "#fff", cursor: currentPage === totalPages ? "pointer" : "not-allowed" }} onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1}>‹</button>
                         {(() => {
                             const out = [];
                             const maxButtons = 7;

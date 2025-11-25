@@ -321,9 +321,6 @@ export default function Registros() {
               </div>
             </TwoCols>
 
-
-
-
             <TableWrapper>
               <TableScroller>
                 <Table>
