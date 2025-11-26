@@ -753,6 +753,22 @@
       "confirmacao": false,
       "origem": "frontend",
       "confirmado": false
+    },
+    {
+      "id": "d2ab",
+      "sepultamentoId": "a6bc",
+      "nome_sep": "marcos almeida",
+      "quadra_sep": "1",
+      "num_sepultura_sep": "2",
+      "dh_exu": "2025-11-26T12:01",
+      "motivo": "teste",
+      "destino": "teste",
+      "coveiro": "teste",
+      "obs_exu": "teste",
+      "status": "Concluído",
+      "confirmacao": false,
+      "origem": "frontend",
+      "confirmado": true
     }
   ],
   "sepultamentos": [
@@ -1260,6 +1276,25 @@
       "falecido_id": "e623",
       "falecido": "e623",
       "taxa_label": "ADULTO (TERRA) - R$112,27"
+    },
+    {
+      "id": "a6bc",
+      "nome_sep": "marcos almeida",
+      "data_obito_sep": "2025-11-26",
+      "dh_sep": "2025-11-26T14:00",
+      "titulo_posse": "Não",
+      "quadra_sep": "e6c1",
+      "num_sepultura_sep": "2",
+      "coveiro_sep": "ze",
+      "obs_sep": "teste",
+      "taxa": "indigente",
+      "taxa_valor": 0,
+      "foi_exumado": true,
+      "falecido_id": "871f",
+      "falecido": "871f",
+      "taxa_label": "ISENÇÃO POR INDIGÊNCIA",
+      "status": "Concluído",
+      "confirmado": true
     }
   ],
   "quadras": [

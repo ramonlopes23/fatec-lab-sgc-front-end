@@ -15,7 +15,8 @@ export default function Relatorios() {
         sepultura: "",
         tipo_sep: "",
         data_inicio: "",
-        data_fim: ""
+        data_fim: "",
+        status_taxa: ""
     });
     const [exumacoes, setExumacoes] = useState([]);
     const [sepultamentos, setSepultamentos] = useState([]);
@@ -72,6 +73,20 @@ export default function Relatorios() {
     useEffect(() => {
         loadData();
     }, []);
+
+    const getStatusTaxa = (item)=>{
+        if(!item) return null;
+        if(item.status_taxa) return String(item.status_taxa).toLowerCase();
+        const val = Number(item.taxa_valor ?? 0);
+        return val > 0 ? "pago" : "gratuito";
+    }
+
+    const matchesStatusFilter = (item) =>{
+        const want = String(filters.status_taxa || "").trim().toLowerCase();
+        if(!want) return true;
+        const s = getStatusTaxa(item);
+        return s === want;
+    }
 
     const loadData = async () => {
         setIsLoading(true);
@@ -175,6 +190,10 @@ export default function Relatorios() {
                 const n = String(item.num_sepultura_sep ?? "");
                 if (n !== String(filters.sepultura)) return false;
             }
+
+            if (filters.status_taxa && !matchesStatusFilter(item)) return false;            
+            
+
             return true;
         })
     }, [sepultamentos, search, filters]);
@@ -306,6 +325,11 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                 <Field style={{ display: "flex", gap: 8 }}>
                                     <SmallInput style={{ width: 110 }} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
                                     <SmallInput style={{ width: 110 }} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
+                                    <SmallSelect style={{ width: 93 }} value={filters.status_taxa} onChange={(e)=>setFilters(prev=>({...prev,status_taxa:e.target.value }))}>
+                                        <option value="">Selecione a taxa</option>
+                                        <option value="pago">Pago</option>
+                                        <option value="gratuito">Gratuito</option>
+                                    </SmallSelect>
 
                                 </Field>
 
@@ -325,7 +349,7 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
                                     </div>
 
                                     <div style={{ fontSize: 16, color: "#666" }}>
-                                        {filters.data_inicio || filters.data_fim ? `Período: ${filters.data_inicio || "..."}->${filters.data_fim || "..."}` : "Período: Total"}
+                                        {filters.data_inicio || filters.data_fim ? `Período: ${filters.data_inicio || "..."}<->${filters.data_fim || "..."}` : "Período: Total"}
 
                                     </div>
                                 </div>

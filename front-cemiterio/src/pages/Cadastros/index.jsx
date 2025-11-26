@@ -52,7 +52,8 @@ export default function Cadastros() {
         crianca_fora:224.54,
         adulto_terra:112.27,
         adulto_fora:430.42,
-        adulto_laje:280.71
+        adulto_laje:280.71,
+        indigente:0
     }
 
     const taxa_label = {
@@ -60,7 +61,8 @@ export default function Cadastros() {
         crianca_fora:"CRIANÇA (FORA DO MUNICÍPIO) - R$224,54",
         adulto_terra:"ADULTO (TERRA) - R$112,27",
         adulto_fora:"ADULTO (FORA DO MUNICÍPIO) - R$430,42",
-        adulto_laje:"ADULTO LAJE - R$280,71"
+        adulto_laje:"ADULTO LAJE - R$280,71",
+        indigente:"ISENÇÃO POR INDIGÊNCIA"
     }
 
     const formatCurrency = (v) =>{
@@ -645,6 +647,7 @@ export default function Cadastros() {
                                                     <option value="adulto_terra">ADULTO (TERRA) - R$112,27</option>
                                                     <option value="adulto_fora">ADULTO (FORA DO MUNICÍPIO) - R$430,42</option>
                                                     <option value="adulto_laje">ADULTO LAJE - R$280,71</option>
+                                                    <option value="indigente">ISENÇÃO POR INDIGÊNCIA</option>
                                                 </Select>
                                             </Field>
 
