@@ -4,10 +4,8 @@ export const DashboardWrapper = styled.div`
   display: flex;
   justify-content: center;
   padding: 0.1rem;  
-  flex: 0 0 350px;
+  flex:0 0 350px;
   box-sizing:border-box;
-  margin-right:480px;
-  margin-top:-110px;
   transition:all 180ms ease;
 `;
 

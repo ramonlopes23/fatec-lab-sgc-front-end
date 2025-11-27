@@ -3,11 +3,9 @@ import styled from "styled-components";
 export const DashboardWrapper = styled.div`
   display: flex;
   justify-content: center;
-  padding: 0.1rem;  
-  flex: 0 0 350px;
+  padding: 0.1rem;
+  flex: 0 0 460px;
   box-sizing:border-box;
-  margin-right:480px;
-  margin-top:-110px;
   transition:all 180ms ease;
 `;
 
@@ -17,8 +15,7 @@ export const Card = styled.div`
   border-radius: 12px;
   padding: 1rem;
   width: 100%;
-  max-width: 350px;
-  height:50px;
+  height:150px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
