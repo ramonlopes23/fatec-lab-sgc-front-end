@@ -271,7 +271,7 @@ export default function Dashboard() {
                             <ProcessInfo>
                                 <strong>{p.nome_fal || p.nome}</strong>
                                 {p._type === "Velório" && p.data_velorio && <span>Velorio:{p.data_velorio}</span>}
-                                {p._type === "Exumação" && p.dh_exu && <span>Sepultamento: {p.dh_exu}</span>}
+                                {p._type === "Exumação" && p.dh_exu && <span>Exumação: {p.dh_exu}</span>}
                                 {p._type === "Sepultamento" && p.dh_sep && (
                                     <span>
                                         Sepultamento: {p.dh_sep}

@@ -5,8 +5,9 @@ import Dashboard from "../../components/Dashboard";
 import SepultadosMedia from "../../components/SepultadosMedia";
 import Calendar from "../../components/Calendar";
 import SepultadosTotal from "../../components/SepultadosTotal";
+import SepultadosMes from "../../components/SepultadosMes";
 import { Row } from "../../components/DashboardRow/styles";
-import SepultadosOntem from "../../components/SepultadosOntem";
+
 
 export default function Home() {
     return (
@@ -14,7 +15,7 @@ export default function Home() {
             <MainLayout>
                 <Dashboard />
                 <Row>
-                    <SepultadosOntem />
+                    <SepultadosMes />
                     <SepultadosMedia />
                     <SepultadosTotal />                    
                 </Row>

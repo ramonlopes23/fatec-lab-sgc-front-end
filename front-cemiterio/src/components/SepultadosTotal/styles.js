@@ -29,6 +29,7 @@ export const CardHeader = styled.h2`
   margin-bottom: 1rem;
   color:#191970;
   padding-bottom: 0.5rem;
+  margin-top:0px;
 `;
 
 export const CardBody = styled.div`

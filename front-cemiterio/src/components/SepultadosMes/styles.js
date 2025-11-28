@@ -16,7 +16,7 @@ export const Card = styled.div`
   padding: 1rem;
   width: 100%;
   max-width: 350px;
-  height:50px;
+  height:70px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
@@ -26,6 +26,7 @@ export const CardHeader = styled.h2`
   text-align: center;
   margin-bottom: 1rem;
   color:#191970;
+  margin-top:0px;
   padding-bottom: 0.5rem;
 `;
 
