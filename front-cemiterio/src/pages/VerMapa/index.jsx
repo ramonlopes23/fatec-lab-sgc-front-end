@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import api from "../../services/api";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
+import GridQuadras from "../../components/GridQuadras";
 import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
@@ -198,7 +199,7 @@ export default function VerMapa() {
 
         const ids = new Set();
         (sepultamentosAll || []).forEach(s => {
-            if(s.foi_exumado) return;
+            if (s.foi_exumado) return;
             const sQ = s.quadra_sep ?? s.quadra ?? "";
             if (String(sQ) === qStr) {
                 const id = s.id ?? s._id ?? null;
@@ -270,6 +271,14 @@ export default function VerMapa() {
         const { name, value, type, checked } = e.target;
         const incoming = type === "checkbox" ? checked : (type === "number" ? (value === "" ? "" : Number(value)) : value);
         updateQuadraFieldByName(name, incoming);
+    }
+
+    const handleGridChange = (item) => {
+        const newId = item?.id ?? null;
+        setSelectedQuadraId(prev => {
+            if (prev === newId) return prev;
+            return newId;
+        })
     }
 
     const handleCovaChange = (e) => {
@@ -414,25 +423,25 @@ export default function VerMapa() {
             const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
             const sepData = Array.isArray(rSep.data) ? rSep.data : [];
 
-            try{
+            try {
                 const exuData = Array.isArray(rExu.data) ? rExu.data : [];
                 const pendingMap = {};
-                exuData.forEach(ex=>{
+                exuData.forEach(ex => {
                     const statusRaw = String(ex.status ?? "").toLowerCase();
                     const isPending = statusRaw.includes("pend") || ex.confirmado === false || ex.confirmado === null || ex.confirmado === undefined;
-                    if(!isPending) return;
+                    if (!isPending) return;
                     const sepId = ex.sepultamentoId ?? null;
-                    if (sepId !=null) pendingMap[String(sepId)] = ex;
+                    if (sepId != null) pendingMap[String(sepId)] = ex;
 
                 })
                 setExumacoesPending(pendingMap);
-            }catch(e){
+            } catch (e) {
                 console.warn("Erro ao carregar exumações", e)
             }
-            
+
 
             setSepultamentosAll(sepData);
-            const visibleSepData = (sepData || []).filter(s=> !s.foi_exumado);
+            const visibleSepData = (sepData || []).filter(s => !s.foi_exumado);
 
             const covaIdToQuadra = Object.fromEntries((covasData || []).map(c => [String(c.id), String(c.quadra_cova ?? c.quadra ?? "")]));
             const tmp = {};
@@ -486,17 +495,17 @@ export default function VerMapa() {
                 if (!quadraMap.has(qId)) quadraMap.set(qId, { id: qId, nome: `Quadra ${qId}`, covas: [] });
                 const quadraObj = quadraMap.get(qId);
                 const numero = cova.num_cova ?? cova.num_sepultura ?? cova.numero ?? "";
-                
-                const cap = (cova.capacidade == null)? null:Number(cova.capacidade);
-                const normalizedStatus =(()=>{
-                    if(cap !==null && !Number.isNaN(cap)&& cap <= 0) return "lotada";
+
+                const cap = (cova.capacidade == null) ? null : Number(cova.capacidade);
+                const normalizedStatus = (() => {
+                    if (cap !== null && !Number.isNaN(cap) && cap <= 0) return "lotada";
                     return normalizeCovaStatus(cova.status);
                 })();
                 quadraObj.covas.push({
                     id: cova.id ?? `${qId}-${numero}`,
                     numero,
                     status: normalizedStatus,
-                    capacidade:cap,
+                    capacidade: cap,
                     cova
                 });
             });
@@ -535,8 +544,16 @@ export default function VerMapa() {
             })
 
             const quadrasArr = Array.from(quadraMap.values()).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
             setQuadras(quadrasArr);
-            if (quadrasArr.length) setSelectedQuadraId(null);
+
+            
+            setSelectedQuadraId(prev => {
+                if (prev == null) return prev;
+                const exists = quadrasArr.some(q => String(q.id) === String(prev) || String(q.num_quadra) === String(prev));
+                return exists ? prev : null;
+            });
+
 
             const qs = new URLSearchParams(location.search);
             const sepId = qs.get("sepId") || qs.get("sepultamentoId");
@@ -644,7 +661,7 @@ export default function VerMapa() {
         const quadraKey = String(selectedQuadraId ?? cova.cova?.quadra_cova ?? cova.quadra_cova ?? cova.quadra_sep ?? cova.sep?.quadra_sep ?? "");
         const numero = String(cova.numero ?? cova.num_cova ?? cova.num_sepultura_sep ?? "");
         const list = (sepultamentosAll || []).filter(s => {
-            if(s.foi_exumado) return false;
+            if (s.foi_exumado) return false;
             const sQuadra = String(s.quadra_sep ?? s.quadra ?? "");
             const sNum = String(s.num_sepultura_sep ?? s.num_sepultura ?? s.numero ?? "");
             return sQuadra === quadraKey && sNum === numero;
@@ -702,14 +719,20 @@ export default function VerMapa() {
                 <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
                     <label style={{ fontWeight: 600, color: "#171770" }}>Quadra: </label>
 
-                    <SmallSelect value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
+                    {/* <SmallSelect value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
                         <option value="">Selecione o número da quadra </option>
                         {quadrasDesc.map(q => (
                             <option key={String(q.id)} value={String(q.id)}>
                                 {q.num_quadra ? `${q.num_quadra}` : q.nome || `${q.id}`}
                             </option>
                         ))}
-                    </SmallSelect>
+                    </SmallSelect> */}
+                    <GridQuadras
+                        quadrasDesc={quadrasDesc}
+                        value={selectedQuadraId}
+                        onChange={handleGridChange}
+                        columnsMinWidth={40}
+                    />
                 </div>
 
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
@@ -988,7 +1011,7 @@ export default function VerMapa() {
                                                             <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
                                                             {exumacoesPending[String(s.id)] ? (
-                                                                <BtnAdd style={{backgroundColor:"#cf142b"}} type="button" onClick={() => cancelExumacao(s)}>Cancelar exumação</BtnAdd>
+                                                                <BtnAdd style={{ backgroundColor: "#cf142b" }} type="button" onClick={() => cancelExumacao(s)}>Cancelar exumação</BtnAdd>
                                                             ) : (
                                                                 <BtnAdd type="button" onClick={() => { openExumacaoForm(s); setModalOpen(false); }}>Iniciar exumação</BtnAdd>
                                                             )}

@@ -17,7 +17,8 @@ export default function Home() {
                 <Row>
                     <SepultadosMes />
                     <SepultadosMedia />
-                    <SepultadosTotal />                    
+                    <SepultadosTotal />  
+                                      
                 </Row>
             </MainLayout>
             <Footer />
