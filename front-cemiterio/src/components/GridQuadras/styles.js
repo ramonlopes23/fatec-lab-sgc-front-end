@@ -21,37 +21,6 @@ export const Grid = styled.div`
   }
 `;
 
-const statusStyles = {
-  livre: css`
-    background: #f4fbf6;
-    .badge {
-      background: #e7f8ee;
-      color: #1b7a3a;
-    }
-  `,
-  ocupado: css`
-    background: #fff6f6;
-    .badge {
-      background: #ffe9e9;
-      color: #b91c1c;
-    }
-  `,
-  reservado: css`
-    background: #fffaf0;
-    .badge {
-      background: #fff2d6;
-      color: #b45b00;
-    }
-  `,
-  isento: css`
-    background: #f2f8ff;
-    .badge {
-      background: #e8f0ff;
-      color: #175fbf;
-    }
-  `,
-};
-
 export const Tile = styled.button`
   display: flex;
   flex-direction: column;
@@ -93,11 +62,11 @@ export const Tile = styled.button`
         rgba(106, 87, 255, 0.12),
         rgba(106, 87, 255, 0.06)
       );
-      border-color: #6a57ff;
+      border-color: #191970;
     `}
 
   /* Status dinâmico */
-  ${(props) => props.status && statusStyles[props.status]}
+  ${(props) => props.status [props.status]}
 
   @media (max-width: 420px) {
     min-height: 56px;

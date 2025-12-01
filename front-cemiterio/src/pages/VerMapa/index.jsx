@@ -8,6 +8,16 @@ import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
 import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
 
+const normalizeIdValue = (v, fallback = null) => {
+    if (v === undefined || v === null || v === "") return fallback;
+    if (typeof v === "number") return Number.isNaN(v) ? fallback : v;
+    if (typeof v === "string") {
+        if (/^\d+$/.test(v)) return Number(v);
+        return v;
+    }
+    return fallback;
+};
+
 
 export default function VerMapa() {
 
@@ -77,7 +87,7 @@ export default function VerMapa() {
             num_quadra: "",
             max_covas: 0,
             covas_atual: 0,
-            status: "ativo",
+            status: "Ativo",
         });
         setModalAddQuadraOpen(true)
     };
@@ -332,18 +342,27 @@ export default function VerMapa() {
             const res = await api.post("/quadras", payload);
             const created = res && res.data ? res.data : null;
 
-            setQuadras(prev => {
-                const entry = {
-                    id: created?.id ?? num,
-                    num_quadra: String(created?.num_quadra ?? num),
-                    nome: `Quadra ${num}`,
-                    max_covas: Number(created?.max_covas ?? payload.max_covas ?? 0),
-                    covas: []
-                };
 
+            const entryId = normalizeIdValue(created?.id ?? num, num);
+            const entry = {
+                id: entryId,
+                num_quadra: String(created?.num_quadra ?? num),
+                nome: `Quadra ${num}`,
+                max_covas: Number(created?.max_covas ?? payload.max_covas ?? 0),
+                covas: []
+            };
+
+            setQuadras(prev => {
                 if (prev.find(p => String(p.id) === String(entry.id) || String(p.nome) === String(entry.nome))) return prev;
                 return [...prev, entry];
             });
+
+            setSelectedQuadraId(prev => {
+                const newId = normalizeIdValue(created?.id ?? num, num);
+                if (String(prev) === String(newId)) return prev;
+                return newId;
+            });
+
             setSelectedQuadraId(created?.id ?? num);
             setModalAddQuadraOpen(false);
             alert("Quadra criada");
@@ -473,17 +492,19 @@ export default function VerMapa() {
 
             };
 
-            quadrasData.forEach(q => {
-                const qKey = q.id ?? q.num_quadra ?? q.nome ?? q;
-                const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);
+            quadrasData.forEach((q, idx) => {
+                const rawKey = q?.id ?? q?.num_quadra ?? q?.nome ?? idx;
+                const fallback = q?.num_quadra ?? `quadra-${idx}`;
+                const qId = normalizeIdValue(rawKey, fallback);
+
                 if (!quadraMap.has(qId)) {
                     quadraMap.set(qId, {
                         id: qId,
-                        num_quadra: q.num_quadra ?? "",
-                        nome: q.nome || `Quadra ${q.num_quadra || q.id}`,
-                        max_covas: q.max_covas ?? 0,
-                        status: q.status ?? "ativa",
-                        covas: Array.isArray(q.covas) ? q.covas.slice() : []
+                        num_quadra: q?.num_quadra ?? q?.nome ?? String(qId),
+                        nome: q?.nome || `Quadra ${q?.num_quadra ?? qId}`,
+                        max_covas: q?.max_covas ?? 0,
+                        status: q?.status ?? "ativa",
+                        covas: Array.isArray(q?.covas) ? q.covas.slice() : []
                     });
                 }
             });
@@ -545,13 +566,11 @@ export default function VerMapa() {
 
             const quadrasArr = Array.from(quadraMap.values()).sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
-            setQuadras(quadrasArr);
-
-            
-            setSelectedQuadraId(prev => {
-                if (prev == null) return prev;
-                const exists = quadrasArr.some(q => String(q.id) === String(prev) || String(q.num_quadra) === String(prev));
-                return exists ? prev : null;
+            setQuadras(prev => {
+                if (prev.length === quadrasArr.length && prev.every((p, i) => String(p.id) === String(quadrasArr[i].id))) {
+                    return prev;
+                }
+                return quadrasArr;
             });
 
 
@@ -836,12 +855,12 @@ export default function VerMapa() {
                                         <Label>Quadra: </Label>
                                         <SmallSelect style={{ width: 200 }} name="quadra_cova" value={formCova.quadra_cova} onChange={handleCovaChange}>
                                             <option value="">Selecione a quadra</option>
-                                            {quadrasDesc.map(q => {
+                                            {quadrasDesc.map((q, idx) => {
                                                 const used = Array.isArray(q.covas) ? q.covas.length : getCovasCount(q.num_quadra ?? q.id);
                                                 const max = Number(q.max_covas || 0);
                                                 const full = max > 0 && used >= max;
                                                 return (
-                                                    <option key={String(q.id)} value={String(q.id)} disabled={full}>
+                                                    <option key={`${String(q.id ?? q.num_sepultura ?? idx)}`} value={String(q.id)} disabled={full}>
                                                         {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`} {full ? `(lotada)` : ''}
                                                     </option>
                                                 )
