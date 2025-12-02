@@ -4,7 +4,6 @@ import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
 import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles"
 
-
 export default function Cadastros() {
 
     const falecido = {
@@ -42,34 +41,34 @@ export default function Cadastros() {
         num_sepultura_sep: "",
         coveiro_sep: "",
         obs_sep: "",
-        taxa:"",
-        taxa_valor:0,
+        taxa: "",
+        taxa_valor: 0,
         foi_exumado: false
     }
 
-    const taxa_map ={
-        crianca:56.12,
-        crianca_fora:224.54,
-        adulto_terra:112.27,
-        adulto_fora:430.42,
-        adulto_laje:280.71,
-        indigente:0
+    const taxa_map = {
+        crianca: 56.12,
+        crianca_fora: 224.54,
+        adulto_terra: 112.27,
+        adulto_fora: 430.42,
+        adulto_laje: 280.71,
+        indigente: 0
     }
 
     const taxa_label = {
-        crianca:"CRIANÇA - R$56,12",
-        crianca_fora:"CRIANÇA (FORA DO MUNICÍPIO) - R$224,54",
-        adulto_terra:"ADULTO (TERRA) - R$112,27",
-        adulto_fora:"ADULTO (FORA DO MUNICÍPIO) - R$430,42",
-        adulto_laje:"ADULTO LAJE - R$280,71",
-        indigente:"ISENÇÃO POR INDIGÊNCIA"
+        crianca: "CRIANÇA - R$56,12",
+        crianca_fora: "CRIANÇA (FORA DO MUNICÍPIO) - R$224,54",
+        adulto_terra: "ADULTO (TERRA) - R$112,27",
+        adulto_fora: "ADULTO (FORA DO MUNICÍPIO) - R$430,42",
+        adulto_laje: "ADULTO LAJE - R$280,71",
+        indigente: "ISENÇÃO POR INDIGÊNCIA"
     }
 
-    const formatCurrency = (v) =>{
-        if(v == null ) return "-";
-        return Number(v).toLocaleString("pt-BR", {style:"currency", currency:"BRL"});
+    /* const formatCurrency = (v) => {
+        if (v == null) return "-";
+        return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     }
-
+ */
 
     const [form, setForm] = useState(falecido);
     const [processType, setProcessType] = useState("Cadastro de falecido");
@@ -82,6 +81,10 @@ export default function Cadastros() {
     const [showFalList, setShowFalList] = useState(false);
     const [busca, setBusca] = useState('');
     const [cidades, setCidades] = useState([]);
+    const [cepResp, setCepResp] = useState("");
+    const [loadingCep, setLoadingCep] = useState(false);
+
+
 
     useEffect(() => {
         fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios')
@@ -89,10 +92,13 @@ export default function Cadastros() {
             .then(data => setCidades(data));
     }, [])
 
+   
+
     const resultados = cidades.filter(c =>
         c.nome.toLowerCase().includes(busca.toLowerCase())
     )
 
+    
     const cpfMask = value => {
         const cpf = String(value || '').replace(/\D/g, '');
 
@@ -153,8 +159,6 @@ export default function Cadastros() {
         }
     }
 
-
-
     useEffect(() => {
         if (!searchFal) {
             setFilteredFalecidos([]);
@@ -166,7 +170,7 @@ export default function Cadastros() {
     }, [searchFal, falecidos])
 
 
-    const [quadras, setQuadras] = useState([]);
+    const [quadras, setQuadras] = useState([]); 
     const [covas, setCovas] = useState([]);
     const [availableCovas, setAvailableCovas] = useState([]);
 
@@ -246,7 +250,7 @@ export default function Cadastros() {
             return;
         }
 
-        if(name=== "taxa"){
+        if (name === "taxa") {
             const valor = taxa_map[value] ?? 0;
             updateFieldByName("taxa", value);
             updateFieldByName("taxa_valor", valor);
@@ -341,7 +345,7 @@ export default function Cadastros() {
                 }
 
                 payload.taxa_valor = Number(payload.taxa_valor ?? taxa_map[payload.taxa] ?? 0);
-                payload.taxa_label = taxa_label[payload.taxa] ?? "";    
+                payload.taxa_label = taxa_label[payload.taxa] ?? "";
 
                 payload.foi_exumado = false;
 
@@ -428,6 +432,30 @@ export default function Cadastros() {
         out = out.filter(isCovaAvailable);
         return out;
     };
+
+    const normalizeCep = (v) =>(String (v || "").replace(/\D/g,"").slice(0,8));
+
+    const fetchViaCep = async (cepDigits) =>{
+        if(!cepDigits || cepDigits.length !==8) return null;
+        try{
+            setLoadingCep(true);
+            const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+            const data = await res.json();
+            setLoadingCep(false);
+            if(!data || data.erro){
+                return null;
+            }
+
+            const formatted = `${data.logradouro || ""}${data.logradouro ? " - " : ""}${data.bairro || ""}${(data.bairro && data.localidade) ? " - " : ""}${data.localidade || ""}${data.uf ? " - " + data.uf : ""}`.trim();
+            return {raw:data,formatted};
+        } catch (err){
+            setLoadingCep(false);
+            console.error("Erro fetch ViaCEP", err);
+            return null;
+        }
+    };
+
+    
 
 
 

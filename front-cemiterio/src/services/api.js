@@ -32,6 +32,7 @@ const createFalecidoAndSep = async (falecidoData = {}, sepData = {}) => {
         const resp = await api.post("/falecidos", falPayload);
         createdFalecido = resp.data;
       }
+      
     } else {
       const resp = await api.post("/falecidos", falPayload);
       createdFalecido = resp.data;
