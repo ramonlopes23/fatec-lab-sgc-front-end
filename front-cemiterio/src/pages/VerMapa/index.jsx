@@ -3,6 +3,7 @@ import api from "../../services/api";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import GridQuadras from "../../components/GridQuadras";
+import PieChartSepulturas from "../../components/PieChartSepulturas";
 import { GiCoffin } from "react-icons/gi";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
@@ -1115,7 +1116,9 @@ export default function VerMapa() {
                     </ModalOverlay>
                 )}
 
+                
 
+                <PieChartSepulturas />
 
             </Container >
 

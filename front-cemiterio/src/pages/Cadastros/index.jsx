@@ -455,7 +455,31 @@ export default function Cadastros() {
         }
     };
 
-    
+    const handleCepChange = async (ev)=>{
+        const raw = ev.target.value || "";
+        const digits = normalizeCep(raw);
+        setCepResp(digits);
+
+        const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
+
+        if (digits.length === 8){
+            const found = await fetchViaCep(digits);
+            if(found){
+                setForm(prev=>({...prev, endereco_resp: found.formatted}));
+            } else{
+                alert("CEP não encontrado. Verifique e tente novamente.");
+            }
+        }
+    };
+
+    const handleCepBlur = async () =>{
+        const digits = normalizeCep(cepResp);
+        if(!digits || digits.length !==8) return;
+        const found = await fetchViaCep(digits);
+        if(found){
+            setForm(prev=>({...prev, endereco_resp:found.formatted}));
+        }
+    };   
 
 
 
@@ -804,16 +828,14 @@ export default function Cadastros() {
                                             )}
                                         </Field>
 
-                                    </ColumnLeft>
-
-                                    <ColumnRight>
-
-
-
                                         <Field>
                                             <label>Causa mortis</label>
                                             <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
                                         </Field>
+
+                                    </ColumnLeft>
+
+                                    <ColumnRight>                                        
 
                                         <Field>
                                             <label>CPF do falecido</label>
@@ -857,8 +879,14 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
+                                            <label>Digite o CEP para buscar o endereço automaticamente</label>
+                                            <Input name="cepResp" value={cepResp ? (cepResp.length > 5 ? cepResp.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : cepResp) : ""} onChange={handleCepChange} onBlur={handleCepBlur} placeholder="00000-000" />
+                                            <small style={{color:"#666" }}>{loadingCep}</small>
+                                        </Field>
+
+                                        <Field>
                                             <label>Endereço do responsável</label>
-                                            <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Digite o endereço do responsável" />
+                                            <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Rua, bairro, cidade - UF" />
                                         </Field>
 
 
