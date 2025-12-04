@@ -5,6 +5,7 @@ import Footer from "../../components/Footer";
 import GridQuadras from "../../components/GridQuadras";
 import PieChartSepulturas from "../../components/PieChartSepulturas";
 import { GiCoffin } from "react-icons/gi";
+import { FaChartPie } from "react-icons/fa";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
 import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
@@ -23,6 +24,7 @@ const normalizeIdValue = (v, fallback = null) => {
 export default function VerMapa() {
 
     const [quadras, setQuadras] = useState([]);
+    const [isPieChartOpen, setIsPieChartOpen] = useState(false);
     const [sepultamentosAll, setSepultamentosAll] = useState([]);
     const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
     const [modalSepList, setModalSepList] = useState([]);
@@ -718,7 +720,7 @@ export default function VerMapa() {
         { key: "disponível", label: "Disponível", color: "#9e9e9e" },
         { key: "indisponível", label: "Indisponível", color: "#c55" },
         { key: "particular", label: "Particular", color: "#d2b24a" },
-        { key: "particular_ocupada", label: "Particular e ocupada", color: "#000", borderColor: "#d2b24a", borderWidth: 3 }
+        { key: "particular_ocupada", label: "P/O (Particular e ocupada)", color: "#000", borderColor: "#d2b24a", borderWidth: 3 }
     ];
 
     const sepDataForModal = modalForm ?? selectedCova?.sep ?? null;
@@ -785,23 +787,66 @@ export default function VerMapa() {
                             )
                         })}
                     </CovaGrid>
+                    <BtnAdd onClick={() => setIsPieChartOpen(true)}>
+                        <FaChartPie />Distribuição de Sepulturas
+                    </BtnAdd>
                 </QuadraWrapper>
 
+                {isPieChartOpen && (
+                    <div style={{
+                        position: "fixed",
+                        inset: 0,
+                        background: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000
+                    }} onMouseDown={(e) => {
+                        if (e.target === e.currentTarget) setIsPieChartOpen(false);
+                    }}>
+                        <div style={{
+                            background: "#fff",
+                            borderRadius: 12,
+                            padding: 20,
+                            width: "90%",
+                            maxWidth: 500,
+                            maxHeight: "60vh",
+                            overflow: "auto",
+                            boxShadow: "0 4px 24px rgba(0,0,0,0.2)",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                                <h2 style={{ marginLeft: 65, color: "#191970", fontSize:25 }}>DISTRIBUIÇÃO DAS SEPULTURAS </h2>
+                            </div>
 
-                <LegendRow>
-                    {statusList.map(s => (
-                        <LegendItem key={s.key} color={s.color} borderColor={s.borderColor} borderWidth={s.borderWidth}>
-                            <span className="color" />
-                            <span>{s.label}</span>
-                        </LegendItem>
-                    ))}
+                            <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flex: 1 }}>
 
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
-                        <BtnAdd onClick={handleAddQuadra}>Quadra<CiCirclePlus size={20} /></BtnAdd>
-                        <BtnAdd onClick={handleAddCova}>Sepultura<CiCirclePlus size={20} /></BtnAdd>
+                                <div style={{ flex: 1, minWidth: 300 }}>
+                                    <PieChartSepulturas />
+                                </div>
+
+                                <div style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 12,
+                                    minWidth: 180,
+                                    paddingTop: 70
+                                }}>
+                                    {statusList.map(s => (
+                                        <LegendItem key={s.key} color={s.color} borderColor={s.borderColor} borderWidth={s.borderWidth}>
+                                            <span className="color" />
+                                            <span>{s.label}</span>
+                                        </LegendItem>
+                                    ))}
+                                </div>
+
+                            </div>
+                        </div>
                     </div>
+                )}
 
-                </LegendRow>
+
 
                 {modalAddQuadraOpen && (
                     <ModalOverlay>
@@ -1115,10 +1160,6 @@ export default function VerMapa() {
                         </form>
                     </ModalOverlay>
                 )}
-
-                
-
-                <PieChartSepulturas />
 
             </Container >
 
