@@ -792,6 +792,21 @@ export default function VerMapa() {
                     </BtnAdd>
                 </QuadraWrapper>
 
+                <LegendRow>
+                    {statusList.map(s => (
+                        <LegendItem key={s.key} color={s.color} borderColor={s.borderColor} borderWidth={s.borderWidth}>
+                            <span className="color" />
+                            <span>{s.label}</span>
+                        </LegendItem>
+                    ))}
+
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+                        <BtnAdd onClick={handleAddQuadra}>Quadra<CiCirclePlus size={20} /></BtnAdd>
+                        <BtnAdd onClick={handleAddCova}>Sepultura<CiCirclePlus size={20} /></BtnAdd>
+                    </div>
+
+                </LegendRow>
+
                 {isPieChartOpen && (
                     <div style={{
                         position: "fixed",
@@ -817,7 +832,7 @@ export default function VerMapa() {
                             flexDirection: "column"
                         }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                                <h2 style={{ marginLeft: 65, color: "#191970", fontSize:25 }}>DISTRIBUIÇÃO DAS SEPULTURAS </h2>
+                                <h2 style={{ marginLeft: 55, color: "#191970", fontSize:25 }}>DISTRIBUIÇÃO DAS SEPULTURAS </h2>
                             </div>
 
                             <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flex: 1 }}>
@@ -1159,6 +1174,8 @@ export default function VerMapa() {
 
                         </form>
                     </ModalOverlay>
+
+                    
                 )}
 
             </Container >

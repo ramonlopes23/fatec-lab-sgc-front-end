@@ -1,15 +1,8 @@
 import React, { useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Sector } from "recharts";
-/* import api from "../../services/api"; */
-import { useState, useRef } from "react";
+import api from "../../services/api";
+import { useState, useRef, useMemo } from "react";
 
-const data = [
-    { status: "Disponível", value: 30 },
-    { status: "Ocupada", value: 15 },
-    { status: "Indisponível", value: 3 },
-    { status: "Particular", value: 4 },
-    { status: "P/O", value: 30 }
-]
 
 const colors = [
     "#9e9e9e", "#000", "#c55", "#d2b24a", { fill: "#000", stroke: "#d2b24a", strokeWidth: 4 }
@@ -21,9 +14,158 @@ function easeOutCubic(t) {
 
 export default function PieChartSepulturas() {
 
+    const [covas, setCovas] = useState([]);
+    const [sepultamentos, setSepultamentos] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [activeIndex, setActiveIndex] = useState(null);
     const [animFactor, setAnimFactor] = useState(1);
     const rafRef = useRef(null);
+
+    useEffect(() => {
+        let mounted = true;
+        setLoading(true);
+
+        Promise.all([
+            api.get("/covas"),
+            api.get("/sepultamentos"),
+        ])
+            .then(([rCovas, rSep]) => {
+                if (!mounted) return;
+                setCovas(Array.isArray(rCovas.data) ? rCovas.data : []);
+                setSepultamentos(Array.isArray(rSep.data) ? rSep.data : []);
+            })
+            .catch((err) => {
+                if (!mounted) return;
+                console.error("Erro ao carregar dados do gráfico:", err);
+                setCovas([]);
+                setSepultamentos([]);
+            })
+            .finally(() => mounted && setLoading(false));
+
+        return () => (mounted = false);
+    }, []);
+
+    const data = useMemo(() => {
+        const counts = {
+            disponivel: 0,
+            ocupada: 0,
+            indisponivel: 0,
+            particular: 0,
+            partiuclar_ocupada: 0,
+        };
+
+        const covaMap = new Map();
+        (covas || []).forEach(cova => {
+            const key = `${cova.quadra_cova || ""}-${cova.num_cova || ""}`;
+            covaMap.set(key, cova);
+        })
+
+        const sepMap = new Map();
+        const visibleSep = (sepultamentos || []).filter(s => !s.foi_exumado);
+        visibleSep.forEach(sep => {
+            const quadraKey = String(sep.quadra ?? "");
+            const numero = String(sep.num_sepultura_sep ?? "");
+            const key = `${quadraKey}-${numero}`;
+            sepMap.set(key, sep);
+        })
+
+        covaMap.forEach((cova, key) => {
+            const sep = sepMap.get(key);
+            const covaStatus = String(cova.status || "").toLowerCase();
+            if (covaStatus.includes("indispon")) {
+                counts.indisponivel++;
+                return;
+            }
+
+            const hasConcessao = cova.concessao && cova.concessao.ativa === true;
+
+            let isOcupada = false;
+            if (sep) {
+                const confirmed = sep.confirmado === true || String(sep.confirmado).toLowerCase() === "true";
+                isOcupada = confirmed || String(sep.status ?? "").toLowerCase().includes("concl");
+            }
+
+            if (hasConcessao && isOcupada) {
+                counts.particular_ocupada++;
+            } else if (hasConcessao) {
+                counts.particular++
+            } else if (isOcupada) {
+                counts.ocupada++
+            } else {
+                counts.disponivel++
+            }
+        });
+
+        return [
+            { status: "Disponível", value: counts.disponivel },
+            { status: "Ocupada", value: counts.ocupada },
+            { status: "Indisponivel", value: counts.indisponivel },
+            { status: "Particular", value: counts.particular },
+            { status: "P/O", value: counts.partiuclar_ocupada },
+        ]
+    }, [covas, sepultamentos]);
+
+    /* const normalizeStatus = (s) => {
+        if (!s) return "disponivel";
+        const raw = String(s).toLowerCase();
+        if (raw.includes("reserv")) return "reservada";
+        if (raw.includes("indispon")) return "indisponivel";
+        if (raw.includes("ocup")) return "ocupada";
+        if (raw === "livre" || raw === "disponivel" || raw === "disponível") return "disponível";
+        return raw;
+    }
+
+    const covaMap = new Map();
+    (covas || []).forEach(cova => {
+        const key = `${cova.quadra_cova || ""}-${cova.num_cova || ""}`;
+        const cap = cova.capacidade == null ? null : Number(cova.capacidade);
+        const status = cap !== null && !isNaN(cap) && cap <= 0 ? "lotada" : normalizeStatus(cova.status);
+        covaMap.set(key, { ...cova, normalizeStatus: status });
+    })
+
+    const visibleSep = (sepultamentos || []).filter(s => !s.foi_exumado);
+    visibleSep.forEach(sep => {
+        const quadraKey = String(sep.quadra_sep ?? "");
+        const numero = String(sep.num_sepultura_sep ?? "");
+        const key = `${quadraKey}-${numero}`;
+
+        const titulo_posse = String(sep.titulo_posse ?? "").toLowerCase() === "sim";
+        const confirmed = sep.confirmado === true || String(sep.confirmado).toLowerCase() === "true";
+        const sepIsConcluded = confirmed || String(sep.status ?? "").toLowerCase().includes("concl");
+
+        const existing = covaMap.get(key);
+        if (existing) {
+            if (sepIsConcluded) {
+                existing.normalizedStatus = "ocupada";
+            } else if (titulo_posse && existing.normalizedStatus !== "ocupada") {
+                existing.normalizedStatus = "reservada";
+            }
+        } else {
+            covaMap.set(key, {
+                normalizedStatus: titulo_posse ? "reservada" : (sepIsConcluded ? "ocupada" : "ocupada")
+            });
+        }
+    });
+ */
+    /*   covaMap.forEach((cova) => {
+          const s = String(cova.normalizedStatus || "").toLowerCase();
+          const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
+          const isOcupada = s.includes("ocup");
+  
+          if (isOcupada && hasTitulo) {
+              counts.particular_ocupada++;
+          } else if (s.includes("ocup")) {
+              counts.ocupada++;
+          } else if (s.includes("reserv") || s.includes("particular")) {
+              counts.particular++;
+          } else if (s.includes("indispon")) {
+              counts.indisponivel++;
+          } else {
+              counts.disponivel++;
+          }
+      });
+   */
+
 
     useEffect(() => {
         cancelAnimationFrame(rafRef.current);
@@ -77,6 +219,14 @@ export default function PieChartSepulturas() {
                 </text>
             </g>
         )
+    }
+
+    if (loading) {
+        return (
+            <div style={{ width: "100%", height: 300, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <p style={{ color: "#666" }}>Carregando...</p>
+            </div>
+        );
     }
 
     return (
