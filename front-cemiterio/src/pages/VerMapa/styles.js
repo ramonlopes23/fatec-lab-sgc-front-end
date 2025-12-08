@@ -71,7 +71,9 @@ const statusColors = {
 export const CovaItem = styled.button`
   display: flex;
   align-items: center;
+  flex-direction: column;
   justify-content: center;
+  gap: 4px;
   width: 54px;
   height: 54px;
   border-radius: 8px;
@@ -94,11 +96,19 @@ export const CovaItem = styled.button`
   }};
 
   border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "none")};
-  svg { width: 22px; height: 22px; }
+  svg { width: 18px; height: 18px; }
   & .cova-number {
-    margin-left: 6px;
-    font-weight: 600;
+    margin:0;
+    font-weight: 700;
     font-size: 12px;
+    line-height:1.1;
+  }
+  & .cova-capacity{
+    font-size: 11px;
+    font-weight: 600;
+    line-height:1.1;
+    color:inherit;
+    opacity:0.9;  
   }
 
   &:hover { transform: translateY(-2px); transition: .12s; }

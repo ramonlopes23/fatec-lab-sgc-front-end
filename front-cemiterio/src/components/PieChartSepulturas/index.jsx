@@ -51,46 +51,73 @@ export default function PieChartSepulturas() {
             ocupada: 0,
             indisponivel: 0,
             particular: 0,
-            partiuclar_ocupada: 0,
+            particular_ocupada: 0,
         };
+
+        const sepCountByCova = {};
 
         const covaMap = new Map();
         (covas || []).forEach(cova => {
             const key = `${cova.quadra_cova || ""}-${cova.num_cova || ""}`;
             covaMap.set(key, cova);
         })
-
-        const sepMap = new Map();
+/* 
+        const sepMap = new Map(); */
         const visibleSep = (sepultamentos || []).filter(s => !s.foi_exumado);
         visibleSep.forEach(sep => {
-            const quadraKey = String(sep.quadra ?? "");
+            const quadraKey = String(sep.quadra ?? sep.quadra_sep);
             const numero = String(sep.num_sepultura_sep ?? "");
             const key = `${quadraKey}-${numero}`;
-            sepMap.set(key, sep);
-        })
 
-        covaMap.forEach((cova, key) => {
-            const sep = sepMap.get(key);
+            if (!sepCountByCova[key]) {
+                sepCountByCova[key] = new Set();
+            }
+            const sepId = sep.id ?? sep._id ?? null;
+            if (sepId != null) {
+                sepCountByCova[key].add(String(sepId));
+            } else {
+                sepCountByCova[key].add(`${quadraKey}-${numero}-${sep.dh_sep ?? ""}`);
+            }
+        });
+
+        const sepCountNumeric = {};
+        Object.keys(sepCountByCova).forEach(key => {
+            sepCountNumeric[key] = sepCountByCova[key].size;
+        });
+
+        (covas || []).forEach(cova => {
+            const quadraKey = String(cova.quadra_cova ?? cova.quadra ?? "");
+            const numero = String(cova.num_cova ?? cova.numero ?? "");
+            const key = `${quadraKey}-${numero}`;
             const covaStatus = String(cova.status || "").toLowerCase();
+
             if (covaStatus.includes("indispon")) {
                 counts.indisponivel++;
                 return;
             }
 
-            const hasConcessao = cova.concessao && cova.concessao.ativa === true;
+            const sepCount = sepCountNumeric[key] ?? 0;
+            const capacidadeNum = Number(cova.capacidade ?? 0);
+            const capacidadeTotal = capacidadeNum + sepCount;
 
-            let isOcupada = false;
-            if (sep) {
-                const confirmed = sep.confirmado === true || String(sep.confirmado).toLowerCase() === "true";
-                isOcupada = confirmed || String(sep.status ?? "").toLowerCase().includes("concl");
-            }
+            const sep = visibleSep.find(s =>
+                String(s.quadra_sep ?? s.quadra ?? "") === quadraKey &&
+                String(s.num_sepultura_sep ?? s.num_sepultura ?? "") === numero
+            )
+            const hasTitulo = sep && String(sep.titulo_posse ?? "").toLowerCase() === "sim";
 
-            if (hasConcessao && isOcupada) {
-                counts.particular_ocupada++;
-            } else if (hasConcessao) {
-                counts.particular++
-            } else if (isOcupada) {
-                counts.ocupada++
+
+            if (capacidadeTotal > 0) {
+                if (sepCount >= capacidadeTotal) {
+                    counts.ocupada++;
+                }
+                if (hasTitulo && sepCount >= capacidadeTotal) {
+                    counts.particular_ocupada++;
+                } else if (hasTitulo) {
+                    counts.particular++
+                } else {
+                    counts.disponivel++
+                }
             } else {
                 counts.disponivel++
             }
@@ -101,7 +128,7 @@ export default function PieChartSepulturas() {
             { status: "Ocupada", value: counts.ocupada },
             { status: "Indisponivel", value: counts.indisponivel },
             { status: "Particular", value: counts.particular },
-            { status: "P/O", value: counts.partiuclar_ocupada },
+            { status: "P/O", value: counts.particular_ocupada },
         ]
     }, [covas, sepultamentos]);
 

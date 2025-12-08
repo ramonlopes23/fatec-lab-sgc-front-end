@@ -92,13 +92,13 @@ export default function Cadastros() {
             .then(data => setCidades(data));
     }, [])
 
-   
+
 
     const resultados = cidades.filter(c =>
         c.nome.toLowerCase().includes(busca.toLowerCase())
     )
 
-    
+
     const cpfMask = value => {
         const cpf = String(value || '').replace(/\D/g, '');
 
@@ -170,16 +170,24 @@ export default function Cadastros() {
     }, [searchFal, falecidos])
 
 
-    const [quadras, setQuadras] = useState([]); 
+    const [quadras, setQuadras] = useState([]);
     const [covas, setCovas] = useState([]);
     const [availableCovas, setAvailableCovas] = useState([]);
 
-    const isCovaAvailable = c => {
+    const isCovaAvailable = (c, tituloPosse = "") => {
         const cap = Number(c?.capacidade ?? 0);
         if (cap <= 0) return false;
         const s = String(c?.status ?? "").toLowerCase();
-        if (s.includes("lotad") || s.includes("indispon") || s.includes("reserv") || s.includes("particular")) return false;
-        return true;
+
+        const tp = String(tituloPosse ?? "").toLowerCase();
+        if (tp === "sim") {
+            return (c.concessao && c.concessao.ativa === true) &&
+                !s.includes("lotad") && !s.includes("indispon");
+        }
+        if (s.includes("lotad") || s.includes("indispon") || s.includes("reserv") || s.includes("particular")) {
+            return false;
+        }
+        return true
     };
 
     useEffect(() => {
@@ -421,6 +429,7 @@ export default function Cadastros() {
 
         const tp = String(tituloPosse ?? "").toLowerCase();
         let out = list;
+
         if (tp === "sim") {
             out = list.filter(c => !!(c.concessao && c.concessao.ativa));
         }
@@ -429,57 +438,57 @@ export default function Cadastros() {
         } else {
             out = list;
         }
-        out = out.filter(isCovaAvailable);
+        out = out.filter(c => isCovaAvailable(c, tituloPosse));
         return out;
     };
 
-    const normalizeCep = (v) =>(String (v || "").replace(/\D/g,"").slice(0,8));
+    const normalizeCep = (v) => (String(v || "").replace(/\D/g, "").slice(0, 8));
 
-    const fetchViaCep = async (cepDigits) =>{
-        if(!cepDigits || cepDigits.length !==8) return null;
-        try{
+    const fetchViaCep = async (cepDigits) => {
+        if (!cepDigits || cepDigits.length !== 8) return null;
+        try {
             setLoadingCep(true);
             const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
             const data = await res.json();
             setLoadingCep(false);
-            if(!data || data.erro){
+            if (!data || data.erro) {
                 return null;
             }
 
             const formatted = `${data.logradouro || ""}${data.logradouro ? " - " : ""}${data.bairro || ""}${(data.bairro && data.localidade) ? " - " : ""}${data.localidade || ""}${data.uf ? " - " + data.uf : ""}`.trim();
-            return {raw:data,formatted};
-        } catch (err){
+            return { raw: data, formatted };
+        } catch (err) {
             setLoadingCep(false);
             console.error("Erro fetch ViaCEP", err);
             return null;
         }
     };
 
-    const handleCepChange = async (ev)=>{
+    const handleCepChange = async (ev) => {
         const raw = ev.target.value || "";
         const digits = normalizeCep(raw);
         setCepResp(digits);
 
         const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
 
-        if (digits.length === 8){
+        if (digits.length === 8) {
             const found = await fetchViaCep(digits);
-            if(found){
-                setForm(prev=>({...prev, endereco_resp: found.formatted}));
-            } else{
+            if (found) {
+                setForm(prev => ({ ...prev, endereco_resp: found.formatted }));
+            } else {
                 alert("CEP não encontrado. Verifique e tente novamente.");
             }
         }
     };
 
-    const handleCepBlur = async () =>{
+    const handleCepBlur = async () => {
         const digits = normalizeCep(cepResp);
-        if(!digits || digits.length !==8) return;
+        if (!digits || digits.length !== 8) return;
         const found = await fetchViaCep(digits);
-        if(found){
-            setForm(prev=>({...prev, endereco_resp:found.formatted}));
+        if (found) {
+            setForm(prev => ({ ...prev, endereco_resp: found.formatted }));
         }
-    };   
+    };
 
 
 
@@ -835,7 +844,7 @@ export default function Cadastros() {
 
                                     </ColumnLeft>
 
-                                    <ColumnRight>                                        
+                                    <ColumnRight>
 
                                         <Field>
                                             <label>CPF do falecido</label>
@@ -881,7 +890,7 @@ export default function Cadastros() {
                                         <Field>
                                             <label>Digite o CEP para buscar o endereço automaticamente</label>
                                             <Input name="cepResp" value={cepResp ? (cepResp.length > 5 ? cepResp.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : cepResp) : ""} onChange={handleCepChange} onBlur={handleCepBlur} placeholder="00000-000" />
-                                            <small style={{color:"#666" }}>{loadingCep}</small>
+                                            <small style={{ color: "#666" }}>{loadingCep}</small>
                                         </Field>
 
                                         <Field>

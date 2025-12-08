@@ -223,6 +223,36 @@ export default function VerMapa() {
         return ids.size;
     }
 
+    const getSepultadosCountBySep = (cova, quadraId) => {
+        if (!cova) return 0;
+        const quadraKey = String(
+            quadraId ?? cova.quadra_cova ?? ""
+        );
+
+        const numero = String(
+            cova.numero ?? cova.num_cova ?? cova.num_sepultura_sep ?? ""
+        );
+        if (!quadraKey || !numero) return 0;
+
+        const ids = new Set();
+        (sepultamentosAll || []).forEach(s => {
+            if (s.foi_exumado) return;
+            const sQuadra = String(s.quadra_sep ?? "");
+            const sNum = String(s.num_sepultura_sep ?? "");
+            if (sQuadra === quadraKey && sNum === numero) {
+                const id = s.id ?? s._id ?? null;
+                if (id != null) ids.add(String(id));
+                else ids.add(`${sQuadra}-${sNum}-${s.dh_sep ?? ""}`);
+
+            }
+        });
+        if (cova.sep) {
+            const sepId = cova.sep.id ?? null;
+            if (sepId != null) ids.add(String(sepId));
+        }
+        return ids.size;
+    }
+
     const handleAddCova = () => {
         setFormCova({
             quadra_cova: "",
@@ -767,22 +797,47 @@ export default function VerMapa() {
                     <QuadraTitle>{quadraSelecionada.nome || "Nenhuma quadra selecionada"}</QuadraTitle>
                     <CovaGrid>
                         {quadraSelecionada.covas.map((cova) => {
-                            const s = String(cova.status || "").toLowerCase();
-                            const isOcupada = s.includes("ocup");
-                            const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
-                            const displayStatus = (isOcupada && hasTitulo) ? "reservada_ocupada" : cova.status;
+/*                             const s = String(cova.status || "").toLowerCase();
+ */                         const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
+
+                            /* const isOcupada = s.includes("ocup");
+                            const displayStatus = (isOcupada && hasTitulo) ? "reservada_ocupada" : cova.status; */
+                            const sepCount = getSepultadosCountBySep(cova, quadraSelecionada.id ?? quadraSelecionada.num_quadra);
+                            const capacidadeNum = Number(cova.capacidade ?? 0);
+                            const capacidadeTotal = capacidadeNum + sepCount;
+
+                            let displayStatus = cova.status;
+
+                            if (String(cova.status || "").toLowerCase().includes("indispon")) {
+                                displayStatus = "indisponível";
+                            }
+                            else if (capacidadeTotal > 0) {
+                                if (sepCount >= capacidadeTotal) {
+                                    displayStatus = "ocupada";
+                                }
+                                else if(hasTitulo && sepCount >=capacidadeTotal){
+                                    displayStatus = "particular e ocupada"
+                                }
+                                else if (hasTitulo) {
+                                    displayStatus = "reservada";
+                                }
+                                else {
+                                    displayStatus = "disponível"
+                                }
+                            }
 
                             return (
                                 <CovaItem
                                     key={cova.id}
                                     status={displayStatus}
-                                    borderColor={displayStatus === "reservada_ocupada" ? "#d2b24a" : undefined}
-                                    borderWidth={displayStatus === "reservada_ocupada" ? 5 : undefined}
+                                    borderColor={displayStatus === "reservada" ? "#d2b24a" : undefined}
+                                    borderWidth={displayStatus === "reservada" ? 5 : undefined}
                                     onClick={() => handleClickCova(cova)}
-                                    title={`Cova ${cova.numero} - ${displayStatus}`}
+                                    title={`Cova ${cova.numero} - ${displayStatus} (${sepCount}/${capacidadeTotal})`}
                                 >
                                     <GiCoffin aria-hidden="true" />
                                     <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
+                                    <span className="cova-capacity" aria-hidden="true">{`${sepCount}/${capacidadeTotal}`}  </span>
                                 </CovaItem>
                             )
                         })}
@@ -832,7 +887,7 @@ export default function VerMapa() {
                             flexDirection: "column"
                         }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                                <h2 style={{ marginLeft: 55, color: "#191970", fontSize:25 }}>DISTRIBUIÇÃO DAS SEPULTURAS </h2>
+                                <h2 style={{ marginLeft: 55, color: "#191970", fontSize: 25 }}>DISTRIBUIÇÃO DAS SEPULTURAS </h2>
                             </div>
 
                             <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flex: 1 }}>
@@ -1175,7 +1230,7 @@ export default function VerMapa() {
                         </form>
                     </ModalOverlay>
 
-                    
+
                 )}
 
             </Container >
