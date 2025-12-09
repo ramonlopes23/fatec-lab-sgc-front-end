@@ -54,57 +54,57 @@ export default function PieChartSepulturas() {
             particular_ocupada: 0,
         };
 
-        const sepCountByCova = {};
+        /* const sepCountByCova = {}; */
 
         const covaMap = new Map();
         (covas || []).forEach(cova => {
             const key = `${cova.quadra_cova || ""}-${cova.num_cova || ""}`;
             covaMap.set(key, cova);
         })
-/* 
-        const sepMap = new Map(); */
+
+        const sepCountMap = new Map();
         const visibleSep = (sepultamentos || []).filter(s => !s.foi_exumado);
         visibleSep.forEach(sep => {
             const quadraKey = String(sep.quadra ?? sep.quadra_sep);
             const numero = String(sep.num_sepultura_sep ?? "");
             const key = `${quadraKey}-${numero}`;
-
-            if (!sepCountByCova[key]) {
-                sepCountByCova[key] = new Set();
-            }
-            const sepId = sep.id ?? sep._id ?? null;
-            if (sepId != null) {
-                sepCountByCova[key].add(String(sepId));
-            } else {
-                sepCountByCova[key].add(`${quadraKey}-${numero}-${sep.dh_sep ?? ""}`);
-            }
+            if (!sepCountMap.has(key)) sepCountMap.set(key, new Set());
+            const id = sep.id ?? sep._id ?? null;
+            sepCountMap.get(key).add(id != null ? String(id) : `${key}-${sep.dh_sep ?? sep.data_obito_sep}`);
         });
+
+        /* const sepId = sep.id ?? sep._id ?? null;
+        if (sepId != null) {
+            sepCountMap[key].add(String(sepId));
+        } else {
+            sepCountMap[key].add(`${quadraKey}-${numero}-${sep.dh_sep ?? ""}`);
+        }
 
         const sepCountNumeric = {};
         Object.keys(sepCountByCova).forEach(key => {
             sepCountNumeric[key] = sepCountByCova[key].size;
-        });
+        }); */
 
         (covas || []).forEach(cova => {
             const quadraKey = String(cova.quadra_cova ?? cova.quadra ?? "");
             const numero = String(cova.num_cova ?? cova.numero ?? "");
             const key = `${quadraKey}-${numero}`;
-            const covaStatus = String(cova.status || "").toLowerCase();
 
-            if (covaStatus.includes("indispon")) {
+            const sepCount = sepCountMap.get(key)?.size ?? 0;
+            const capacidadeNum = Number(cova.capacidade ?? 0);
+            const capacidadeTotal = capacidadeNum + sepCount;
+
+            const statusRaw = String(cova.status ?? "").toLowerCase();
+            if (statusRaw.includes("indispon")) {
                 counts.indisponivel++;
                 return;
             }
 
-            const sepCount = sepCountNumeric[key] ?? 0;
-            const capacidadeNum = Number(cova.capacidade ?? 0);
-            const capacidadeTotal = capacidadeNum + sepCount;
-
-            const sep = visibleSep.find(s =>
+            const sepForCova = visibleSep.find(s =>
                 String(s.quadra_sep ?? s.quadra ?? "") === quadraKey &&
                 String(s.num_sepultura_sep ?? s.num_sepultura ?? "") === numero
             )
-            const hasTitulo = sep && String(sep.titulo_posse ?? "").toLowerCase() === "sim";
+            const hasTitulo = (cova.concessao && cova.concessao.ativa === true) || (sepForCova && String(sepForCova.titulo_posse ?? "").toLowerCase() === "sim")
 
 
             if (capacidadeTotal > 0) {
@@ -131,68 +131,6 @@ export default function PieChartSepulturas() {
             { status: "P/O", value: counts.particular_ocupada },
         ]
     }, [covas, sepultamentos]);
-
-    /* const normalizeStatus = (s) => {
-        if (!s) return "disponivel";
-        const raw = String(s).toLowerCase();
-        if (raw.includes("reserv")) return "reservada";
-        if (raw.includes("indispon")) return "indisponivel";
-        if (raw.includes("ocup")) return "ocupada";
-        if (raw === "livre" || raw === "disponivel" || raw === "disponível") return "disponível";
-        return raw;
-    }
-
-    const covaMap = new Map();
-    (covas || []).forEach(cova => {
-        const key = `${cova.quadra_cova || ""}-${cova.num_cova || ""}`;
-        const cap = cova.capacidade == null ? null : Number(cova.capacidade);
-        const status = cap !== null && !isNaN(cap) && cap <= 0 ? "lotada" : normalizeStatus(cova.status);
-        covaMap.set(key, { ...cova, normalizeStatus: status });
-    })
-
-    const visibleSep = (sepultamentos || []).filter(s => !s.foi_exumado);
-    visibleSep.forEach(sep => {
-        const quadraKey = String(sep.quadra_sep ?? "");
-        const numero = String(sep.num_sepultura_sep ?? "");
-        const key = `${quadraKey}-${numero}`;
-
-        const titulo_posse = String(sep.titulo_posse ?? "").toLowerCase() === "sim";
-        const confirmed = sep.confirmado === true || String(sep.confirmado).toLowerCase() === "true";
-        const sepIsConcluded = confirmed || String(sep.status ?? "").toLowerCase().includes("concl");
-
-        const existing = covaMap.get(key);
-        if (existing) {
-            if (sepIsConcluded) {
-                existing.normalizedStatus = "ocupada";
-            } else if (titulo_posse && existing.normalizedStatus !== "ocupada") {
-                existing.normalizedStatus = "reservada";
-            }
-        } else {
-            covaMap.set(key, {
-                normalizedStatus: titulo_posse ? "reservada" : (sepIsConcluded ? "ocupada" : "ocupada")
-            });
-        }
-    });
- */
-    /*   covaMap.forEach((cova) => {
-          const s = String(cova.normalizedStatus || "").toLowerCase();
-          const hasTitulo = !!(cova.sep && String(cova.sep.titulo_posse ?? "").toLowerCase() === "sim");
-          const isOcupada = s.includes("ocup");
-  
-          if (isOcupada && hasTitulo) {
-              counts.particular_ocupada++;
-          } else if (s.includes("ocup")) {
-              counts.ocupada++;
-          } else if (s.includes("reserv") || s.includes("particular")) {
-              counts.particular++;
-          } else if (s.includes("indispon")) {
-              counts.indisponivel++;
-          } else {
-              counts.disponivel++;
-          }
-      });
-   */
-
 
     useEffect(() => {
         cancelAnimationFrame(rafRef.current);

@@ -833,6 +833,38 @@
       "confirmacao": false,
       "origem": "frontend",
       "confirmado": true
+    },
+    {
+      "id": "2740",
+      "sepultamentoId": "1c1a",
+      "nome_sep": "julio silva",
+      "quadra_sep": "1",
+      "num_sepultura_sep": "3",
+      "dh_exu": "2025-12-09T13:59",
+      "motivo": "teste",
+      "destino": "teste",
+      "coveiro": "teste",
+      "obs_exu": "teste",
+      "status": "Concluído",
+      "confirmacao": false,
+      "origem": "frontend",
+      "confirmado": true
+    },
+    {
+      "id": "308e",
+      "sepultamentoId": "3ec1",
+      "nome_sep": "Maria eunice campos ",
+      "quadra_sep": "1",
+      "num_sepultura_sep": "3",
+      "dh_exu": "2025-12-09T14:35",
+      "motivo": "teste",
+      "destino": "teste",
+      "coveiro": "teste",
+      "obs_exu": "teste",
+      "status": "Concluído",
+      "confirmacao": false,
+      "origem": "frontend",
+      "confirmado": true
     }
   ],
   "sepultamentos": [
@@ -897,7 +929,8 @@
       "falecido_id": "2dd6",
       "falecido": "2dd6",
       "status": "concluido",
-      "confirmado": true
+      "confirmado": true,
+      "foi_exumado": true
     },
     {
       "id": "50d1",
@@ -1467,9 +1500,28 @@
       "obs_sep": "teste",
       "taxa": "adulto_terra",
       "taxa_valor": 112.27,
-      "foi_exumado": false,
+      "foi_exumado": true,
       "falecido_id": "0db6",
       "falecido": "0db6",
+      "taxa_label": "ADULTO (TERRA) - R$112,27",
+      "status": "Concluído",
+      "confirmado": true
+    },
+    {
+      "id": "03dc",
+      "nome_sep": "mario roberto",
+      "data_obito_sep": "2025-12-09",
+      "dh_sep": "2025-12-09T13:59",
+      "titulo_posse": "Sim",
+      "quadra_sep": "e6c1",
+      "num_sepultura_sep": "3",
+      "coveiro_sep": "ze",
+      "obs_sep": "teste",
+      "taxa": "adulto_terra",
+      "taxa_valor": 112.27,
+      "foi_exumado": false,
+      "falecido_id": "e603",
+      "falecido": "e603",
       "taxa_label": "ADULTO (TERRA) - R$112,27",
       "status": "Concluído",
       "confirmado": true
@@ -1593,8 +1645,8 @@
       "quadra_cova": "e6c1",
       "num_cova": "3",
       "tipo_cova": "gaveta",
-      "status": "lotada",
-      "capacidade": 0,
+      "status": "ocupada",
+      "capacidade": 1,
       "concessao": {
         "ativa": true,
         "responsavel": "joao leite",

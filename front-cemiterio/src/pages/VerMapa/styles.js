@@ -83,9 +83,10 @@ export const CovaItem = styled.button`
   background: ${p => {
     const s = String(p.status || "").toLowerCase();
     if (s === "reservada") return "#d2b24a";
+    if (s === "particular_ocupada") return "#000";
     if (s === "ocupada") return "#000";
     if (s === "indisponível") return "#c55";
-    if (s === "reservada_ocupada") return "#000";
+    if (s === "particular_ocupada") return "#000";
     if (s === "disponível" || s === "livre" || s === "livre") return "#9e9e9e";
     return "#fff";
   }};

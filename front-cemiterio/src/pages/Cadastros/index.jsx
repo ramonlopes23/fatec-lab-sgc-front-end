@@ -245,6 +245,34 @@ export default function Cadastros() {
         const { name, value, type, checked } = e.target;
         const incoming = type === "checkbox" ? checked : value;
 
+        if (name === "data_nasc" || name === "dh_falec") {
+            const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+
+            if(name=== "data_nasc"){
+                const newDataNasc = value;
+                if(!isEmpty(newDataNasc) && !isEmpty(form.dh_falec)){
+                    const dataNasc = new Date(newDataNasc);
+                    const dhFalec = new Date(dhFalec);
+
+                    if(dhFalec < dataNasc){
+                        console.warn("Data de falecimento é anterior a data de nascimento.")
+                    }
+                }
+            }
+
+            if(name=== "data_nasc"){
+                const newDhFalec = value;
+                if(!isEmpty(newDhFalec) && !isEmpty(form.dh_falec)){
+                    const dataNasc = new Date(form.data_nasc);
+                    const dhFalec = new Date(newDhFalec);
+
+                    if(dhFalec < dataNasc){
+                        console.warn("Data de falecimento é anterior a data de nascimento.")
+                    }
+                }
+            }
+        }
+
         const cpfFields = ["cpf", "doc_resp"];
 
         if (cpfFields.includes(name)) {
@@ -305,8 +333,41 @@ export default function Cadastros() {
 
 
 
+    const validateDates = () => {
+        if (processType !== "Cadastro de falecido") return true;
+
+        const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+        if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
+            const dataNasc = new Date(form.data_nasc);
+            const dhFalec = new Date(form.dh_falec);
+
+            if (isNaN(dataNasc.getTime())) {
+                alert("Data de nascimento inválida");
+                return false;
+            }
+
+            if (isNaN(dhFalec.getTime())) {
+                alert("Data e hora de falecimento inválida");
+                return false;
+            }
+
+            if (dhFalec < dataNasc) {
+                alert("A data de falecimento não pode ser anterior a data de nascimento");
+                return false;
+            }
+
+
+        }
+        return true;
+
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!validateDates()) {
+            return;
+        }
 
         const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
@@ -337,8 +398,13 @@ export default function Cadastros() {
 
             if (processType === "Cadastro de falecido") {
 
-                await api.post("/falecidos", form);
+                const payload = {
+                    ...form,
+                    data_nasc: form.data_nasc ? new Date(form.data_nasc).toISOString().split('T')[0] : "",
+                    dh_falec: form.dh_falec ? new Date(form.dh_falec).toISOString() : ""
+                };
 
+                await api.post("/falecidos", payload);
                 alert("Falecido cadastrado");
                 setForm(falecido);
 
@@ -489,8 +555,6 @@ export default function Cadastros() {
             setForm(prev => ({ ...prev, endereco_resp: found.formatted }));
         }
     };
-
-
 
     useEffect(() => {
         setAvailableCovas(computeAvailableCovas(form.quadra_sep, form.titulo_posse));

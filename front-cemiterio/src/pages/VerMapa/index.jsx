@@ -698,7 +698,7 @@ export default function VerMapa() {
 
     const quadraSelecionada = quadras.find(q => String(q.id) === String(selectedQuadraId)) || { covas: [] };
 
-    const handleSelectQuadra = (e) => {
+   /*  const handleSelectQuadra = (e) => {
         const v = e?.target?.value;
         if (v === "" || v === null) {
             setSelectedQuadraId(null);
@@ -706,7 +706,7 @@ export default function VerMapa() {
         }
         const parsed = /^\d+$/.test(String(v)) ? Number(v) : v;
         setSelectedQuadraId(parsed);
-    };
+    }; */
 
     const handleClickCova = (cova) => {
         setSelectedCova(cova);
@@ -813,13 +813,10 @@ export default function VerMapa() {
                             }
                             else if (capacidadeTotal > 0) {
                                 if (sepCount >= capacidadeTotal) {
-                                    displayStatus = "ocupada";
-                                }
-                                else if(hasTitulo && sepCount >=capacidadeTotal){
-                                    displayStatus = "particular e ocupada"
+                                    displayStatus = hasTitulo ? "particular_ocupada" : "ocupada";
                                 }
                                 else if (hasTitulo) {
-                                    displayStatus = "reservada";
+                                    displayStatus = "reservada"
                                 }
                                 else {
                                     displayStatus = "disponível"
@@ -830,8 +827,8 @@ export default function VerMapa() {
                                 <CovaItem
                                     key={cova.id}
                                     status={displayStatus}
-                                    borderColor={displayStatus === "reservada" ? "#d2b24a" : undefined}
-                                    borderWidth={displayStatus === "reservada" ? 5 : undefined}
+                                    borderColor={(displayStatus === "reservada" || displayStatus === "particular_ocupada") ? "#d2b24a" : undefined}
+                                    borderWidth={(displayStatus === "reservada" || displayStatus === "particular_ocupada") ? 5 : undefined}
                                     onClick={() => handleClickCova(cova)}
                                     title={`Cova ${cova.numero} - ${displayStatus} (${sepCount}/${capacidadeTotal})`}
                                 >
