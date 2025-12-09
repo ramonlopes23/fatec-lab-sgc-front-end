@@ -60,13 +60,14 @@ export const CovaGrid = styled.div`
   align-items: center;
 `;
 
-const statusColors = {
+/* const statusColors = {
   ocupada: "#000",
   "disponível": "#9e9e9e",
   "indisponível": "#c55",
   reservada: "#d2b24a",
   default: "#ccc"
 };
+ */
 
 export const CovaItem = styled.button`
   display: flex;
@@ -96,23 +97,23 @@ export const CovaItem = styled.button`
     return (s === "reservada" ? "#000" : "#fff");
   }};
 
-  border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "none")};
+  border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "transparent")};
   svg { width: 18px; height: 18px; }
   & .cova-number {
     margin:0;
     font-weight: 700;
-    font-size: 12px;
-    line-height:1.1;
+    font-size: 17px;
+    line-height:0.6;
   }
   & .cova-capacity{
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
-    line-height:1.1;
+    line-height:0.9;
     color:inherit;
     opacity:0.9;  
   }
 
-  &:hover { transform: translateY(-2px); transition: .12s; }
+  &:hover { transform: translateY(-5px); transition: .40s; border-color:#000; border-width:1.5px; }
 `;
 
 export const LegendRow = styled.div`

@@ -535,8 +535,8 @@ export default function Cadastros() {
         const digits = normalizeCep(raw);
         setCepResp(digits);
 
-        const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
-
+/*         const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
+ */
         if (digits.length === 8) {
             const found = await fetchViaCep(digits);
             if (found) {
