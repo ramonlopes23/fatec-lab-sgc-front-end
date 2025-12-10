@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import api from "../../services/api";
 import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
@@ -8,7 +8,7 @@ import { GiCoffin } from "react-icons/gi";
 import { FaChartPie } from "react-icons/fa";
 import { CiCirclePlus } from "react-icons/ci";
 import { Form, useLocation } from "react-router-dom";
-import { Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
+import { QuadraDropdown, QuadraDropdownWrapper, QuadraSelectButton, Container, CovaGrid, CovaItem, QuadraTitle, QuadraWrapper, QuadraInfo, InfoPill, Title, LegendItem, LegendRow, SmallSelect, Button, ThreeCols, BtnAdd, BtnClose, BtnPrimaryClose, Input, Label, ModalOverlay, FormGrid, Textarea, Field, FormStyled, ColumnLeft, ColumnRight, ButtonsRow, TwoCols, ModalContent, ModalButtonsRow, SepDivider, SepHeader, SepItemButton, SepItemDate, SepItemName, SepList, SepItemRow, SepToggle } from "./styles"
 
 const normalizeIdValue = (v, fallback = null) => {
     if (v === undefined || v === null || v === "") return fallback;
@@ -24,6 +24,8 @@ const normalizeIdValue = (v, fallback = null) => {
 export default function VerMapa() {
 
     const [quadras, setQuadras] = useState([]);
+    const [isQuadraDropdownOpen, setIsQuadraDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
     const [isPieChartOpen, setIsPieChartOpen] = useState(false);
     const [sepultamentosAll, setSepultamentosAll] = useState([]);
     const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
@@ -695,18 +697,30 @@ export default function VerMapa() {
         };
     }, [loadMapData]);
 
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setIsQuadraDropdownOpen(false)
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    }, []);
+
 
     const quadraSelecionada = quadras.find(q => String(q.id) === String(selectedQuadraId)) || { covas: [] };
 
-   /*  const handleSelectQuadra = (e) => {
-        const v = e?.target?.value;
-        if (v === "" || v === null) {
-            setSelectedQuadraId(null);
-            return;
-        }
-        const parsed = /^\d+$/.test(String(v)) ? Number(v) : v;
-        setSelectedQuadraId(parsed);
-    }; */
+    /*  const handleSelectQuadra = (e) => {
+         const v = e?.target?.value;
+         if (v === "" || v === null) {
+             setSelectedQuadraId(null);
+             return;
+         }
+         const parsed = /^\d+$/.test(String(v)) ? Number(v) : v;
+         setSelectedQuadraId(parsed);
+     }; */
 
     const handleClickCova = (cova) => {
         setSelectedCova(cova);
@@ -771,22 +785,30 @@ export default function VerMapa() {
                 <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
                     <label style={{ fontWeight: 600, color: "#171770" }}>Quadra: </label>
 
-                    {/* <SmallSelect value={selectedQuadraId != null ? String(selectedQuadraId) : ""} onChange={handleSelectQuadra}>
-                        <option value="">Selecione o número da quadra </option>
-                        {quadrasDesc.map(q => (
-                            <option key={String(q.id)} value={String(q.id)}>
-                                {q.num_quadra ? `${q.num_quadra}` : q.nome || `${q.id}`}
-                            </option>
-                        ))}
-                    </SmallSelect> */}
-                    <GridQuadras
-                        quadrasDesc={quadrasDesc}
-                        value={selectedQuadraId}
-                        onChange={handleGridChange}
-                        columnsMinWidth={40}
-                    />
-                </div>
+                    <QuadraDropdownWrapper style={{ position: "relative", }} ref={dropdownRef}>
+                        <QuadraSelectButton onClick={() => setIsQuadraDropdownOpen(!isQuadraDropdownOpen)}
+                        >
+                            {selectedQuadraId ? `Quadra ${quadrasDesc.find(q => String(q.id) === String(selectedQuadraId))?.num_quadra || selectedQuadraId}` : "Selecione uma quadra"}
+                            <span style={{ marginLeft: "8px" }}>
+                                {isQuadraDropdownOpen ? "▲" : "▼"}
+                            </span>
+                        </QuadraSelectButton>
 
+                        {isQuadraDropdownOpen && (
+                            <QuadraDropdown>
+                                <GridQuadras
+                                    quadrasDesc={quadrasDesc}
+                                    value={selectedQuadraId}
+                                    onChange={(quadra) => {
+                                        handleGridChange(quadra);
+                                        setIsQuadraDropdownOpen(true);
+                                    }}
+                                    columnsMinWidth={40}
+                                />
+                            </QuadraDropdown>
+                        )}
+                    </QuadraDropdownWrapper>
+                </div>
                 <QuadraWrapper key={quadraSelecionada.id || "preview"}>
                     <QuadraInfo key={String(quadraSelecionada.id)}>
                         <InfoPill>Capacidade máxima de sepulturas: {quadraSelecionada.max_covas > 0 ? quadraSelecionada.max_covas : "-"}</InfoPill>

@@ -86,8 +86,7 @@ export const CovaItem = styled.button`
     if (s === "reservada") return "#d2b24a";
     if (s === "particular_ocupada") return "#000";
     if (s === "ocupada") return "#000";
-    if (s === "indisponível") return "#c55";
-    if (s === "particular_ocupada") return "#000";
+    if (s === "indisponível") return "rgba(170, 24, 24, 1)";
     if (s === "disponível" || s === "livre" || s === "livre") return "#9e9e9e";
     return "#fff";
   }};
@@ -417,4 +416,35 @@ export const ModalButtonsRow = styled.div`
   gap: 8px;
   justify-content: flex-end;
   margin-top: 12px;
+`;
+
+export const QuadraDropdownWrapper = styled.div`
+  position: relative;
+`;
+
+export const QuadraSelectButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #d6d9e6;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  color: #191970;
+`;
+
+export const QuadraDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #d6d9e6;
+  padding: 16px;
+  min-width: 400px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  z-index: 999;
 `;
