@@ -196,6 +196,7 @@ export default function Relatorios() {
 
             return true;
         })
+        
     }, [sepultamentos, search, filters]);
 
 

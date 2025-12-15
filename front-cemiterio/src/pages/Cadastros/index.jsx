@@ -69,20 +69,77 @@ export default function Cadastros() {
         return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     }
  */
+    const STORAGE_KEY = "cadastro_form_state";
 
-    const [form, setForm] = useState(falecido);
-    const [processType, setProcessType] = useState("Cadastro de falecido");
+    const loadSavedState = () => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return parsed;
+            }
+        } catch (err) {
+            console.error("Erro ao carregar estado salvo:", err);
+        }
+        return null;
+    }
+
+    const saveState = (state) => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (err) {
+            console.error("Erro ao salvar estado:", err);
+        }
+    }
+
+
+    const [form, setForm] = useState(() => {
+        const saved = loadSavedState();
+        return saved?.form || falecido;
+    });
+    const [processType, setProcessType] = useState(() => {
+        const saved = loadSavedState();
+        return saved?.processType || "Cadastro de falecido"
+    });
     const [registros, setRegistros] = useState([]);
     const [falecidos, setFalecidos] = useState([]);
     /* const [cpf, setCpf] = useState(value || "");
     const [erro, setErro] = useState(""); */
-    const [searchFal, setSearchFal] = useState("");
+    const [searchFal, setSearchFal] = useState(() => {
+        const saved = loadSavedState();
+        return saved?.searchFal || "";
+    });
+
     const [filteredFalecidos, setFilteredFalecidos] = useState([]);
     const [showFalList, setShowFalList] = useState(false);
     const [busca, setBusca] = useState('');
     const [cidades, setCidades] = useState([]);
-    const [cepResp, setCepResp] = useState("");
+    const [cepResp, setCepResp] = useState(() => {
+        const saved = loadSavedState();
+        return saved?.cepResp || "";
+    });
     const [loadingCep, setLoadingCep] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            saveState({
+                form,
+                processType,
+                cepResp,
+                searchFal
+            });
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [form, processType, cepResp, searchFal]);
+
+    const clearSavedState = () => {
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (err) {
+            console.error("Erro ao limpar o estado salvo", err)
+        }
+    }
 
 
 
@@ -92,6 +149,25 @@ export default function Cadastros() {
             .then(data => setCidades(data));
     }, [])
 
+    const fetchViaCep = async (cepDigits) => {
+        if (!cepDigits || cepDigits.length !== 8) return null;
+        try {
+            setLoadingCep(true);
+            const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+            const data = await res.json();
+            setLoadingCep(false);
+            if (!data || data.erro) {
+                return null;
+            }
+
+            const formatted = `${data.logradouro || ""}${data.logradouro ? " - " : ""}${data.bairro || ""}${(data.bairro && data.localidade) ? " - " : ""}${data.localidade || ""}${data.uf ? " - " + data.uf : ""}`.trim();
+            return { raw: data, formatted };
+        } catch (err) {
+            setLoadingCep(false);
+            console.error("Erro fetch ViaCEP", err);
+            return null;
+        }
+    };
 
 
     const resultados = cidades.filter(c =>
@@ -248,25 +324,25 @@ export default function Cadastros() {
         if (name === "data_nasc" || name === "dh_falec") {
             const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-            if(name=== "data_nasc"){
+            if (name === "data_nasc") {
                 const newDataNasc = value;
-                if(!isEmpty(newDataNasc) && !isEmpty(form.dh_falec)){
+                if (!isEmpty(newDataNasc) && !isEmpty(form.dh_falec)) {
                     const dataNasc = new Date(newDataNasc);
                     const dhFalec = new Date(dhFalec);
 
-                    if(dhFalec < dataNasc){
+                    if (dhFalec < dataNasc) {
                         console.warn("Data de falecimento é anterior a data de nascimento.")
                     }
                 }
             }
 
-            if(name=== "data_nasc"){
+            if (name === "data_nasc") {
                 const newDhFalec = value;
-                if(!isEmpty(newDhFalec) && !isEmpty(form.dh_falec)){
+                if (!isEmpty(newDhFalec) && !isEmpty(form.dh_falec)) {
                     const dataNasc = new Date(form.data_nasc);
                     const dhFalec = new Date(newDhFalec);
 
-                    if(dhFalec < dataNasc){
+                    if (dhFalec < dataNasc) {
                         console.warn("Data de falecimento é anterior a data de nascimento.")
                     }
                 }
@@ -406,6 +482,7 @@ export default function Cadastros() {
 
                 await api.post("/falecidos", payload);
                 alert("Falecido cadastrado");
+                clearSavedState();
                 setForm(falecido);
 
             }
@@ -445,6 +522,7 @@ export default function Cadastros() {
                                 }
                                 setRegistros(prev => ([...prev, { processType, data: payload }]));
                                 alert("Sepultamento cadastrado (pendente). Confirme na Dashboard para concluir.");
+                                clearSavedState();
                                 setForm(sepultamento);
 
                             } catch (err) {
@@ -510,33 +588,14 @@ export default function Cadastros() {
 
     const normalizeCep = (v) => (String(v || "").replace(/\D/g, "").slice(0, 8));
 
-    const fetchViaCep = async (cepDigits) => {
-        if (!cepDigits || cepDigits.length !== 8) return null;
-        try {
-            setLoadingCep(true);
-            const res = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
-            const data = await res.json();
-            setLoadingCep(false);
-            if (!data || data.erro) {
-                return null;
-            }
-
-            const formatted = `${data.logradouro || ""}${data.logradouro ? " - " : ""}${data.bairro || ""}${(data.bairro && data.localidade) ? " - " : ""}${data.localidade || ""}${data.uf ? " - " + data.uf : ""}`.trim();
-            return { raw: data, formatted };
-        } catch (err) {
-            setLoadingCep(false);
-            console.error("Erro fetch ViaCEP", err);
-            return null;
-        }
-    };
 
     const handleCepChange = async (ev) => {
         const raw = ev.target.value || "";
         const digits = normalizeCep(raw);
         setCepResp(digits);
 
-/*         const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
- */
+        /*         const display = digits.length > 5 ? digits.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : digits;
+         */
         if (digits.length === 8) {
             const found = await fetchViaCep(digits);
             if (found) {
