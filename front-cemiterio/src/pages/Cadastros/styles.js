@@ -82,7 +82,6 @@ export const TwoCols = styled.div`
 
 export const Field = styled.div`
   margin-bottom: 14px;
-
   label {
     display: block;
     font-size: 12px;

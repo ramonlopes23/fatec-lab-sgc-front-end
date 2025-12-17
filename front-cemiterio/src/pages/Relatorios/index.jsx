@@ -281,7 +281,6 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
     }
 
 
-    console.log("tipoLista:", tipoLista, "paginated[0]: ", paginated[0]);
     return (
         <div>
             <MainLayout>

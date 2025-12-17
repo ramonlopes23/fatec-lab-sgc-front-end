@@ -2,7 +2,11 @@ import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
-import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles"
+import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles";
+import TextField from "@mui/material/TextField";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/InputLabel";
+import Select as MuiSelect from "@mui/material/Select";
 
 export default function Cadastros() {
 
@@ -70,6 +74,22 @@ export default function Cadastros() {
     }
  */
     const STORAGE_KEY = "cadastro_form_state";
+
+    const fieldSxStyle = {
+        "& .MuiOutlinedInput-root": {
+            borderRadius: "24px"
+        },
+        "& .MuiOutlinedInput-input": {
+            fontSize: "14px"
+        },
+        "& .MuiInputBase-input::placeholder": {
+            opacity: 1
+        }
+    };
+
+    const labelSxStyle = {
+        fontSize: "14px"
+    };
 
     const loadSavedState = () => {
         try {
@@ -1006,8 +1026,22 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
-                                            <label>Contato do responsável</label>
-                                            <Input name="tel_resp" value={form.tel_resp} onChange={handleChange} placeholder="(XX)XXXXX-XXXX" />
+                                            <TextField variant="outlined" fullWidth label="Contato do responsável" name="tel_resp" value={form.tel_resp} onChange={handleChange}
+                                                sx={{
+                                                    "& .MuiOutlinedInput-root": {
+                                                        borderRadius: "24px"
+                                                    },
+                                                    "& .MuiOutlinedInput-input": {
+                                                        fontSize: "14px"
+                                                    },
+                                                    "& .MuiInputBase-input::placeholder": {
+                                                        opacity: 1
+                                                    }
+                                                }}
+                                                InputLabelProps={{
+                                                    sx: { fontSize: "14px" }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
@@ -1020,7 +1054,6 @@ export default function Cadastros() {
                                             <label>Endereço do responsável</label>
                                             <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Rua, bairro, cidade - UF" />
                                         </Field>
-
 
                                         <Field>
                                             <label>Observações</label>
