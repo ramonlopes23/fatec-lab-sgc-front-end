@@ -39,6 +39,14 @@ margin-bottom:0.5rem;
 margin-left:2.5rem;
 `;
 
+export const Title = styled.h2`
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 2px;
+  margin-bottom:-50px;
+  color: #191970;
+`;
+
 
 export const NavItem = styled.li`
   margin-bottom: 0.5rem;

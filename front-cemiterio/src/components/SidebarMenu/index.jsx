@@ -8,6 +8,7 @@ import { LuCalendarSearch, LuFileSearch2 } from "react-icons/lu";
 import { FaMap, FaFileAlt, FaCog } from "react-icons/fa";
 import {  LogoContainer,LogoImage,NavContainer,NavItem,NavTitle,StyledNavLink, GlobalStyle } from "./styles";
 import sgclogo1 from "../../assets/sgclogo1.png";
+import {Title} from "./styles"
 
 
 export default function SidebarMenu(){
@@ -26,6 +27,7 @@ export default function SidebarMenu(){
         <>
         <GlobalStyle />
             <LogoContainer>
+                <Title>SISTEMA DE GERENCIAMENTO DE CEMITÉRIOS</Title>
                 <LogoImage src={sgclogo1} alt="Logo Memo"/>
             </LogoContainer>
 
@@ -35,6 +37,7 @@ export default function SidebarMenu(){
                     {menuItems.map(item=>(
                         <NavItem key={item.name}>
                             <StyledNavLink to={item.path}>
+                                
                                 {item.icon} {item.name}
                             </StyledNavLink>
                         </NavItem>
