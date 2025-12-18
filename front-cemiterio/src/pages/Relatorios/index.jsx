@@ -4,7 +4,11 @@ import Footer from "../../components/Footer";
 import { BtnPrimary, BtnPrimaryClose, BtnPrimarySave, ColumnLeft, ColumnRight, Container, Field, FormStyled, Label, ModalContent, ModalGrid, ModalOverlay, SearchBar, SearchIcon, SearchInput, SearchWrapper, SmallInput, SmallSelect, Title, TwoCols, IconBtn, TableWrapper, Table } from "./styles"
 import { FaFileCsv, FaFileExcel, FaFilePdf, FaSearch, FaEye } from "react-icons/fa";
 import api from "../../services/api";
-
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select"
 
 export default function Relatorios() {
 
@@ -74,16 +78,16 @@ export default function Relatorios() {
         loadData();
     }, []);
 
-    const getStatusTaxa = (item)=>{
-        if(!item) return null;
-        if(item.status_taxa) return String(item.status_taxa).toLowerCase();
+    const getStatusTaxa = (item) => {
+        if (!item) return null;
+        if (item.status_taxa) return String(item.status_taxa).toLowerCase();
         const val = Number(item.taxa_valor ?? 0);
         return val > 0 ? "pago" : "gratuito";
     }
 
-    const matchesStatusFilter = (item) =>{
+    const matchesStatusFilter = (item) => {
         const want = String(filters.status_taxa || "").trim().toLowerCase();
-        if(!want) return true;
+        if (!want) return true;
         const s = getStatusTaxa(item);
         return s === want;
     }
@@ -191,12 +195,12 @@ export default function Relatorios() {
                 if (n !== String(filters.sepultura)) return false;
             }
 
-            if (filters.status_taxa && !matchesStatusFilter(item)) return false;            
-            
+            if (filters.status_taxa && !matchesStatusFilter(item)) return false;
+
 
             return true;
         })
-        
+
     }, [sepultamentos, search, filters]);
 
 
@@ -297,42 +301,144 @@ As exumações têm como objetivo garantir a adequada gestão dos espaços do ce
 
                         <SearchBar>
                             <SearchWrapper>
-                                <SearchInput placeholder="Pesquisar por nome do falecido" value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); applyFilters(); }} />
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    label="Pesquisar"
+                                    placeholder="Pesquisar por nome do falecido..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            e.preventDefault();
+                                            applyFilters();
+                                        }
+                                    }}
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '18px',
+                                            paddingRight: '44px'
+                                        },
+                                        '& .MuiOutlinedInput-input': {
+                                            fontSize: '14px'
+                                        }
+                                    }}
+                                />
                                 <SearchIcon>
                                     <FaSearch />
                                 </SearchIcon>
-
                             </SearchWrapper>
                         </SearchBar>
 
                         <TwoCols style={{ marginTop: 12 }}>
                             <ColumnLeft style={{ flex: 1 }}>
-                                <SmallSelect value={filters.quadra} onChange={(e) => setFilters(prev => ({ ...prev, quadra: e.target.value, sepultura: "" }))}>
-                                    <option value="">Selecione a quadra</option>
-                                    {quadras.map(q => (
-                                        <option key={String(q.id)} value={String(q.id)}>{q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}</option>
-                                    ))}
+                                <FormControl
+                                    fullWidth
+                                    size="small"
+                                    sx={{
+                                        marginRight: '10px',
+                                        marginBottom: '10px',
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '18px'
+                                        }
+                                    }}
+                                >
+                                    <InputLabel sx={{ fontSize: '14px' }}>Selecione a quadra</InputLabel>
+                                    <Select
+                                        value={filters.quadra}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, quadra: e.target.value, sepultura: "" }))}
+                                        label="Selecione a quadra"
+                                        sx={{ fontSize: '14px' }}
+                                    >
+                                        <MenuItem value="">Selecione a quadra</MenuItem>
+                                        {quadras.map(q => (
+                                            <MenuItem key={String(q.id)} value={String(q.id)}>
+                                                {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
 
-                                </SmallSelect>
-                                <SmallSelect value={filters.tipo_sep} onChange={(e) => setFilters(prev => ({ ...prev, tipo_sep: e.target.value }))}>
-                                    <option value="">Selecione o tipo de sepultura</option>
-                                    <option value="cova">Cova</option>
-                                    <option value="gaveta">Gaveta</option>
-                                    <option value="nicho">Nicho</option>
-                                </SmallSelect>
-
+                                <FormControl
+                                    fullWidth
+                                    size="small"
+                                    sx={{
+                                        marginRight: '10px',
+                                        marginBottom: '10px',
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '18px'
+                                        }
+                                    }}
+                                >
+                                    <InputLabel sx={{ fontSize: '14px' }}>Selecione o tipo de sepultura</InputLabel>
+                                    <Select
+                                        value={filters.tipo_sep}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, tipo_sep: e.target.value }))}
+                                        label="Selecione o tipo de sepultura"
+                                        sx={{ fontSize: '14px' }}
+                                    >
+                                        <MenuItem value="">Selecione o tipo de sepultura</MenuItem>
+                                        <MenuItem value="cova">Cova</MenuItem>
+                                        <MenuItem value="gaveta">Gaveta</MenuItem>
+                                        <MenuItem value="nicho">Nicho</MenuItem>
+                                    </Select>
+                                </FormControl>
 
                                 <Field style={{ display: "flex", gap: 8 }}>
-                                    <SmallInput style={{ width: 110 }} type="date" value={filters.data_inicio} onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))} />
-                                    <SmallInput style={{ width: 110 }} type="date" value={filters.data_fim} onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))} />
-                                    <SmallSelect style={{ width: 93 }} value={filters.status_taxa} onChange={(e)=>setFilters(prev=>({...prev,status_taxa:e.target.value }))}>
-                                        <option value="">Selecione a taxa</option>
-                                        <option value="pago">Pago</option>
-                                        <option value="gratuito">Gratuito</option>
-                                    </SmallSelect>
-
+                                    <TextField
+                                        type="date"
+                                        size="small"
+                                        value={filters.data_inicio}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, data_inicio: e.target.value }))}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{
+                                            width: 110,
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '18px'
+                                            },
+                                            '& .MuiOutlinedInput-input': {
+                                                fontSize: '14px'
+                                            }
+                                        }}
+                                    />
+                                    <TextField
+                                        type="date"
+                                        size="small"
+                                        value={filters.data_fim}
+                                        onChange={(e) => setFilters(prev => ({ ...prev, data_fim: e.target.value }))}
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{
+                                            width: 110,
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '18px'
+                                            },
+                                            '& .MuiOutlinedInput-input': {
+                                                fontSize: '14px'
+                                            }
+                                        }}
+                                    />
+                                    <FormControl
+                                        size="small"
+                                        sx={{
+                                            width: 93,
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: '18px'
+                                            }
+                                        }}
+                                    >
+                                        <InputLabel sx={{ fontSize: '14px' }}>Taxa</InputLabel>
+                                        <Select
+                                            value={filters.status_taxa}
+                                            onChange={(e) => setFilters(prev => ({ ...prev, status_taxa: e.target.value }))}
+                                            label="Taxa"
+                                            sx={{ fontSize: '14px' }}
+                                        >
+                                            <MenuItem value="">Selecione a taxa</MenuItem>
+                                            <MenuItem value="pago">Pago</MenuItem>
+                                            <MenuItem value="gratuito">Gratuito</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                 </Field>
-
                             </ColumnLeft>
 
                             <ColumnRight style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>

@@ -93,8 +93,8 @@ export default function Cadastros() {
     };
 
     const selectSxStyle = {
-        borderRadius:"24px",
-        fontSize:"14px"
+        borderRadius: "24px",
+        fontSize: "14px"
     }
 
     const loadSavedState = () => {
@@ -1038,10 +1038,9 @@ export default function Cadastros() {
                                         <TwoCols>
                                             <Field>
                                                 <label>Data de nascimento</label>
-                                                <Input
+                                                <TextField
                                                     fullWidth
                                                     variant="outlined"
-                                                    label="Data de nascimento"
                                                     type="date"
                                                     name="data_nasc"
                                                     value={form.data_nasc}
@@ -1055,10 +1054,9 @@ export default function Cadastros() {
                                             </Field>
                                             <Field>
                                                 <label>Data e hora de falecimento</label>
-                                                <Input
+                                                <TextField
                                                     fullWidth
                                                     variant="outlined"
-                                                    label="Data e hora do falecimento"
                                                     type="datetime-local"
                                                     name="dh_falec"
                                                     value={form.dh_falec}

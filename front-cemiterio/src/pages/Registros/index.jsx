@@ -7,6 +7,11 @@ import {
   BtnPrimary, Input, BtnPrimarySave, SmallInput, TwoCols, Field, SearchWrapper, SearchIcon, Label, ModalContent, ModalGrid, ModalOverlay, BtnPrimaryClose
 } from "./styles";
 import api from "../../services/api";
+import FormControl from "@mui/material/FormControl";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
 
 
 export default function Registros() {
@@ -282,39 +287,99 @@ export default function Registros() {
             <Title>BUSCAR REGISTROS</Title>
             <SearchBar>
               <SearchWrapper>
-                <SearchInput
-                  type="text"
-                  name="busca"
-                  placeholder="Pesquisar por nome"
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Pesquisar"
+                  placeholder="Pesquisar por nome do falecido..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSearch(); } }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '18px',
+                      paddingRight: '44px'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '14px'
+                    }
+                  }}
                 />
-                <SearchIcon type="button" onClick={handleSearch} >
+                <SearchIcon type="button" onClick={handleSearch}>
                   <FaSearch />
                 </SearchIcon>
               </SearchWrapper>
             </SearchBar>
 
             <TwoCols>
-              <SmallSelect name="tipo_sep" value={pendingFilters.tipo} onChange={(e) => setPendingFilters(prev => ({ ...prev, tipo: e.target.value }))}>
-                <option value="">Selecione o tipo de sepultura</option>
-                <option value="Cova">Cova</option>
-                <option value="Gaveta">Gaveta</option>
-                <option value="Nicho">Nicho</option>
-              </SmallSelect>
+              <FormControl
+                fullWidth
+                size="small"
+                sx={{
+                  marginRight: '10px',
+                  marginBottom: '10px',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '18px'
+                  }
+                }}
+              >
+                <InputLabel sx={{ fontSize: '14px' }}>Selecione o tipo de sepultura</InputLabel>
+                <Select
+                  name="tipo_sep"
+                  value={pendingFilters.tipo}
+                  onChange={(e) => setPendingFilters(prev => ({ ...prev, tipo: e.target.value }))}
+                  label="Selecione o tipo de sepultura"
+                  sx={{ fontSize: '14px' }}
+                >
+                  <MenuItem value="">Selecione o tipo de sepultura</MenuItem>
+                  <MenuItem value="Cova">Cova</MenuItem>
+                  <MenuItem value="Gaveta">Gaveta</MenuItem>
+                  <MenuItem value="Nicho">Nicho</MenuItem>
+                </Select>
+              </FormControl>
             </TwoCols>
 
             <TwoCols>
               <Field>
-                <SmallInput style={{ width: 225 }} placeholder="Digite o número da quadra" value={pendingFilters.quadra} onChange={(e) => setPendingFilters(prev => ({ ...prev, quadra: e.target.value }))} />
+                <TextField
+                  size="small"
+                  label="Nº da quadra"
+                  value={pendingFilters.quadra}
+                  onChange={(e) => setPendingFilters(prev => ({ ...prev, quadra: e.target.value }))}
+                  sx={{
+                    width: 225,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '18px'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '14px'
+                    }
+                  }}
+                />
 
-                <SmallInput style={{ width: 225 }} placeholder="Digite o número da sepultura" value={pendingFilters.sepultura} onChange={(e) => setPendingFilters(prev => ({ ...prev, sepultura: e.target.value }))} />
-
-
+                <TextField
+                  size="small"
+                  label="Nº da sepultura"
+                  value={pendingFilters.sepultura}
+                  onChange={(e) => setPendingFilters(prev => ({ ...prev, sepultura: e.target.value }))}
+                  sx={{
+                    width: 225,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '18px'
+                    },
+                    '& .MuiOutlinedInput-input': {
+                      fontSize: '14px'
+                    }
+                  }}
+                />
               </Field>
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 15 }}>
-                <BtnPrimary style={{marginBottom:10}} type="button" onClick={() => {
+                <BtnPrimary style={{ marginBottom: 10 }} type="button" onClick={() => {
                   setFilters(pendingFilters);
                   setPage(1);
                 }}>Aplicar Filtros</BtnPrimary>
