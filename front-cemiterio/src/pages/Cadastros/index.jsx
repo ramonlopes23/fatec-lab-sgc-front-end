@@ -2,11 +2,12 @@ import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
-import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Select, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles";
+import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/InputLabel";
-import Select as MuiSelect from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
 
 export default function Cadastros() {
 
@@ -91,6 +92,11 @@ export default function Cadastros() {
         fontSize: "14px"
     };
 
+    const selectSxStyle = {
+        borderRadius:"24px",
+        fontSize:"14px"
+    }
+
     const loadSavedState = () => {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -111,7 +117,6 @@ export default function Cadastros() {
             console.error("Erro ao salvar estado:", err);
         }
     }
-
 
     const [form, setForm] = useState(() => {
         const saved = loadSavedState();
@@ -752,16 +757,21 @@ export default function Cadastros() {
                                 <>
                                     <ColumnLeft>
                                         <Field>
-                                            <label>Nome do falecido</label>
                                             <div style={{ position: "relative" }}>
-                                                <Input
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label="Nome do falecido"
                                                     type="text"
                                                     placeholder="Digite o nome do falecido..."
                                                     value={searchFal}
                                                     onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); }}
                                                     onFocus={() => setShowFalList(true)}
                                                     onBlur={() => setTimeout(() => setShowFalList(false), 150)}
-                                                    style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+                                                    sx={fieldSxStyle}
+                                                    slotProps={{
+                                                        inputLabel: { sx: labelSxStyle }
+                                                    }}
                                                 />
                                                 {showFalList && filteredFalecidos.length > 0 && (
                                                     <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", zIndex: 50, background: "#fff", borderRadius: "16px", border: "1px solid #191970", maxHeight: 220, overflow: "auto", margin: 0, padding: 0, listStyle: "none" }}>
@@ -786,89 +796,144 @@ export default function Cadastros() {
                                         <TwoCols>
                                             <Field>
                                                 <label>Data do óbito</label>
-                                                <Input type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} />
+                                                <TextField fullWidth variant="outlined" type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
                                             </Field>
+
                                             <Field>
-                                                <label>Data e hora de sepultamento</label>
-                                                <Input type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" />
+                                                <label>Data e hora do sepultamento</label>
+                                                <TextField fullWidth variant="outlined" type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
                                             </Field>
                                         </TwoCols>
 
 
                                         <TwoCols>
                                             <Field>
-                                                <label>Possui título de posse?</label>
-                                                <Select name="titulo_posse" value={form.titulo_posse} onChange={handleChange}>
-                                                    <option value="Selecione a opção">Selecione a opção</option>
-                                                    <option value="Sim">Sim</option>
-                                                    <option value="Não">Não</option>
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Possui título de posse?</InputLabel>
+                                                    <Select label="Possui título de posse?" name="titulo_posse" value={form.titulo_posse} onChange={handleChange} sx={selectSxStyle}>
+                                                        <MenuItem value="">Selecione a opção</MenuItem>
+                                                        <MenuItem value="Sim">Sim</MenuItem>
+                                                        <MenuItem value="Não">Não</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
-
-
                                         </TwoCols>
 
                                         <TwoCols>
                                             <Field>
-                                                <label>Quadra</label>
-                                                <Select name="quadra_sep" value={form.quadra_sep ?? ""} onChange={(e) => handleQuadraSepChange(e.target.value)}>
-                                                    <option value="">Selecione a quadra</option>
-                                                    {quadras.map(q => (
-                                                        <option key={String(q.id)} value={String(q.id)}>
-                                                            {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}
-                                                        </option>
-                                                    ))}
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Quadra</InputLabel>
+                                                    <Select
+                                                        label="Quadra"
+                                                        name="quadra_sep"
+                                                        value={form.quadra_sep ?? ""}
+                                                        onChange={(e) => handleQuadraSepChange(e.target.value)}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione a quadra</MenuItem>
+                                                        {quadras.map(q => (
+                                                            <MenuItem key={String(q.id)} value={String(q.id)}>
+                                                                {q.num_quadra ? `Quadra ${q.num_quadra}` : q.nome || `Quadra ${q.id}`}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
 
                                             <Field>
-                                                <label>Nº da sepultura</label>
-                                                <Select name="num_sepultura_sep" value={form.num_sepultura_sep ?? ""} onChange={handleChange}>
-                                                    <option value="">Selecione a sepultura</option>
-                                                    {availableCovas.map(c => {
-                                                        const val = String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "");
-                                                        const isReserved = String(c.status ?? "").toLowerCase().includes("reserv");
-                                                        return (
-                                                            <option key={String(c.id ?? `${c.quadra_cova}-${c.num_cova}`)} value={val}>
-                                                                {val}{isReserved}{isReserved ? "(Particular)" : ""}
-                                                            </option>
-                                                        )
-                                                    })}
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Nº da sepultura</InputLabel>
+                                                    <Select
+                                                        label="Nº da sepultura"
+                                                        name="num_sepultura_sep"
+                                                        value={form.num_sepultura_sep ?? ""}
+                                                        onChange={handleChange}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione a sepultura</MenuItem>
+                                                        {availableCovas.map(c => {
+                                                            const val = String(c.num_cova ?? c.numero ?? c.num_sepultura ?? "");
+                                                            const isReserved = String(c.status ?? "").toLowerCase().includes("reserv");
+                                                            return (
+                                                                <MenuItem key={String(c.id ?? `${c.quadra_cova}-${c.num_cova}`)} value={val}>
+                                                                    {val}{isReserved ? "(Particular)" : ""}
+                                                                </MenuItem>
+                                                            )
+                                                        })}
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
 
                                             <Field>
-                                                <label>Tipo de sepultura: </label>
-                                                <InputCova value={tipoCovaSelecionada || "-"} />
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label="Tipo de sepultura"
+                                                    value={tipoCovaSelecionada || "-"}
+                                                    disabled
+                                                    sx={fieldSxStyle}
+                                                    slotProps={{
+                                                        inputLabel: { sx: labelSxStyle }
+                                                    }}
+                                                />
                                             </Field>
 
                                             <Field>
-                                                <label>Taxa de sepultamento</label>
-                                                <Select name="taxa" value={form.taxa} onChange={handleChange}>
-                                                    <option value="">Selecione o tipo de taxa</option>
-                                                    <option value="crianca">CRIANÇA - R$56,12</option>
-                                                    <option value="crianca_fora">CRIANÇA (FORA DO MUNICÍPIO) - R$224,54</option>
-                                                    <option value="adulto_terra">ADULTO (TERRA) - R$112,27</option>
-                                                    <option value="adulto_fora">ADULTO (FORA DO MUNICÍPIO) - R$430,42</option>
-                                                    <option value="adulto_laje">ADULTO LAJE - R$280,71</option>
-                                                    <option value="indigente">ISENÇÃO POR INDIGÊNCIA</option>
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Taxa de sepultamento</InputLabel>
+                                                    <Select
+                                                        label="Taxa de sepultamento"
+                                                        name="taxa"
+                                                        value={form.taxa}
+                                                        onChange={handleChange}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione o tipo de taxa</MenuItem>
+                                                        <MenuItem value="crianca">CRIANÇA - R$56,12</MenuItem>
+                                                        <MenuItem value="crianca_fora">CRIANÇA (FORA DO MUNICÍPIO) - R$224,54</MenuItem>
+                                                        <MenuItem value="adulto_terra">ADULTO (TERRA) - R$112,27</MenuItem>
+                                                        <MenuItem value="adulto_fora">ADULTO (FORA DO MUNICÍPIO) - R$430,42</MenuItem>
+                                                        <MenuItem value="adulto_laje">ADULTO LAJE - R$280,71</MenuItem>
+                                                        <MenuItem value="indigente">ISENÇÃO POR INDIGÊNCIA</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
-
                                         </TwoCols>
-
                                     </ColumnLeft>
 
                                     <ColumnRight>
-
                                         <Field>
-                                            <label>Funcionário designado</label>
-                                            <Input name="coveiro_sep" value={form.coveiro_sep} onChange={handleChange} placeholder="Digite o nome do funcionário" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Funcionário designado"
+                                                name="coveiro_sep"
+                                                value={form.coveiro_sep}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome do funcionário"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Observações</label>
-                                            <Textarea name="obs_sep" value={form.obs_sep} onChange={handleChange} placeholder="Observações..." />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Observações"
+                                                name="obs_sep"
+                                                value={form.obs_sep}
+                                                onChange={handleChange}
+                                                placeholder="Observações..."
+                                                multiline
+                                                rows={4}
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <FormActions>
@@ -880,81 +945,196 @@ export default function Cadastros() {
                                 <>
                                     <ColumnLeft>
                                         <Field>
-                                            <label>Nome completo</label>
-                                            <Input name="nome_fal" value={form.nome_fal} onChange={handleChange} placeholder="Digite o nome do falecido" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Nome completo"
+                                                name="nome_fal"
+                                                value={form.nome_fal}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome do falecido"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
-
 
                                         <TwoCols>
                                             <Field>
-                                                <label>Idade</label>
-                                                <Input name="idade" value={form.idade} onChange={handleChange} />
+                                                <TextField
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label="Idade"
+                                                    name="idade"
+                                                    value={form.idade}
+                                                    onChange={handleChange}
+                                                    sx={fieldSxStyle}
+                                                    slotProps={{
+                                                        inputLabel: { sx: labelSxStyle }
+                                                    }}
+                                                />
                                             </Field>
 
                                             <Field>
-                                                <label>Sexo</label>
-                                                <Select name="sexo" value={form.sexo} onChange={handleChange}>
-                                                    <option value="">Selecione</option>
-                                                    <option value="masculino">Masculino</option>
-                                                    <option value="feminino">Feminino</option>
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Sexo</InputLabel>
+                                                    <Select
+                                                        label="Sexo"
+                                                        name="sexo"
+                                                        value={form.sexo}
+                                                        onChange={handleChange}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione</MenuItem>
+                                                        <MenuItem value="masculino">Masculino</MenuItem>
+                                                        <MenuItem value="feminino">Feminino</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
                                         </TwoCols>
 
                                         <TwoCols>
                                             <Field>
-                                                <label>Estado civil</label>
-                                                <Select name="estado_civil" value={form.estado_civil} onChange={handleChange}>
-                                                    <option value="">Selecione o estado civil</option>
-                                                    <option value="Solteiro">Solteiro(a)</option>
-                                                    <option value="Casado">Casado(a)</option>
-                                                    <option value="Separado">Separado(a)</option>
-                                                    <option value="Divorciado">Divorciado(a)</option>
-                                                    <option value="Viúvo">Viúvo(a)</option>
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Estado civil</InputLabel>
+                                                    <Select
+                                                        label="Estado civil"
+                                                        name="estado_civil"
+                                                        value={form.estado_civil}
+                                                        onChange={handleChange}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione o estado civil</MenuItem>
+                                                        <MenuItem value="Solteiro">Solteiro(a)</MenuItem>
+                                                        <MenuItem value="Casado">Casado(a)</MenuItem>
+                                                        <MenuItem value="Separado">Separado(a)</MenuItem>
+                                                        <MenuItem value="Divorciado">Divorciado(a)</MenuItem>
+                                                        <MenuItem value="Viúvo">Viúvo(a)</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
                                             <Field>
-                                                <label>Cor</label>
-                                                <Select name="cor" value={form.cor} onChange={handleChange}>
-                                                    <option value="">Selecione a cor</option>
-                                                    <option value="Branca">Branca</option>
-                                                    <option value="Preta">Preta</option>
-                                                    <option value="Parda">Parda</option>
-                                                    <option value="Amarela">Amarela</option>
-                                                    <option value="Indígena">Indígena</option>
-                                                </Select>
+                                                <FormControl fullWidth>
+                                                    <InputLabel sx={labelSxStyle}>Cor</InputLabel>
+                                                    <Select
+                                                        label="Cor"
+                                                        name="cor"
+                                                        value={form.cor}
+                                                        onChange={handleChange}
+                                                        sx={selectSxStyle}
+                                                    >
+                                                        <MenuItem value="">Selecione a cor</MenuItem>
+                                                        <MenuItem value="Branca">Branca</MenuItem>
+                                                        <MenuItem value="Preta">Preta</MenuItem>
+                                                        <MenuItem value="Parda">Parda</MenuItem>
+                                                        <MenuItem value="Amarela">Amarela</MenuItem>
+                                                        <MenuItem value="Indígena">Indígena</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Field>
                                         </TwoCols>
 
                                         <TwoCols>
                                             <Field>
                                                 <label>Data de nascimento</label>
-                                                <Input type="date" name="data_nasc" value={form.data_nasc} onChange={handleChange} placeholder="DD/MM/AAAA" />
+                                                <Input
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label="Data de nascimento"
+                                                    type="date"
+                                                    name="data_nasc"
+                                                    value={form.data_nasc}
+                                                    onChange={handleChange}
+                                                    InputLabelProps={{ shrink: true }}
+                                                    sx={fieldSxStyle}
+                                                    slotProps={{
+                                                        inputLabel: { sx: labelSxStyle }
+                                                    }}
+                                                />
                                             </Field>
                                             <Field>
-                                                <label>Data e hora do falecimento</label>
-                                                <Input type="datetime-local" name="dh_falec" value={form.dh_falec} onChange={handleChange} placeholder="DD/MM/AAAA hh:mm" />
+                                                <label>Data e hora de falecimento</label>
+                                                <Input
+                                                    fullWidth
+                                                    variant="outlined"
+                                                    label="Data e hora do falecimento"
+                                                    type="datetime-local"
+                                                    name="dh_falec"
+                                                    value={form.dh_falec}
+                                                    onChange={handleChange}
+                                                    InputLabelProps={{ shrink: true }}
+                                                    sx={fieldSxStyle}
+                                                    slotProps={{
+                                                        inputLabel: { sx: labelSxStyle }
+                                                    }}
+                                                />
                                             </Field>
                                         </TwoCols>
 
                                         <Field>
-                                            <label>Filiação pai</label>
-                                            <Input name="filiacao_pai" value={form.filiacao_pai} onChange={handleChange} placeholder="Digite o nome do pai" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Filiação pai"
+                                                name="filiacao_pai"
+                                                value={form.filiacao_pai}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome do pai"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Filiação mãe</label>
-                                            <Input name="filiacao_mae" value={form.filiacao_mae} onChange={handleChange} placeholder="Digite o nome da mãe" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Filiação mãe"
+                                                name="filiacao_mae"
+                                                value={form.filiacao_mae}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome da mãe"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Profissão</label>
-                                            <Input name="profissao" value={form.profissao} onChange={handleChange} placeholder="Digite a profissão do falecido" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Profissão"
+                                                name="profissao"
+                                                value={form.profissao}
+                                                onChange={handleChange}
+                                                placeholder="Digite a profissão do falecido"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Naturalidade</label>
-                                            <Input name="naturalidade" value={busca.nacionalidade} onChange={e => setBusca(e.target.value)} list="lista-cidades" placeholder="Digite a naturalidade do falecido" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Naturalidade"
+                                                name="naturalidade"
+                                                value={busca}
+                                                onChange={e => setBusca(e.target.value)}
+                                                list="lista-cidades"
+                                                placeholder="Digite a naturalidade do falecido"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                             <datalist id="lista-cidades">
                                                 {resultados.map(c => (
                                                     <option key={c.id} value={`${c.nome} - ${c?.microrregiao?.mesorregiao?.UF?.sigla || ''}`} />
@@ -981,83 +1161,195 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
-                                            <label>Causa mortis</label>
-                                            <Input name="causa_mortis" value={form.causa_mortis} onChange={handleChange} placeholder="Digite a causa da morte" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Causa mortis"
+                                                name="causa_mortis"
+                                                value={form.causa_mortis}
+                                                onChange={handleChange}
+                                                placeholder="Digite a causa da morte"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
-
                                     </ColumnLeft>
 
                                     <ColumnRight>
-
                                         <Field>
-                                            <label>CPF do falecido</label>
-                                            <Input name="cpf" value={form.cpf || ""} onChange={handleChange} onBlur={() => {
-                                                const cpfLimpo = form.cpf.replace(/\D/g, '');
-                                                if (!cpfMask(cpfLimpo)) alert("CPF do falecido inválido")
-                                            }} placeholder="000.000.000-00" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>RG do falecido</label>
-                                            <Input name="rg" value={form.rg} onChange={handleChange} placeholder="00.000.000-0" maxLength={12} />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Certidão de óbito</label>
-                                            <Input name="certidao_obito" value={form.certidao_obito} onChange={handleChange} placeholder="Digite o número da certidão" maxLength={32} />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Nome do médico responsável</label>
-                                            <Input name="nome_doutor" value={form.nome_doutor} onChange={handleChange} placeholder="Digite o nome do médico" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Nome do familiar ou responsável</label>
-                                            <Input name="nome_resp" value={form.nome_resp} onChange={handleChange} placeholder="Digite o nome do responsável" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>CPF do responsável</label>
-                                            <Input name="doc_resp" value={form.doc_resp || ""} onChange={handleChange} onBlur={() => {
-                                                const cpfLimpo = form.doc_resp.replace(/\D/g, '');
-                                                if (!cpfMask(cpfLimpo)) alert("CPF do responsável inválido")
-                                            }} placeholder="000.000.000-00" />
-                                        </Field>
-
-                                        <Field>
-                                            <TextField variant="outlined" fullWidth label="Contato do responsável" name="tel_resp" value={form.tel_resp} onChange={handleChange}
-                                                sx={{
-                                                    "& .MuiOutlinedInput-root": {
-                                                        borderRadius: "24px"
-                                                    },
-                                                    "& .MuiOutlinedInput-input": {
-                                                        fontSize: "14px"
-                                                    },
-                                                    "& .MuiInputBase-input::placeholder": {
-                                                        opacity: 1
-                                                    }
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="CPF do falecido"
+                                                name="cpf"
+                                                value={form.cpf || ""}
+                                                onChange={handleChange}
+                                                onBlur={() => {
+                                                    const cpfLimpo = form.cpf.replace(/\D/g, '');
+                                                    if (!cpfMask(cpfLimpo)) alert("CPF do falecido inválido")
                                                 }}
-                                                InputLabelProps={{
-                                                    sx: { fontSize: "14px" }
+                                                placeholder="000.000.000-00"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
                                                 }}
                                             />
                                         </Field>
 
                                         <Field>
-                                            <label>Digite o CEP para buscar o endereço automaticamente</label>
-                                            <Input name="cepResp" value={cepResp ? (cepResp.length > 5 ? cepResp.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : cepResp) : ""} onChange={handleCepChange} onBlur={handleCepBlur} placeholder="00000-000" />
-                                            <small style={{ color: "#666" }}>{loadingCep}</small>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="RG do falecido"
+                                                name="rg"
+                                                value={form.rg}
+                                                onChange={handleChange}
+                                                placeholder="00.000.000-0"
+                                                maxLength={12}
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Endereço do responsável</label>
-                                            <Input name="endereco_resp" value={form.endereco_resp} onChange={handleChange} placeholder="Rua, bairro, cidade - UF" />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Certidão de óbito"
+                                                name="certidao_obito"
+                                                value={form.certidao_obito}
+                                                onChange={handleChange}
+                                                placeholder="Digite o número da certidão"
+                                                maxLength={32}
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <Field>
-                                            <label>Observações</label>
-                                            <Textarea name="obs_fal" value={form.obs_fal} onChange={handleChange} placeholder="Observações..." />
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Nome do médico responsável"
+                                                name="nome_doutor"
+                                                value={form.nome_doutor}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome do médico"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Nome do familiar ou responsável"
+                                                name="nome_resp"
+                                                value={form.nome_resp}
+                                                onChange={handleChange}
+                                                placeholder="Digite o nome do responsável"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="CPF do responsável"
+                                                name="doc_resp"
+                                                value={form.doc_resp || ""}
+                                                onChange={handleChange}
+                                                onBlur={() => {
+                                                    const cpfLimpo = form.doc_resp.replace(/\D/g, '');
+                                                    if (!cpfMask(cpfLimpo)) alert("CPF do responsável inválido")
+                                                }}
+                                                placeholder="000.000.000-00"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Contato do responsável"
+                                                name="tel_resp"
+                                                value={form.tel_resp}
+                                                onChange={handleChange}
+                                                placeholder="(XX)XXXXX-XXXX"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="CEP"
+                                                name="cepResp"
+                                                value={cepResp ? (cepResp.length > 5 ? cepResp.replace(/^(\d{5})(\d{1,3})/, "$1-$2") : cepResp) : ""}
+                                                onChange={handleCepChange}
+                                                onBlur={handleCepBlur}
+                                                placeholder="00000-000"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                            {loadingCep && <small style={{ color: "#666" }}>Buscando...</small>}
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Endereço do responsável"
+                                                name="endereco_resp"
+                                                value={form.endereco_resp}
+                                                onChange={handleChange}
+                                                placeholder="Rua, bairro, cidade - UF"
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Observações"
+                                                name="obs_fal"
+                                                value={form.obs_fal}
+                                                onChange={handleChange}
+                                                placeholder="Observações..."
+                                                multiline
+                                                rows={4}
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
                                         </Field>
 
                                         <FormActions>
@@ -1066,13 +1358,11 @@ export default function Cadastros() {
                                     </ColumnRight>
                                 </>
                             )}
-
                         </FormGrid>
                     </FormStyled>
                 </Container>
-            </MainLayout >
+            </MainLayout>
             <Footer />
         </div>
-
     )
 }

@@ -110,7 +110,7 @@ export const Input = styled.input`
   }
 `;
 
-export const Select = styled.select`
+export const SelectField = styled.select`
   ${baseInput}
   border-radius: 18px;
   &:focus {
