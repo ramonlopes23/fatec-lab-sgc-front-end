@@ -10,11 +10,22 @@ font-family:"Inter", sans-serif;
 
 
 export const LogoContainer = styled.div`
-padding:1.5rem;
-display:flex;
-flex-direction:column;
-align-items:center;
-border-bottom:1px solid #e5e7eb;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border-bottom: none;         
+  margin-bottom: 12px;        
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -20px;            
+    height: 2px;
+    background: #e5e7eb;
+  }
 `;
 
 export const LogoImage = styled.img`
@@ -37,13 +48,15 @@ font-family:"Inter", sans-serif;
 color:#6b7280;
 margin-bottom:0.5rem;
 margin-left:2.5rem;
+margin-top:20px;
 `;
 
 export const Title = styled.h2`
   text-align: center;
-  font-size: 20px;
+  font-size: 10px;
   letter-spacing: 2px;
-  margin-bottom:-50px;
+  margin-bottom:-25px;
+  margin-top:-0px;
   color: #191970;
 `;
 
