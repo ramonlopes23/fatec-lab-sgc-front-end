@@ -389,7 +389,7 @@ export default function Cadastros() {
         let rules = {};
 
         if (processType === "Cadastro de falecido") {
-            rules = {...RULES_FALECIDO, ...RULES_RESPONSAVEL};
+            rules = { ...RULES_FALECIDO, ...RULES_RESPONSAVEL };
 
             if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
                 if (!isValidDateRange(form.data_nasc, form.dh_falec)) {
@@ -401,7 +401,7 @@ export default function Cadastros() {
                 }
             }
         } else if (processType === "Cadastro de sepultamento") {
-            rules = {...RULES_SEPULTAMENTO, ...RULES_RESPONSAVEL};
+            rules = { ...RULES_SEPULTAMENTO, ...RULES_RESPONSAVEL };
         }
 
         const errors = validateForm(form, rules);
@@ -688,11 +688,12 @@ export default function Cadastros() {
                                                     variant="outlined"
                                                     label="Nome do falecido"
                                                     type="text"
+                                                    name="nome_fal"
                                                     placeholder="Digite o nome do falecido..."
                                                     error={!!fieldErrors.nome_fal}
                                                     helperText={fieldErrors.nome_fal}
                                                     value={searchFal}
-                                                    onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); }}
+                                                    onChange={(e) => { setSearchFal(e.target.value); setShowFalList(true); validateFieldOnChange("nome_fal", e.target.value) }}
                                                     onFocus={() => setShowFalList(true)}
                                                     onBlur={() => setTimeout(() => setShowFalList(false), 150)}
                                                     sx={fieldSxStyle}
@@ -735,7 +736,7 @@ export default function Cadastros() {
 
                                         <TwoCols>
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.titulo_posse}>
                                                     <InputLabel sx={labelSxStyle}>Possui título de posse?</InputLabel>
                                                     <Select label="Possui título de posse?" name="titulo_posse" value={form.titulo_posse} onChange={handleChange} sx={selectSxStyle}>
                                                         <MenuItem value="">Selecione a opção</MenuItem>
@@ -749,7 +750,7 @@ export default function Cadastros() {
 
                                         <TwoCols>
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.quadra_sep}>
                                                     <InputLabel sx={labelSxStyle}>Quadra</InputLabel>
                                                     <Select
                                                         label="Quadra"
@@ -771,7 +772,7 @@ export default function Cadastros() {
                                             </Field>
 
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.num_sepultura_sep}>
                                                     <InputLabel sx={labelSxStyle}>Nº da sepultura</InputLabel>
                                                     <Select
                                                         label="Nº da sepultura"
@@ -779,6 +780,7 @@ export default function Cadastros() {
                                                         value={form.num_sepultura_sep ?? ""}
                                                         onChange={handleChange}
                                                         disabled={isSubmitting}
+                                                        error={!!fieldErrors.num_sepultura_sep}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione a sepultura</MenuItem>
@@ -811,7 +813,7 @@ export default function Cadastros() {
                                             </Field>
 
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.taxa}>
                                                     <InputLabel sx={labelSxStyle}>Taxa de sepultamento</InputLabel>
                                                     <Select
                                                         label="Taxa de sepultamento"
@@ -920,7 +922,7 @@ export default function Cadastros() {
                                             </Field>
 
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.sexo}>
                                                     <InputLabel sx={labelSxStyle}>Sexo</InputLabel>
                                                     <Select
                                                         label="Sexo"
@@ -928,8 +930,6 @@ export default function Cadastros() {
                                                         value={form.sexo}
                                                         onChange={handleChange}
                                                         disabled={isSubmitting}
-                                                        error={!!fieldErrors.sexo}
-                                                        helperText={fieldErrors.sexo}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione</MenuItem>
@@ -943,15 +943,13 @@ export default function Cadastros() {
 
                                         <TwoCols>
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.estado_civil}>
                                                     <InputLabel sx={labelSxStyle}>Estado civil</InputLabel>
                                                     <Select
                                                         label="Estado civil"
                                                         name="estado_civil"
                                                         value={form.estado_civil}
                                                         onChange={handleChange}
-                                                        error={!!fieldErrors.sexo}
-                                                        helperText={fieldErrors.sexo}
                                                         disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
@@ -966,15 +964,13 @@ export default function Cadastros() {
                                                 </FormControl>
                                             </Field>
                                             <Field>
-                                                <FormControl fullWidth>
+                                                <FormControl fullWidth error={!!fieldErrors.cor}>
                                                     <InputLabel sx={labelSxStyle}>Cor</InputLabel>
                                                     <Select
                                                         label="Cor"
                                                         name="cor"
                                                         value={form.cor}
                                                         onChange={handleChange}
-                                                        error={!!fieldErrors.cor}
-                                                        helperText={fieldErrors.cor}
                                                         disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
