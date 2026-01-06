@@ -6,8 +6,11 @@ import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, For
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
+import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
+import { applyMaskByFieldName } from "../../utils/masks";
+import { isEmpty, isValidCPF, validateForm, isValidDateRange, RULES_FALECIDO, RULES_RESPONSAVEL, RULES_SEPULTAMENTO, getFieldError, hasErrors } from "../../utils/validation"
 
 export default function Cadastros() {
 
@@ -144,6 +147,11 @@ export default function Cadastros() {
         return saved?.cepResp || "";
     });
     const [loadingCep, setLoadingCep] = useState(false);
+    const [quadras, setQuadras] = useState([]);
+    const [covas, setCovas] = useState([]);
+    const [availableCovas, setAvailableCovas] = useState([]);
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -165,7 +173,6 @@ export default function Cadastros() {
             console.error("Erro ao limpar o estado salvo", err)
         }
     }
-
 
 
     useEffect(() => {
@@ -200,66 +207,6 @@ export default function Cadastros() {
     )
 
 
-    const cpfMask = value => {
-        const cpf = String(value || '').replace(/\D/g, '');
-
-        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
-        let soma = 0;
-        for (let i = 0; i < 9; i++) {
-            soma += parseInt(cpf[i]) * (10 - i);
-        }
-        let resto = (soma * 10) % 11;
-        if (resto === 10) resto = 0;
-        if (resto !== parseInt(cpf[9])) return false;
-
-        soma = 0;
-        for (let i = 0; i < 10; i++) {
-            soma += parseInt(cpf[i]) * (11 - i);
-        }
-        resto = (soma * 10) % 11
-        if (resto === 10) resto = 0;
-        if (resto !== parseInt(cpf[10])) return false;
-
-        return true;
-
-    };
-
-    const rgMask = value => {
-        const cleaned = String(value || '').replace(/[^0-9A-Za-z]/g, '');
-        let letter = '';
-        let core = cleaned;
-        if (/[A-Za-z]$/.test(core)) {
-            letter = core.slice(-1).toUpperCase();
-            core = core.slice(0, -1);
-        }
-        const digits = core.replace(/\D/g, '').slice(0, 9);
-        let out = digits
-            .replace(/(\d{2})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d)/, '$1.$2')
-            .replace(/(\d{3})(\d{1,2})/, '$1-$2');
-
-        if (letter) {
-            if (!out) return letter;
-            return out.includes('-') ? out + letter : out + '-' + letter;
-        }
-        return out;
-    };
-
-    const phoneMask = (value) => {
-        const digits = value.replace(/\D/g, '').slice(0, 11)
-
-        if (digits.length <= 10) {
-            return digits
-                .replace(/^(\d{2})(\d)/g, "($1) $2")
-                .replace(/(\d{4})(\d)/, "$1-$2")
-        } else {
-            return digits
-                .replace(/^(\d{2})(\d)/g, "($1) $2")
-                .replace()
-        }
-    }
-
     useEffect(() => {
         if (!searchFal) {
             setFilteredFalecidos([]);
@@ -270,10 +217,6 @@ export default function Cadastros() {
         setFilteredFalecidos((falecidos || []).filter(f => ((f.nome_fal || f.nome) || "").toLowerCase().includes(s)).slice(0, 10));
     }, [searchFal, falecidos])
 
-
-    const [quadras, setQuadras] = useState([]);
-    const [covas, setCovas] = useState([]);
-    const [availableCovas, setAvailableCovas] = useState([]);
 
     const isCovaAvailable = (c, tituloPosse = "") => {
         const cap = Number(c?.capacidade ?? 0);
@@ -346,70 +289,50 @@ export default function Cadastros() {
         const { name, value, type, checked } = e.target;
         const incoming = type === "checkbox" ? checked : value;
 
-        if (name === "data_nasc" || name === "dh_falec") {
-            const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
+        const maskedValue = applyMaskByFieldName(name, incoming);
+        updateFieldByName(name, maskedValue);
 
-            if (name === "data_nasc") {
-                const newDataNasc = value;
-                if (!isEmpty(newDataNasc) && !isEmpty(form.dh_falec)) {
-                    const dataNasc = new Date(newDataNasc);
-                    const dhFalec = new Date(dhFalec);
+        validateFieldOnChange(name, maskedValue);
 
-                    if (dhFalec < dataNasc) {
-                        console.warn("Data de falecimento é anterior a data de nascimento.")
-                    }
-                }
-            }
 
-            if (name === "data_nasc") {
-                const newDhFalec = value;
-                if (!isEmpty(newDhFalec) && !isEmpty(form.dh_falec)) {
-                    const dataNasc = new Date(form.data_nasc);
-                    const dhFalec = new Date(newDhFalec);
 
-                    if (dhFalec < dataNasc) {
-                        console.warn("Data de falecimento é anterior a data de nascimento.")
-                    }
+        /* if (name === "data_nasc" || name === "dh_falec") {
+            const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === ""); */
+
+        /* if (name === "data_nasc") {
+            const newDataNasc = value;
+            if (!isEmpty(newDataNasc) && !isEmpty(form.dh_falec)) {
+                const dataNasc = new Date(newDataNasc);
+                const dhFalec = new Date(dhFalec);
+
+                if (dhFalec < dataNasc) {
+                    console.warn("Data de falecimento é anterior a data de nascimento.")
                 }
             }
         }
 
-        const cpfFields = ["cpf", "doc_resp"];
+        if (name === "data_nasc") {
+            const newDhFalec = value;
+            if (!isEmpty(newDhFalec) && !isEmpty(form.dh_falec)) {
+                const dataNasc = new Date(form.data_nasc);
+                const dhFalec = new Date(newDhFalec);
 
-        if (cpfFields.includes(name)) {
-            const digitsOnly = value.replace(/\D/g, '').slice(0, 11);
-
-            const maskedCpf = digitsOnly
-                .replace(/^(\d{3})(\d)/, "$1.$2")
-                .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
-                .replace(/\.(\d{3})(\d)/, ".$1-$2");
-            updateFieldByName(name, maskedCpf);
-            return;
+                if (dhFalec < dataNasc) {
+                    console.warn("Data de falecimento é anterior a data de nascimento.")
+                }
+            }
         }
+    } */
+
 
         if (name === "taxa") {
-            const valor = taxa_map[value] ?? 0;
-            updateFieldByName("taxa", value);
+            const valor = taxa_map[maskedValue] ?? 0;
             updateFieldByName("taxa_valor", valor);
-            return;
         }
 
-        const phoneFields = ["tel_resp"];
-        if (phoneFields.includes(name)) {
-            const masked = phoneMask(value);
-            updateFieldByName(name, masked);
-            return
-        }
-
-        if (name === "rg") {
-            const masked = rgMask(value);
-            updateFieldByName("rg", masked)
-            return;
-        }
-
-
-        updateFieldByName(name, incoming)
+        /* updateFieldByName(name, incoming) */
     };
+
 
     const handleSelectFalecido = (val) => {
         const raw = val === undefined || val === null ? "" : String(val).trim();
@@ -434,67 +357,95 @@ export default function Cadastros() {
 
 
 
-    const validateDates = () => {
+    /* const validateDates = () => {
         if (processType !== "Cadastro de falecido") return true;
-
+    
         const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
         if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
             const dataNasc = new Date(form.data_nasc);
             const dhFalec = new Date(form.dh_falec);
-
+    
             if (isNaN(dataNasc.getTime())) {
                 alert("Data de nascimento inválida");
                 return false;
             }
-
+    
             if (isNaN(dhFalec.getTime())) {
                 alert("Data e hora de falecimento inválida");
                 return false;
             }
-
+    
             if (dhFalec < dataNasc) {
                 alert("A data de falecimento não pode ser anterior a data de nascimento");
                 return false;
             }
-
-
+    
+    
         }
         return true;
+    
+    } */
 
+    const validateFieldOnChange = (fieldName, value) => {
+        let rule = {};
+
+        if (processType === "Cadastro de falecido") {
+            rule = RULES_FALECIDO[fieldName];
+        } else if (processType === "Cadastro de sepultamento") {
+            rule = RULES_SEPULTAMENTO[fieldName];
+        }
+
+        if (!rule && (fieldName === "nome_resp" || fieldName === "tel_resp" || fieldName === "doc_resp")) {
+            rule = RULES_RESPONSAVEL[fieldName];
+        }
+
+        const error = getFieldError(fieldName, value, rule);
+
+        setFieldErrors(prev => {
+            const newErrors = { ...prev };
+            if (error) {
+                newErrors[fieldName] = error;
+            } else {
+                delete newErrors[fieldName];
+            }
+            return newErrors;
+        })
     }
+
+    const validateBeforeSubmit = () => {
+        let rules = {};
+
+        if (processType === "Cadastro de falecido") {
+            rules = RULES_FALECIDO;
+
+            if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
+                if (!isValidDateRange(form.data_nasc, form.dh_falec)) {
+                    setFieldErrors(prev => ({
+                        ...prev,
+                        dh_falec: "Data de falecimento não pode ser anterior à data de nascimento"
+                    }));
+                    return false
+                }
+            }
+        } else if (processType === "Cadastro de sepultamento") {
+            rules = RULES_SEPULTAMENTO;
+        }
+
+        const errors = validateForm(form, rules);
+        setFieldErrors(errors);
+        return !hasErrors(errors);
+    }
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateDates()) {
-            return;
+        if (!validateBeforeSubmit()) {
+            alert("Por favor, corrija os erros no formulário");
+            return
         }
 
-        const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
-
-        let requiredTemplate = {};
-        if (processType === "Cadastro de falecido") requiredTemplate = falecido;
-        else if (processType === "Cadastro de sepultamento") requiredTemplate = sepultamento;
-
-
-        const requiredKeys = Object.keys(requiredTemplate);
-        const missing = requiredKeys.filter((k) => {
-            if (typeof requiredTemplate[k] === "boolean") return false;
-            return isEmpty(form[k])
-        });
-
-        if (missing.length) {
-            console.group("%cValidação de cadastro falhou", "color: #b00; font-weight:700");
-            console.log("processType:", processType);
-            console.log("requiredKeys:", requiredKeys);
-            console.log("form (valores):", form);
-            console.log("missing keys:", missing);
-            missing.forEach(k => console.log(`-> '${k}':`, form[k]));
-            console.groupEnd();
-            alert("Preencha todos os campos obrigatórios antes de salvar");
-            return;
-        }
-
+        setIsSubmitting(true);
         try {
 
             if (processType === "Cadastro de falecido") {
@@ -659,7 +610,8 @@ export default function Cadastros() {
         }
         return found?.tipo_cova ?? "";
 
-    }, [form.quadra_sep, form.num_sepultura_sep, form.num_sepultura, covas, availableCovas]);
+    }, [form.quadra_sep, form.num_sepultura_sep, covas, availableCovas]);
+
 
     return (
         <div>
@@ -796,12 +748,12 @@ export default function Cadastros() {
                                         <TwoCols>
                                             <Field>
                                                 <label>Data do óbito</label>
-                                                <TextField fullWidth variant="outlined" type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
+                                                <TextField fullWidth variant="outlined" type="date" name="data_obito_sep" value={form.data_obito_sep} onChange={handleChange} disabled={isSubmitting} InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
                                             </Field>
 
                                             <Field>
                                                 <label>Data e hora do sepultamento</label>
-                                                <TextField fullWidth variant="outlined" type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
+                                                <TextField fullWidth variant="outlined" type="datetime-local" name="dh_sep" value={form.dh_sep} onChange={handleChange} placeholder="Sala" disabled={isSubmitting} InputLabelProps={{ shrink: true }} sx={fieldSxStyle} slotProps={{ inputLabel: { sx: labelSxStyle } }} />
                                             </Field>
                                         </TwoCols>
 
@@ -828,6 +780,7 @@ export default function Cadastros() {
                                                         name="quadra_sep"
                                                         value={form.quadra_sep ?? ""}
                                                         onChange={(e) => handleQuadraSepChange(e.target.value)}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione a quadra</MenuItem>
@@ -837,6 +790,7 @@ export default function Cadastros() {
                                                             </MenuItem>
                                                         ))}
                                                     </Select>
+                                                    {fieldErrors.quadra_sep && <FormHelperText>{fieldErrors.quadra_sep}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
 
@@ -848,6 +802,7 @@ export default function Cadastros() {
                                                         name="num_sepultura_sep"
                                                         value={form.num_sepultura_sep ?? ""}
                                                         onChange={handleChange}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione a sepultura</MenuItem>
@@ -861,6 +816,7 @@ export default function Cadastros() {
                                                             )
                                                         })}
                                                     </Select>
+                                                    {fieldErrors.num_sepultura_sep && <FormHelperText>{fieldErrors.num_sepultura_sep}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
 
@@ -886,6 +842,7 @@ export default function Cadastros() {
                                                         name="taxa"
                                                         value={form.taxa}
                                                         onChange={handleChange}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione o tipo de taxa</MenuItem>
@@ -896,6 +853,7 @@ export default function Cadastros() {
                                                         <MenuItem value="adulto_laje">ADULTO LAJE - R$280,71</MenuItem>
                                                         <MenuItem value="indigente">ISENÇÃO POR INDIGÊNCIA</MenuItem>
                                                     </Select>
+                                                    {fieldErrors.taxa && <FormHelperText>{fieldErrors.taxa}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
                                         </TwoCols>
@@ -910,6 +868,7 @@ export default function Cadastros() {
                                                 name="coveiro_sep"
                                                 value={form.coveiro_sep}
                                                 onChange={handleChange}
+                                                disabled={isSubmitting}
                                                 placeholder="Digite o nome do funcionário"
                                                 sx={fieldSxStyle}
                                                 slotProps={{
@@ -937,7 +896,7 @@ export default function Cadastros() {
                                         </Field>
 
                                         <FormActions>
-                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
+                                            <BtnPrimary type="submit" disabled={isSubmitting || hasErrors(fieldErrors)}>{isSubmitting ? "Salvando..." : "Salvar"}</BtnPrimary>
                                         </FormActions>
                                     </ColumnRight>
                                 </>
@@ -953,6 +912,9 @@ export default function Cadastros() {
                                                 value={form.nome_fal}
                                                 onChange={handleChange}
                                                 placeholder="Digite o nome do falecido"
+                                                error={!!fieldErrors.nome_fal}
+                                                helperText={fieldErrors.nome_fal}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -969,6 +931,9 @@ export default function Cadastros() {
                                                     name="idade"
                                                     value={form.idade}
                                                     onChange={handleChange}
+                                                    error={!!fieldErrors.idade}
+                                                    helperText={fieldErrors.idade}
+                                                    disabled={isSubmitting}
                                                     sx={fieldSxStyle}
                                                     slotProps={{
                                                         inputLabel: { sx: labelSxStyle }
@@ -984,12 +949,14 @@ export default function Cadastros() {
                                                         name="sexo"
                                                         value={form.sexo}
                                                         onChange={handleChange}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione</MenuItem>
                                                         <MenuItem value="masculino">Masculino</MenuItem>
                                                         <MenuItem value="feminino">Feminino</MenuItem>
                                                     </Select>
+                                                    {fieldErrors.sexo && <FormHelperText>{fieldErrors.sexo}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
                                         </TwoCols>
@@ -1003,6 +970,7 @@ export default function Cadastros() {
                                                         name="estado_civil"
                                                         value={form.estado_civil}
                                                         onChange={handleChange}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione o estado civil</MenuItem>
@@ -1012,6 +980,7 @@ export default function Cadastros() {
                                                         <MenuItem value="Divorciado">Divorciado(a)</MenuItem>
                                                         <MenuItem value="Viúvo">Viúvo(a)</MenuItem>
                                                     </Select>
+                                                    {fieldErrors.estado_civil && <FormHelperText>{fieldErrors.estado_civil}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
                                             <Field>
@@ -1022,6 +991,7 @@ export default function Cadastros() {
                                                         name="cor"
                                                         value={form.cor}
                                                         onChange={handleChange}
+                                                        disabled={isSubmitting}
                                                         sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione a cor</MenuItem>
@@ -1031,6 +1001,7 @@ export default function Cadastros() {
                                                         <MenuItem value="Amarela">Amarela</MenuItem>
                                                         <MenuItem value="Indígena">Indígena</MenuItem>
                                                     </Select>
+                                                    {fieldErrors.cor && <FormHelperText>{fieldErrors.cor}</FormHelperText>}
                                                 </FormControl>
                                             </Field>
                                         </TwoCols>
@@ -1045,6 +1016,9 @@ export default function Cadastros() {
                                                     name="data_nasc"
                                                     value={form.data_nasc}
                                                     onChange={handleChange}
+                                                    error={!!fieldErrors.data_nasc}
+                                                    helperText={fieldErrors.data_nasc}
+                                                    disabled={isSubmitting}
                                                     InputLabelProps={{ shrink: true }}
                                                     sx={fieldSxStyle}
                                                     slotProps={{
@@ -1061,6 +1035,9 @@ export default function Cadastros() {
                                                     name="dh_falec"
                                                     value={form.dh_falec}
                                                     onChange={handleChange}
+                                                    error={!!fieldErrors.dh_falec}
+                                                    helperText={fieldErrors.dh_falec}
+                                                    disabled={isSubmitting}
                                                     InputLabelProps={{ shrink: true }}
                                                     sx={fieldSxStyle}
                                                     slotProps={{
@@ -1078,6 +1055,9 @@ export default function Cadastros() {
                                                 name="filiacao_pai"
                                                 value={form.filiacao_pai}
                                                 onChange={handleChange}
+                                                error={!!fieldErrors.filiacao_pai}
+                                                helperText={fieldErrors.filiacao_pai}
+                                                disabled={isSubmitting}
                                                 placeholder="Digite o nome do pai"
                                                 sx={fieldSxStyle}
                                                 slotProps={{
@@ -1094,6 +1074,9 @@ export default function Cadastros() {
                                                 name="filiacao_mae"
                                                 value={form.filiacao_mae}
                                                 onChange={handleChange}
+                                                error={!!fieldErrors.filiacao_mae}
+                                                helperText={fieldErrors.filiacao_mae}
+                                                disabled={isSubmitting}
                                                 placeholder="Digite o nome da mãe"
                                                 sx={fieldSxStyle}
                                                 slotProps={{
@@ -1111,6 +1094,9 @@ export default function Cadastros() {
                                                 value={form.profissao}
                                                 onChange={handleChange}
                                                 placeholder="Digite a profissão do falecido"
+                                                error={!!fieldErrors.profissao}
+                                                helperText={fieldErrors.profissao}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1128,6 +1114,9 @@ export default function Cadastros() {
                                                 onChange={e => setBusca(e.target.value)}
                                                 list="lista-cidades"
                                                 placeholder="Digite a naturalidade do falecido"
+                                                error={!!fieldErrors.naturalidade}
+                                                helperText={fieldErrors.naturalidade}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1167,6 +1156,9 @@ export default function Cadastros() {
                                                 value={form.causa_mortis}
                                                 onChange={handleChange}
                                                 placeholder="Digite a causa da morte"
+                                                error={!!fieldErrors.causa_mortis}
+                                                helperText={fieldErrors.causa_mortis}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1184,6 +1176,9 @@ export default function Cadastros() {
                                                 name="cpf"
                                                 value={form.cpf || ""}
                                                 onChange={handleChange}
+                                                error={!!fieldErrors.cpf}
+                                                helperText={fieldErrors.cpf}
+                                                disabled={isSubmitting}
                                                 onBlur={() => {
                                                     const cpfLimpo = form.cpf.replace(/\D/g, '');
                                                     if (!cpfMask(cpfLimpo)) alert("CPF do falecido inválido")
@@ -1205,6 +1200,9 @@ export default function Cadastros() {
                                                 value={form.rg}
                                                 onChange={handleChange}
                                                 placeholder="00.000.000-0"
+                                                error={!!fieldErrors.rg}
+                                                helperText={fieldErrors.rg}
+                                                disabled={isSubmitting}
                                                 maxLength={12}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
@@ -1222,6 +1220,9 @@ export default function Cadastros() {
                                                 value={form.certidao_obito}
                                                 onChange={handleChange}
                                                 placeholder="Digite o número da certidão"
+                                                error={!!fieldErrors.certidao_obito}
+                                                helperText={fieldErrors.certidao_obito}
+                                                disabled={isSubmitting}
                                                 maxLength={32}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
@@ -1239,6 +1240,9 @@ export default function Cadastros() {
                                                 value={form.nome_doutor}
                                                 onChange={handleChange}
                                                 placeholder="Digite o nome do médico"
+                                                error={!!fieldErrors.nome_doutor}
+                                                helperText={fieldErrors.nome_doutor}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1255,6 +1259,9 @@ export default function Cadastros() {
                                                 value={form.nome_resp}
                                                 onChange={handleChange}
                                                 placeholder="Digite o nome do responsável"
+                                                error={!!fieldErrors.nome_resp}
+                                                helperText={fieldErrors.nome_resp}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1275,6 +1282,9 @@ export default function Cadastros() {
                                                     if (!cpfMask(cpfLimpo)) alert("CPF do responsável inválido")
                                                 }}
                                                 placeholder="000.000.000-00"
+                                                error={!!fieldErrors.doc_resp}
+                                                helperText={fieldErrors.doc_resp}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1291,6 +1301,9 @@ export default function Cadastros() {
                                                 value={form.tel_resp}
                                                 onChange={handleChange}
                                                 placeholder="(XX)XXXXX-XXXX"
+                                                error={!!fieldErrors.tel_resp}
+                                                helperText={fieldErrors.tel_resp}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1308,6 +1321,9 @@ export default function Cadastros() {
                                                 onChange={handleCepChange}
                                                 onBlur={handleCepBlur}
                                                 placeholder="00000-000"
+                                                error={!!fieldErrors.cepResp}
+                                                helperText={fieldErrors.cepResp}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1325,6 +1341,9 @@ export default function Cadastros() {
                                                 value={form.endereco_resp}
                                                 onChange={handleChange}
                                                 placeholder="Rua, bairro, cidade - UF"
+                                                error={!!fieldErrors.endereco_resp}
+                                                helperText={fieldErrors.endereco_resp}
+                                                disabled={isSubmitting}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1341,6 +1360,9 @@ export default function Cadastros() {
                                                 value={form.obs_fal}
                                                 onChange={handleChange}
                                                 placeholder="Observações..."
+                                                error={!!fieldErrors.obs_fal}
+                                                helperText={fieldErrors.obs_fal}
+                                                disabled={isSubmitting}
                                                 multiline
                                                 rows={4}
                                                 sx={fieldSxStyle}
