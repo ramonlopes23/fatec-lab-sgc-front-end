@@ -171,6 +171,41 @@ export const BtnPrimary = styled.button`
   }
 `;
 
+export const BtnCheck = styled.button`
+    
+`
+
+export const BtnClear = styled.button`
+  background: #bbc1c3;
+  color: #000;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 24px;
+  margin-right:15px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+  width: 120px;       
+  height: 44px;
+  transition:
+    transform 220ms cubic-bezier(.22,.61,.36,1),
+    box-shadow 220ms cubic-bezier(.22,.61,.36,1),
+    opacity 160ms ease;
+    font-size:18px;
+  will-change: transform;
+  transform: translateZ(0);
+
+  &:hover {
+    opacity: 0.8;
+    transform: scale(1.12);
+    box-shadow: 0 10px 22px rgba(15,13,58,0.25);
+  }
+  &:active {
+    transform: scale(1.06);
+  }
+`;
+
+
 export const InputCova = styled.input`
   width: 100%;
   box-sizing: border-box;

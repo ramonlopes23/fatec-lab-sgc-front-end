@@ -2,7 +2,7 @@ import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
-import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova } from "./styles";
+import { BtnPrimary, ColumnLeft, ColumnRight, Container, Field, FormActions, FormGrid, FormStyled, FormTop, Input, SelectTop, SmallLabel, Textarea, Title, TwoCols, InputCova, BtnClear, BtnCheck } from "./styles";
 import TextField from "@mui/material/TextField";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -153,6 +153,7 @@ export default function Cadastros() {
     const [availableCovas, setAvailableCovas] = useState([]);
     const [fieldErrors, setFieldErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isIndigente, setIsIndigente] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -368,7 +369,14 @@ export default function Cadastros() {
     };
 
 
-
+    const handleClearFalecido = () =>{
+        setForm(falecido);
+        setFieldErrors({});
+        setCepResp("");
+        setBusca("");
+        setSearchFal("");
+        clearSavedState();
+    };
 
     const validateFieldOnChange = (fieldName, value) => {
         let rule = {};
@@ -601,7 +609,8 @@ export default function Cadastros() {
         <div>
             <MainLayout>
                 <Container>
-                    <FormStyled onSubmit={handleSubmit}>
+                    <FormStyled onSubmit={handleSubmit}>   
+                        <BtnCheck type="checkbox">É indigente?</BtnCheck>                     
                         <Title>CADASTRO DE PROCESSOS</Title>
                         <FormTop>
                             <SmallLabel>Selecione qual processo deseja cadastrar</SmallLabel>
@@ -1367,6 +1376,7 @@ export default function Cadastros() {
                                         </Field>
 
                                         <FormActions>
+                                            <BtnClear type="button" onClick={handleClearFalecido} disabled={isSubmitting}>Limpar</BtnClear>
                                             <BtnPrimary type="submit" disabled={isSubmitting || hasErrors(fieldErrors)}>{isSubmitting ? "Salvando..." : "Salvar"}</BtnPrimary>
                                         </FormActions>
                                     </ColumnRight>
