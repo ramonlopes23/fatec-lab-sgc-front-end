@@ -98,6 +98,7 @@ export const RULES_FALECIDO = {
 };
 
 export const RULES_SEPULTAMENTO = {
+    nome_fal: { required: true, label: "Nome do falecido" },
     data_obito_sep: { required: true, label: "Data do óbito" },
     dh_sep: { required: true, label: "Data do sepultamento" },
     titulo_posse: { required: true, label: "Título de posse" },

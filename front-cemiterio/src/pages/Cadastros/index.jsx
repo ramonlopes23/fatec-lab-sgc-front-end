@@ -9,6 +9,7 @@ import FormControl from "@mui/material/FormControl";
 import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
+import Autocomplete from "@mui/material/Autocomplete";
 import { applyMaskByFieldName } from "../../utils/masks";
 import { isEmpty, isValidCPF, validateForm, isValidDateRange, RULES_FALECIDO, RULES_RESPONSAVEL, RULES_SEPULTAMENTO, getFieldError, hasErrors } from "../../utils/validation"
 
@@ -178,7 +179,12 @@ export default function Cadastros() {
     useEffect(() => {
         fetch('https://servicodados.ibge.gov.br/api/v1/localidades/municipios')
             .then(res => res.json())
-            .then(data => setCidades(data));
+            .then(data => {
+                console.log('Cidades carregadas:', data.length);
+                setCidades(data);
+            })
+            .catch(err => console.error('Erro ao carregar cidades', err))
+        /* .then(data => setCidades(data)); */
     }, [])
 
     const fetchViaCep = async (cepDigits) => {
@@ -202,9 +208,14 @@ export default function Cadastros() {
     };
 
 
-    const resultados = cidades.filter(c =>
-        c.nome.toLowerCase().includes(busca.toLowerCase())
-    )
+    const resultados = useMemo(() => {
+        const filtered = cidades.filter(c =>
+            c.nome.toLowerCase().includes((busca || "").toLowerCase())
+        );
+        console.log('Busca:', busca, 'Resultados:', filtered.length);
+        return filtered;
+    }, [cidades, busca]);
+
 
 
     useEffect(() => {
@@ -1085,28 +1096,39 @@ export default function Cadastros() {
                                         </Field>
 
                                         <Field>
-                                            <TextField
+                                            <Autocomplete
                                                 fullWidth
-                                                variant="outlined"
-                                                label="Naturalidade"
-                                                name="naturalidade"
-                                                value={form.naturalidade}
-                                                onChange={(e) => { updateFieldByName('naturalidade', e.target.value); setBusca(e.target.value); }}
-                                                list="lista-cidades"
-                                                placeholder="Digite a naturalidade do falecido"
-                                                error={!!fieldErrors.naturalidade}
-                                                helperText={fieldErrors.naturalidade}
-                                                disabled={isSubmitting}
-                                                sx={fieldSxStyle}
-                                                slotProps={{
-                                                    inputLabel: { sx: labelSxStyle }
+                                                options={resultados}
+                                                getOptionLabel={(option) => `${option.nome} - ${option?.microrregiao?.mesorregiao?.UF?.sigla || ''}`}
+                                                inputValue={busca}
+                                                onInputChange={(_, newInputValue) => {
+                                                    updateFieldByName('naturalidade', newInputValue)
+                                                    setBusca(newInputValue);
+                                                    validateFieldOnChange("naturalidade", newInputValue);
                                                 }}
+                                                onChange={(_, newValue) => {
+                                                    const displayValue = newValue ? `${newValue.nome} - ${newValue?.microrregiao?.mesorregiao?.UF?.sigla || ''}` : '';
+                                                    updateFieldByName('naturalidade', displayValue);
+                                                    validateFieldOnChange("naturalidade", displayValue);
+                                                }}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        label="Naturalidade"
+                                                        placeholder="Digite a naturalidade do falecido"
+                                                        error={!!fieldErrors.naturalidade}
+                                                        helperText={fieldErrors.naturalidade}
+                                                        disabled={isSubmitting}
+                                                        sx={fieldSxStyle}
+                                                        slotProps={{
+                                                            inputLabel: { sx: labelSxStyle }
+                                                        }}
+                                                    />
+                                                )}
+                                                noOptionsText="Nenhuma cidade encontrada"
+                                                loadingText="Carregando..."
+                                                disabled={isSubmitting}
                                             />
-                                            <datalist id="lista-cidades">
-                                                {resultados.map(c => (
-                                                    <option key={c.id} value={`${c.nome} - ${c?.microrregiao?.mesorregiao?.UF?.sigla || ''}`} />
-                                                ))}
-                                            </datalist>
                                         </Field>
 
                                         <Field>
