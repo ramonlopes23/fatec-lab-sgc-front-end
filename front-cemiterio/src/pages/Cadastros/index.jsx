@@ -38,7 +38,7 @@ export default function Cadastros() {
         nome_resp: "",
         doc_resp: "",
         tel_resp: "",
-        cep_resp:"",
+        cep_resp: "",
         endereco_resp: "",
     };
 
@@ -80,7 +80,7 @@ export default function Cadastros() {
     }
  */
     const STORAGE_KEY = "cadastro_form_state";
-    
+
 
     const loadSavedState = () => {
         try {
@@ -389,6 +389,26 @@ export default function Cadastros() {
         setIsIndigente(false)
     };
 
+    const handleClearSepultamento = () => {
+        setForm(prev => ({
+            ...prev,
+            nome_fal: "",
+            data_obito_sep: "",
+            dh_sep: "",
+            titulo_posse: "",
+            quadra_sep: "",
+            num_sepultura_sep: "",
+            taxa: "",
+            coveiro_sep: "",
+            obs_sep: ""
+        }));
+        setFieldErrors({});
+        setBusca("");
+        clearSavedState();
+        setIsIndigente(false);
+
+    }
+
     const validateFieldOnChange = (fieldName, value) => {
         if (processType === "Cadastro de falecido" && isIndigente && !ALLOWED_FAL_INDI.has(fieldName)) {
             setFieldErrors(prev => {
@@ -557,7 +577,7 @@ export default function Cadastros() {
             console.error("Erro ao cadastrar:", err);
             alert("Erro ao cadastrar processo");
         }
-        finally{
+        finally {
             setIsSubmitting(false);
         }
     }
@@ -605,15 +625,15 @@ export default function Cadastros() {
         const raw = ev.target.value || "";
         const digits = normalizeCep(raw);
         setCepResp(digits);
-        setForm(prev=>({...prev, cep_resp:digits}))
-        setFieldErrors(prev=>{
-            if(!prev.cep_resp) return prev;
-            const next = {...prev};
+        setForm(prev => ({ ...prev, cep_resp: digits }))
+        setFieldErrors(prev => {
+            if (!prev.cep_resp) return prev;
+            const next = { ...prev };
             delete next.cep_resp;
             return next;
         })
-        
-        
+
+
         if (digits.length === 8) {
             const found = await fetchViaCep(digits);
             if (found) {
@@ -978,7 +998,8 @@ export default function Cadastros() {
                                         </Field>
 
                                         <FormActions>
-                                            <BtnPrimary type="submit" disabled={isSubmitting || hasErrors(fieldErrors)}>{isSubmitting ? "Salvando..." : "Salvar"}</BtnPrimary>
+                                            <BtnClear type="button" onClick={handleClearSepultamento} disabled={isSubmitting}>Limpar</BtnClear>
+                                            <BtnPrimary type="submit" disabled={isSubmitting || hasErrors(fieldErrors)}>Salvar</BtnPrimary>
                                         </FormActions>
                                     </ColumnRight>
                                 </>
@@ -1053,7 +1074,7 @@ export default function Cadastros() {
                                                         value={form.estado_civil}
                                                         onChange={handleChange}
                                                         disabled={disabledFor('estado_civil')}
-                                                        sx={selectSxStyle}                                                        
+                                                        sx={selectSxStyle}
                                                     >
                                                         <MenuItem value="">Selecione o estado civil</MenuItem>
                                                         <MenuItem value="Solteiro">Solteiro(a)</MenuItem>
