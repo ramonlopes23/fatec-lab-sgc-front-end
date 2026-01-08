@@ -171,9 +171,100 @@ export const BtnPrimary = styled.button`
   }
 `;
 
-export const BtnCheck = styled.button`
-    
-`
+export const CheckboxWrapper = styled.div`
+  box-sizing: border-box;
+
+  * {
+    box-sizing: inherit;
+  }
+
+  *::before,
+  *::after {
+    box-sizing: inherit;
+  }
+`;
+
+export const CheckboxInput = styled.input.attrs({ type: "checkbox" })`
+  --active: #275efe;
+  --active-inner: #fff;
+  --focus: 2px rgba(39, 94, 254, 0.3);
+  --border: #bbc1e1;
+  --border-hover: #275efe;
+  --background: #fff;
+  --disabled: #f6f8ff;
+  --disabled-inner: #e1e6f9;
+
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  width: 21px;
+  height: 21px;
+  margin: 0;
+  outline: none;
+  cursor: pointer;
+  display: inline-block;
+  vertical-align: top;
+  position: relative;
+
+  border: 1px solid var(--bc, var(--border));
+  border-radius: 7px;
+  background: var(--b, var(--background));
+
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.2s;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 4px;
+    width: 5px;
+    height: 9px;
+    border: 2px solid var(--active-inner);
+    border-top: 0;
+    border-left: 0;
+    opacity: var(--o, 0);
+    transform: rotate(var(--r, 20deg));
+    transition: transform var(--d-t, 0.3s) var(--d-t-e, ease),
+      opacity var(--d-o, 0.2s);
+  }
+
+  &:checked {
+    --b: var(--active);
+    --bc: var(--active);
+    --o: 1;
+    --r: 43deg;
+    --d-o: 0.3s;
+    --d-t: 0.6s;
+    --d-t-e: cubic-bezier(0.2, 0.85, 0.32, 1.2);
+  }
+
+  &:hover:not(:checked):not(:disabled) {
+    --bc: var(--border-hover);
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 var(--focus);
+  }
+
+  &:disabled {
+    --b: var(--disabled);
+    cursor: not-allowed;
+    opacity: 0.9;
+  }
+
+  &:disabled:checked {
+    --b: var(--disabled-inner);
+    --bc: var(--border);
+  }
+`;
+
+export const CheckboxLabel = styled.label`
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  cursor: pointer;
+`;
 
 export const BtnClear = styled.button`
   background: #bbc1c3;
