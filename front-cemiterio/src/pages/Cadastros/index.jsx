@@ -10,8 +10,13 @@ import FormHelperText from "@mui/material/FormHelperText";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import Autocomplete from "@mui/material/Autocomplete";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogActions from "@mui/material/DialogActions";
 import { applyMaskByFieldName } from "../../utils/masks";
-import { isEmpty, isValidCPF, validateForm, isValidDateRange, RULES_FALECIDO, RULES_RESPONSAVEL, RULES_SEPULTAMENTO, getFieldError, hasErrors } from "../../utils/validation"
+import { isEmpty, validateForm, isValidDateRange, RULES_FALECIDO, RULES_RESPONSAVEL, RULES_SEPULTAMENTO, getFieldError, hasErrors } from "../../utils/validation"
 
 export default function Cadastros() {
 
@@ -37,6 +42,7 @@ export default function Cadastros() {
         residenciaPreview: "",
         nome_resp: "",
         doc_resp: "",
+        prof_resp:"",
         tel_resp: "",
         cep_resp: "",
         endereco_resp: "",
@@ -135,6 +141,7 @@ export default function Cadastros() {
     const [fieldErrors, setFieldErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isIndigente, setIsIndigente] = useState(false);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
     const fieldSxStyle = {
         "& .MuiOutlinedInput-root": {
@@ -312,7 +319,13 @@ export default function Cadastros() {
         const { name, value, type, checked } = e.target;
         const incoming = type === "checkbox" ? checked : value;
 
-        const maskedValue = applyMaskByFieldName(name, incoming);
+
+        let maskedValue = applyMaskByFieldName(name, incoming);
+
+        if (name === "certidao_obito") {
+            maskedValue = String(maskedValue || "").slice(0, 32);
+        }
+
         updateFieldByName(name, maskedValue);
 
         validateFieldOnChange(name, maskedValue);
@@ -426,7 +439,7 @@ export default function Cadastros() {
         } else if (processType === "Cadastro de sepultamento") {
             rule = RULES_SEPULTAMENTO[fieldName];
         }
-        if (!rule && (fieldName === "nome_resp" || fieldName === "tel_resp" || fieldName === "doc_resp")) {
+        if (!rule && (fieldName === "nome_resp" || fieldName === "tel_resp" || fieldName === "doc_resp" || fieldName === "prof_resp")) {
             rule = RULES_RESPONSAVEL[fieldName];
         }
 
@@ -486,11 +499,16 @@ export default function Cadastros() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!validateBeforeSubmit()) {
+        /* if (!validateBeforeSubmit()) {
             alert("Por favor, corrija os erros no formulário");
             return
-        }
+        } */
 
+        setConfirmOpen(true);
+    };
+
+    const handleConfirmSubmit = async (e) => {
+        setConfirmOpen(false);
         setIsSubmitting(true);
         try {
 
@@ -515,7 +533,10 @@ export default function Cadastros() {
 
             else if (processType === "Cadastro de sepultamento") {
 
-                const payload = { ...form };
+                const payload = {
+                    ...form,
+                    nome: searchFal || form.nome_sep || form.nome_fal
+                };
                 if (!payload.nome_sep && payload.falecido) {
                     const f = falecidos.find(x => Number(x.id) === Number(payload.falecido));
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
@@ -581,6 +602,7 @@ export default function Cadastros() {
             setIsSubmitting(false);
         }
     }
+
 
     const handleFileChange = (e, fieldName) => {
         const file = e.target.files && e.target.files[0];
@@ -673,6 +695,12 @@ export default function Cadastros() {
         return found?.tipo_cova ?? "";
 
     }, [form.quadra_sep, form.num_sepultura_sep, covas, availableCovas]);
+
+    /* const returnCPF = useMemo(() => {
+        if (!form.nome_fal) return "";
+        const target = String(form.nome_fal);
+
+    }) */
 
     const ALLOWED_FAL_INDI = new Set([
         'nome_fal', 'sexo', 'cor', 'dh_falec', 'causa_mortis', 'obs_fal'
@@ -843,6 +871,20 @@ export default function Cadastros() {
                                             </div>
                                         </Field>
 
+                                       {/*  <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="CPF do falecido"
+                                                value={"-"}
+                                                disabled
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field> */}
+
                                         <TwoCols>
                                             <Field>
                                                 <label>Data do óbito</label>
@@ -960,7 +1002,7 @@ export default function Cadastros() {
                                     </ColumnLeft>
 
                                     <ColumnRight>
-                                        <Field>
+                                        {/* <Field>
                                             <TextField
                                                 fullWidth
                                                 variant="outlined"
@@ -977,7 +1019,7 @@ export default function Cadastros() {
                                                     inputLabel: { sx: labelSxStyle }
                                                 }}
                                             />
-                                        </Field>
+                                        </Field> */}
 
                                         <Field>
                                             <TextField
@@ -1330,13 +1372,13 @@ export default function Cadastros() {
                                                 value={form.certidao_obito}
                                                 onChange={handleChange}
                                                 placeholder="Digite o número da certidão"
-                                                error={!!fieldErrors.certidao_obito}
+                                                
                                                 helperText={fieldErrors.certidao_obito}
                                                 disabled={disabledFor('certidao_obito')}
-                                                maxLength={32}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
-                                                    inputLabel: { sx: labelSxStyle }
+                                                    inputLabel: { sx: labelSxStyle },
+                                                    input: { maxLength: 32 }
                                                 }}
                                             />
                                         </Field>
@@ -1391,6 +1433,25 @@ export default function Cadastros() {
                                                 error={!!fieldErrors.doc_resp}
                                                 helperText={fieldErrors.doc_resp}
                                                 disabled={disabledFor('doc_resp')}
+                                                sx={fieldSxStyle}
+                                                slotProps={{
+                                                    inputLabel: { sx: labelSxStyle }
+                                                }}
+                                            />
+                                        </Field>
+
+                                        <Field>
+                                            <TextField
+                                                fullWidth
+                                                variant="outlined"
+                                                label="Profissão do responsável"
+                                                name="prof_resp"
+                                                value={form.doc_resp || ""}
+                                                onChange={handleChange}
+                                                placeholder="000.000.000-00"
+                                                error={!!fieldErrors.prof_resp}
+                                                helperText={fieldErrors.prof_resp}
+                                                disabled={disabledFor('prof_resp')}
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
@@ -1487,6 +1548,18 @@ export default function Cadastros() {
                             )}
                         </FormGrid>
                     </FormStyled>
+                    <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                        <DialogTitle>Confirmar envio</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Deseja confirmar o envio deste cadastro?
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <BtnClear style={{ display: "flex", justifyContent: "flex-start", paddingLeft: 23 }} onClick={() => setConfirmOpen(false)} disabled={isSubmitting}>Cancelar</BtnClear>
+                            <BtnPrimary style={{ display: "flex", justifyContent: "flex-start", paddingLeft: 20 }} onClick={handleConfirmSubmit} disabled={isSubmitting} autoFocus>Confirmar</BtnPrimary>
+                        </DialogActions>
+                    </Dialog>
                 </Container>
             </MainLayout>
             <Footer />

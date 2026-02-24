@@ -10,7 +10,7 @@ export const Title = styled.h2`
   text-align: center;
   font-size: 20px;
   letter-spacing: 2px;
-  margin-bottom: 18px;
+  margin-bottom: 28px;
   color: #191970;
 `;
 
