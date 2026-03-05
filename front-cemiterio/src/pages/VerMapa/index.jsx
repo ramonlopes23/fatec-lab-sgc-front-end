@@ -1164,6 +1164,8 @@ export default function VerMapa() {
                                                             <p style={{ margin: "6px 0" }}><strong>Nome do sepultado: </strong>{modalForm.nome_sep || modalForm.falecido?.nome_fal || modalForm.falecido?.nome || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data e hora do sepultamento: </strong>{modalForm.dh_sep || modalForm.data_hora || modalForm.data_obito_sep || "-"}</p>
                                                             <p style={{ margin: "6px 0" }}><strong>Data do óbito: </strong>{modalForm.data_obito || modalForm.data_obito_sep || "-"}</p>
+                                                            <p style={{ margin: "6px 0" }}><strong>Responsável: </strong>{modalForm.nome_resp || "-"}</p>
+                                                            <p style={{ margin: "6px 0" }}><strong>Contato do responsável: </strong>{modalForm.tel_resp || "-"}</p>
                                                             {exumacoesPending[String(s.id)] ? (
                                                                 <BtnAdd style={{ backgroundColor: "#cf142b" }} type="button" onClick={() => cancelExumacao(s)}>Cancelar exumação</BtnAdd>
                                                             ) : (

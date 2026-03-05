@@ -42,7 +42,7 @@ export default function Cadastros() {
         residenciaPreview: "",
         nome_resp: "",
         doc_resp: "",
-        prof_resp:"",
+        prof_resp: "",
         tel_resp: "",
         cep_resp: "",
         endereco_resp: "",
@@ -731,6 +731,15 @@ export default function Cadastros() {
         })
     }
 
+    const cpfDoFalecidoSelecionado = useMemo(() => {
+        const id = form.falecido || form.falecido_id;
+        if (id) {
+            const f = (falecidos || []).find(x => String(x.id) === String(id));
+            if (f && f.cpf) return applyMaskByFieldName('cpf', f.cpf);
+        }
+        return form.cpf ? applyMaskByFieldName('cpf', form.cpf) : "-";
+    }, [form.falecido, form.falecido_id, form.cpf, falecidos])
+
 
     return (
         <div>
@@ -871,19 +880,19 @@ export default function Cadastros() {
                                             </div>
                                         </Field>
 
-                                       {/*  <Field>
+                                        <Field>
                                             <TextField
                                                 fullWidth
                                                 variant="outlined"
                                                 label="CPF do falecido"
-                                                value={"-"}
+                                                value={cpfDoFalecidoSelecionado}
                                                 disabled
                                                 sx={fieldSxStyle}
                                                 slotProps={{
                                                     inputLabel: { sx: labelSxStyle }
                                                 }}
                                             />
-                                        </Field> */}
+                                        </Field>
 
                                         <TwoCols>
                                             <Field>
@@ -1372,7 +1381,7 @@ export default function Cadastros() {
                                                 value={form.certidao_obito}
                                                 onChange={handleChange}
                                                 placeholder="Digite o número da certidão"
-                                                
+
                                                 helperText={fieldErrors.certidao_obito}
                                                 disabled={disabledFor('certidao_obito')}
                                                 sx={fieldSxStyle}
