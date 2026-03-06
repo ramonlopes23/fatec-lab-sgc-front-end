@@ -7,6 +7,7 @@ import Registros from "../pages/Registros";
 import VerMapa from "../pages/VerMapa";
 import Calendario from "../pages/Calendario";
 import Relatorios from "../pages/Relatorios";
+import Contratos from "../pages/Contratos";
 
 export default function AppRoutes(){
     return(
@@ -19,6 +20,7 @@ export default function AppRoutes(){
             <Route path='/registros' element={<Registros />} />
             <Route path='/vermapa' element={<VerMapa />} />
             <Route path='/relatorios' element={<Relatorios />} />
+            <Route path='/contratos' element={<Contratos />} />
         </Routes>
     );
 }
