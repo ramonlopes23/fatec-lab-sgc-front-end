@@ -1,6 +1,6 @@
 import Footer from "../../components/Footer";
 import MainLayout from "../../layout/MainLayout";
-import { BtnPrimaryClose, BtnPrimarySave, Container, FormStyled, SearchBar, SearchIcon, SearchWrapper, TableWrapper, Title, Card, TableScroller,TBody,THead,Table,Td,Th,Tr } from "./styles";
+import { BtnPrimaryClose, BtnPrimarySave, Container, FormStyled, SearchBar, SearchIcon, SearchWrapper, TableWrapper, Title, Card, TableScroller, TBody, THead, Table, Td, Th, Tr, ModalOverlay, ModalContent, ModalGrid, Input } from "./styles";
 import TextField from "@mui/material/TextField";
 import { MenuItem } from "@mui/material";
 import { FaSearch } from "react-icons/fa";
@@ -25,10 +25,10 @@ const INITIAL_FORM = {
 };
 
 function formatDateBR(value) {
-  if (!value) return "-";
-  const [y, m, d] = String(value).split("-");
-  if (!y || !m || !d) return value;
-  return `${d}/${m}/${y}`;
+    if (!value) return "-";
+    const [y, m, d] = String(value).split("-");
+    if (!y || !m || !d) return value;
+    return `${d}/${m}/${y}`;
 }
 
 function statusLabel(status) {
@@ -40,9 +40,9 @@ function statusLabel(status) {
 export default function Contratos() {
     const [query, setQuery] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
-    const [titulos, setTitulos] = useState("");
+    const [titulos, setTitulos] = useState([]);
     const [form, setForm] = useState(INITIAL_FORM);
-    const [erros, setErrors] = useState({});
+    const [errors, setErrors] = useState({});
 
     const filteredTitulos = useMemo(() => {
         const q = String(query || "").trim().toLowerCase();
@@ -100,22 +100,32 @@ export default function Contratos() {
         return Object.keys(nextErrors).length === 0;
     };
 
-    const handleCreateTitulo = (e) => {
+    const handleCreateTitulo = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
-        const novoTitulo = {
-            id: `t-${Date.now()}`,
-            nomeTitular: form.nomeTitular.trim(),
-            numeroTitulo: form.numeroTitulo.trim(),
-            status: form.status,
-            validadeTitulo: form.validadeTitulo,
-            sepultura: form.sepultura.trim(),
-            quadra: form.quadra.trim(),
-        };
+        try {
+            const now = new Date().toISOString();
 
-        setTitulos((prev) => [novoTitulo, ...prev]);
-        closeModal();
+            const payload = {
+                nome_titular: form.nome_titular.trim(),
+                numero_titulo: form.numero_titulo.trim(),
+                status: form.status,
+                validade_titulo: form.validade_titulo,
+                sepultura: form.sepultura.trim(),
+                quadra: form.quadra.trim(),
+                created_at: now,
+                updated_at: now,
+            };
+
+            const { data } = await api.post("/contratos", payload)
+
+            setTitulos((prev) => [data, ...prev]);
+            closeModal();
+        } catch (error) {
+            console.error("Erro ao criar contrato/título", error);
+            alert("Não foi possível salvar o título");
+        }
     };
 
     const errorStyle = { margin: "6px 0 0", color: "#b42318", fontSize: 12 };
@@ -155,13 +165,13 @@ export default function Contratos() {
                         <BtnPrimarySave type="button" onClick={openModal}>
                             <ImProfile />Adicionar contrato/título
                         </BtnPrimarySave>
-                        <BtnPrimaryClose type="button" disabled style={{opacity:0.6, cursor:"not-allowed"}}>
+                        <BtnPrimaryClose type="button" disabled style={{ opacity: 0.6, cursor: "not-allowed" }}>
                             <AiOutlineUserSwitch />Alterar responsável pelo título
                         </BtnPrimaryClose>
                     </div>
 
                     <Card>
-                        <h3 style={{marginTop:0, color:"#191970"}}>Títulos cadastrados</h3>
+                        <h3 style={{ marginTop: 0, color: "#191970" }}>Títulos cadastrados</h3>
                         <TableWrapper>
                             <TableScroller>
                                 <Table>
@@ -176,8 +186,8 @@ export default function Contratos() {
                                         </tr>
                                     </THead>
                                     <TBody>
-                                        {filteredTitulos.length > 0?(
-                                            filteredTitulos.map((item, index)=>(
+                                        {filteredTitulos.length > 0 ? (
+                                            filteredTitulos.map((item, index) => (
                                                 <Tr key={item.id} index={index}>
                                                     <Td>{item.numero_titulo}</Td>
                                                     <Td>{item.nome_titular}</Td>
@@ -187,7 +197,7 @@ export default function Contratos() {
                                                     <Td>{item.quadra}</Td>
                                                 </Tr>
                                             ))
-                                        ):(
+                                        ) : (
                                             <tr>
                                                 <Td colSpan={6}>Nenhum título encontrado.</Td>
                                             </tr>
@@ -197,10 +207,107 @@ export default function Contratos() {
                             </TableScroller>
                         </TableWrapper>
                     </Card>
-
-
                 </Container>
             </MainLayout>
+
+            {modalOpen && (
+                <ModalOverlay>
+                    <ModalContent>
+                        <h3 style={{ marginTop: 0, marginBottom: 16, color: "#191970" }}>
+                            Novo título de posse
+                        </h3>
+
+                        <form onSubmit={handleCreateTitulo}>
+                            <ModalGrid>
+                                <div style={{ gridColumn: "1 / -1" }}>
+                                    <label>Nome de titular</label>
+                                    <Input
+                                        value={form.nome_titular}
+                                        onChange={(e) => updateField("nome_titular", e.target.value)}
+                                        placeholder="Nome completo do titular"
+                                    />
+                                    {errors.nome_titular ? <p style={errorStyle}>{errors.nome_titular}</p> : null}
+                                </div>
+
+                                <div>
+                                    <label>Número do título</label>
+                                    <Input
+                                        value={form.numero_titulo}
+                                        onChange={(e) => updateField("numero_titulo", e.target.value)}
+                                        placeholder="Ex: 000145"
+                                    />
+                                    {errors.numero_titulo ? <p style={errorStyle}>{errors.numero_titulo}</p> : null}
+                                </div>
+
+                                <div>
+                                    <label>Status</label>
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
+                                        value={form.status}
+                                        onChange={(e) => updateField("status", e.target.value)}
+                                        sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                borderRadius: "18px",
+                                            },
+                                            "& .MuiOutlinedInput-input": {
+                                                fontSize: "14px",
+                                            },
+                                        }}
+                                    >
+                                        {STATUS_OPTIONS.map((option) => (
+                                            <MenuItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                    {errors.status ? <p style={errorStyle}>{errors.status}</p> : null}
+                                </div>
+
+                                <div>
+                                    <label>Sepultura</label>
+                                    <Input
+                                        value={form.sepultura}
+                                        onChange={(e) => updateField("sepultura", e.target.value)}
+                                        placeholder="Exemplo: 05"
+                                    />
+                                    {errors.sepultura ? <p style={errorStyle}>{errors.sepultura}</p> : null}
+                                </div>
+
+                                <div>
+                                    <label>Quadra</label>
+                                    <Input
+                                        value={form.quadra}
+                                        onChange={(e) => updateField("quadra", e.target.value)}
+                                        placeholder="Exemplo: 12"
+                                    />
+                                    {errors.quadra ? <p style={errorStyle}>{errors.quadra}</p> : null}
+                                </div>
+
+                                <div>
+                                    <label>Validade do titulo</label>
+                                    <Input
+                                        type="date"
+                                        value={form.validade_titulo}
+                                        onChange={(e) => updateField("validade_titulo", e.target.value)}
+                                    />
+                                    {errors.validade_titulo ? <p style={errorStyle}>{errors.validade_titulo}</p> : null}
+                                </div>
+                            </ModalGrid>
+
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+                                <BtnPrimaryClose type="button" onClick={closeModal}>
+                                    Cancelar
+                                </BtnPrimaryClose>
+                                <BtnPrimarySave type="submit">Salvar titulo</BtnPrimarySave>
+                            </div>
+                        </form>
+                    </ModalContent>
+                </ModalOverlay >
+            )
+            }
+
             <Footer />
         </>
     )

@@ -105,6 +105,7 @@ export const BtnPrimaryClose = styled.button`
   color: #191970;
   border-color:#191970;
   border: 2px;
+  margin-top:10px;
   padding: 12px 28px;
   border-radius: 24px;
   cursor: pointer;
@@ -299,10 +300,10 @@ export const ModalOverlay = styled.div`
 export const ModalContent = styled.div`
   background: #fff;
   padding: 20px;
-  height:42vh;
+  height:55vh;
   overflow-y: auto;
   border-radius: 8px;
-  width: 500px;
+  width: 600px;
 `;
 
 export const ModalGrid = styled.div`

@@ -980,7 +980,10 @@ export default function VerMapa() {
 
 
                 {modalAddCovaOpen && (
-                    <ModalOverlay>
+                    <ModalOverlay >
+                        <div style={{
+                            position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex: 9999
+                        }} onMouseDown={(e)=> {if (e.target === e.currentTarget) handleCloseAddCovaModal();}}>                   
                         <FormStyled onSubmit={handleCreateCova} style={{ color: "#171770", width: 520, background: "#fff", padding: 18, borderRadius: 8 }}>
                             <h3 style={{ marginTop: 0 }} >Criar sepultura</h3>
 
@@ -1078,6 +1081,7 @@ export default function VerMapa() {
                                 <BtnAdd type="submit" style={{ padding: "8px 10px" }}>Criar</BtnAdd>
                             </ButtonsRow>
                         </FormStyled>
+                        </div>
                     </ModalOverlay>
                 )}
 
