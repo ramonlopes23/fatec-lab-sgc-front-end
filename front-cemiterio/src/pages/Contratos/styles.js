@@ -120,6 +120,7 @@ export const BtnPrimarySave = styled.button`
   background-color:#008000;
   border: 2px;
   margin-right:10px;
+  margin-top:10px;
   padding: 12px 28px;
   border-radius: 24px;
   cursor: pointer;
