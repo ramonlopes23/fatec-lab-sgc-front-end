@@ -7,7 +7,7 @@ import { FaSearch } from "react-icons/fa";
 import { ImProfile } from "react-icons/im";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 import api from "../../services/api";
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 
 const STATUS_OPTIONS = [
     { value: "ativo", label: "Ativo" },
@@ -43,6 +43,7 @@ export default function Contratos() {
     const [titulos, setTitulos] = useState([]);
     const [form, setForm] = useState(INITIAL_FORM);
     const [errors, setErrors] = useState({});
+    const [editingId, setEditingId] = useState(null);
 
     const filteredTitulos = useMemo(() => {
         const q = String(query || "").trim().toLowerCase();
@@ -61,6 +62,7 @@ export default function Contratos() {
     };
 
     const openModal = () => {
+        setEditingId(null)
         setForm(INITIAL_FORM);
         setErrors({});
         setModalOpen(true);
@@ -90,7 +92,7 @@ export default function Contratos() {
 
         const numeroNormalizado = form.numero_titulo.trim().toLowerCase();
         const isDuplicated = titulos.some(
-            (item) => String(item.numero_titulo || "").trim().toLowerCase() === numeroNormalizado
+            (item) => item.id !== editingId && String(item.numero_titulo || "").trim().toLowerCase() === numeroNormalizado
         );
         if (isDuplicated) {
             nextErrors.numero_titulo = "Já existe um título com esse número";
@@ -100,7 +102,9 @@ export default function Contratos() {
         return Object.keys(nextErrors).length === 0;
     };
 
-    const handleCreateTitulo = async (e) => {
+    const errorStyle = { margin: "6px 0 0", color: "#b42318", fontSize: 12 };
+
+    const handleSaveTitulo = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
 
@@ -114,21 +118,80 @@ export default function Contratos() {
                 validade_titulo: form.validade_titulo,
                 sepultura: form.sepultura.trim(),
                 quadra: form.quadra.trim(),
-                created_at: now,
-                updated_at: now,
-            };
+                update_at: now,
+            }
 
-            const { data } = await api.post("/contratos", payload)
+            if (editingId) {
+                await api.put(`/contratos/${editingId}`, {
+                    ...payload,
+                    id: editingId,
+                });
+            } else {
+                await api.post("/contratos", {
+                    ...payload,
+                    created_at: now,
+                });
+            }
 
-            setTitulos((prev) => [data, ...prev]);
+            await loadContratos();
             closeModal();
+            setEditingId(null);
         } catch (error) {
-            console.error("Erro ao criar contrato/título", error);
-            alert("Não foi possível salvar o título");
+            console.error("Erro ao salvar contrato/titulo", error);
+            alert("Não foi possivel salvar o título")
+        }
+    }
+
+    const handleEditTitulo = (item) =>{
+        setEditingId(item.id);
+        setForm({
+            nome_titular: item.nome_titular || "",
+            numero_titulo: item.numero_titulo || "",
+            status: item.status || "ativo",
+            validade_titulo: item.validade_titulo || "",
+            sepultura: item.sepultura || "",
+            quadra: item.quadra || "",
+        });
+        setErrors({});
+        setModalOpen(true);
+    }
+
+    const handleDeleteTitulo = async (id) =>{
+        const ok = window.confirm("Deseja realmente excluir este título?");
+        if(!ok) return;
+
+        try{
+            await api.delete(`/contratos/${id}`);
+            await loadContratos();
+        } catch(error){
+            console.error("Error ao excluir título", error);
+            alert("Não foi possível excluiro título");
+        }
+    }
+
+
+    useEffect(() => {
+        const loadContratos = async () => {
+            try {
+                const { data } = await api.get("/contratos");
+                setTitulos(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Erro ao carregar contratos", error);
+                setTitulos([]);
+            }
+        };
+    }, []);
+
+
+    const loadContratos = async () => {
+        try {
+            const { data } = await api.get("/contratos");
+            setTitulos(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("Erro ao carregar contratos", error);
+            setTitulos([]);
         }
     };
-
-    const errorStyle = { margin: "6px 0 0", color: "#b42318", fontSize: 12 };
 
     return (
         <>
@@ -195,6 +258,10 @@ export default function Contratos() {
                                                     <Td>{formatDateBR(item.validade_titulo)}</Td>
                                                     <Td>{item.sepultura}</Td>
                                                     <Td>{item.quadra}</Td>
+                                                    <Td>
+                                                        <button type="button" onClick={()=>handleEditTitulo(item)}>Editar</button>
+                                                        <button type="button" onClick={()=>handleDeleteTitulo(item.id)}>Excluir</button>
+                                                    </Td>
                                                 </Tr>
                                             ))
                                         ) : (
@@ -217,7 +284,7 @@ export default function Contratos() {
                             Novo título de posse
                         </h3>
 
-                        <form onSubmit={handleCreateTitulo}>
+                        <form onSubmit={handleSaveTitulo}>
                             <ModalGrid>
                                 <div style={{ gridColumn: "1 / -1" }}>
                                     <label>Nome de titular</label>
@@ -300,7 +367,7 @@ export default function Contratos() {
                                 <BtnPrimaryClose type="button" onClick={closeModal}>
                                     Cancelar
                                 </BtnPrimaryClose>
-                                <BtnPrimarySave type="submit">Salvar titulo</BtnPrimarySave>
+                                <BtnPrimarySave type="button">Salvar título</BtnPrimarySave>
                             </div>
                         </form>
                     </ModalContent>
