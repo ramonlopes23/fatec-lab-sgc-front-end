@@ -1830,12 +1830,6 @@
       "num_quadra": "96",
       "max_covas": 10,
       "status": "ativo"
-    },
-    {
-      "id": "b8f6",
-      "num_quadra": "11",
-      "max_covas": 50,
-      "status": "ativo"
     }
   ],
   "covas": [
@@ -2414,112 +2408,12 @@
         "data_fim": ""
       },
       "obs": "teste"
-    },
-    {
-      "id": "739c",
-      "quadra_cova": "b8f6",
-      "num_cova": "1",
-      "tipo_cova": "gaveta",
-      "status": "livre",
-      "capacidade": "4",
-      "concessao": {
-        "ativa": false,
-        "responsavel": "",
-        "prazo_anos": 0,
-        "data_inicio": "",
-        "data_fim": ""
-      },
-      "obs": "teste"
-    },
-    {
-      "id": "195a",
-      "quadra_cova": "b8f6",
-      "num_cova": "2",
-      "tipo_cova": "gaveta",
-      "status": "reservada",
-      "capacidade": "4",
-      "concessao": {
-        "ativa": true,
-        "responsavel": "julio silva",
-        "prazo_anos": 2,
-        "data_inicio": "2026-03-16",
-        "data_fim": "2028-03-16"
-      },
-      "obs": "teste"
-    },
-    {
-      "id": "0a37",
-      "quadra_cova": "b8f6",
-      "num_cova": "3",
-      "tipo_cova": "cova",
-      "status": "indisponivel",
-      "capacidade": "3",
-      "concessao": {
-        "ativa": false,
-        "responsavel": "",
-        "prazo_anos": 0,
-        "data_inicio": "",
-        "data_fim": ""
-      },
-      "obs": "em manutenção"
-    },
-    {
-      "id": "60d7",
-      "quadra_cova": "b8f6",
-      "num_cova": "4",
-      "tipo_cova": "cova",
-      "status": "reservada",
-      "capacidade": "3",
-      "concessao": {
-        "ativa": false,
-        "responsavel": "",
-        "prazo_anos": 0,
-        "data_inicio": "",
-        "data_fim": ""
-      },
-      "obs": "teste"
-    },
-    {
-      "id": "29f7",
-      "quadra_cova": "b8f6",
-      "num_cova": "5",
-      "tipo_cova": "cova",
-      "status": "reservada",
-      "capacidade": "4",
-      "concessao": {
-        "ativa": false,
-        "responsavel": "",
-        "prazo_anos": 0,
-        "data_inicio": "",
-        "data_fim": ""
-      },
-      "obs": "teste"
     }
   ],
   "contratos": [
     {
       "nome_titular": "teste",
       "id": "8e14"
-    }
-  ],
-  "pets": [
-    {},
-    {
-      "id": "418d",
-      "nome_pet": "teste",
-      "especie": "cachorro",
-      "raca": "collie",
-      "data_obito_pet": "2026-03-17",
-      "dh_sep_pet": "2026-03-18T15:10",
-      "obs_pet": "teste",
-      "status": "concluido",
-      "confirmado": true,
-      "foi_exumado": false,
-      "sepultamento_id": "91cb",
-      "falecido_id": "0db6",
-      "quadra_sep": "e6c1",
-      "num_sepultura_sep": "1",
-      "nome_sep": "Maria eunice campos "
     }
   ]
 }

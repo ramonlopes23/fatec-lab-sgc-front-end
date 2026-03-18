@@ -29,7 +29,7 @@ export default function SidebarMenu() {
         <>
             <GlobalStyle />
             <LogoContainer>
-                <LogoImage src={sgclogo1} alt="Logo Memo"/>
+                <LogoImage src={sgclogo1} alt="Logo Memo" />
                 <Title>SISTEMA DE GERENCIAMENTO DE CEMITÉRIOS</Title>
             </LogoContainer>
 

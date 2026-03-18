@@ -56,7 +56,7 @@ export const InfoPill = styled.span`
 export const CovaGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-  gap: 12px;
+  gap: 20px;
   align-items: center;
 `;
 
@@ -74,12 +74,13 @@ export const CovaItem = styled.button`
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  gap: 4px;
-  width: 54px;
-  height: 54px;
+  gap: 3px;
+  width: 64px;
+  height: 70px;
   border-radius: 8px;
   cursor: pointer;
   box-sizing: border-box;
+  position:relative;
 
   background: ${p => {
     const s = String(p.status || "").toLowerCase();
@@ -99,17 +100,20 @@ export const CovaItem = styled.button`
   border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "transparent")};
   svg { width: 18px; height: 18px; }
   & .cova-number {
-    margin:0;
+    top: 4px;
+    right: 6px;
+    margin: 0;
     font-weight: 700;
-    font-size: 17px;
-    line-height:0.6;
+    font-size: 19px;
+    line-height: 1;
+    pointer-events: none;
   }
   & .cova-capacity{
     font-size: 10px;
     font-weight: 600;
-    line-height:0.9;
-    color:inherit;
-    opacity:0.9;  
+    line-height: 0.9;
+    color: inherit;
+    opacity: 0.9;
   }
 
   &:hover { transform: translateY(-5px); transition: .40s; border-color:#000; border-width:1.5px; }
@@ -184,6 +188,7 @@ export const BtnAdd = styled.button`
   font-size:15px;
   align-items:center;
   margin-left: auto; 
+  margin-top: 15px;
   background: #191970;
   color: #fff;
   border: none;

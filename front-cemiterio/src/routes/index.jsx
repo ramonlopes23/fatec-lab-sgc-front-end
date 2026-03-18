@@ -1,5 +1,5 @@
 import React from "react";
-import {Routes, Route, Navigate} from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import Cadastros from "../pages/Cadastros";
 import Configurar from "../pages/Configurar";
@@ -9,8 +9,8 @@ import Calendario from "../pages/Calendario";
 import Relatorios from "../pages/Relatorios";
 import Contratos from "../pages/Contratos";
 
-export default function AppRoutes(){
-    return(
+export default function AppRoutes() {
+    return (
         <Routes>
             <Route path='/' element={<Navigate to="/home" />} />
             <Route path='/home' element={<Home />} />

@@ -1372,7 +1372,7 @@ export default function Cadastros() {
                                             />
                                         </Field>
 
-                                        <Field>
+                                       {/*  <Field>
                                             <TextField
                                                 fullWidth
                                                 variant="outlined"
@@ -1390,7 +1390,7 @@ export default function Cadastros() {
                                                     input: { maxLength: 32 }
                                                 }}
                                             />
-                                        </Field>
+                                        </Field> */}
 
                                         <Field>
                                             <TextField
@@ -1455,9 +1455,9 @@ export default function Cadastros() {
                                                 variant="outlined"
                                                 label="Profissão do responsável"
                                                 name="prof_resp"
-                                                value={form.doc_resp || ""}
+                                                value={form.prof_resp || ""}
                                                 onChange={handleChange}
-                                                placeholder="000.000.000-00"
+                                                placeholder="Profissão do responsável"
                                                 error={!!fieldErrors.prof_resp}
                                                 helperText={fieldErrors.prof_resp}
                                                 disabled={disabledFor('prof_resp')}
