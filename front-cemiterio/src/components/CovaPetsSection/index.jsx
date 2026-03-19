@@ -14,6 +14,7 @@ import {
     ModalButtonsRow,
     ModalCard,
     ModalOverlay,
+    PetActionsRow,
     PetCard,
     PetList,
     PetMeta,
@@ -247,8 +248,15 @@ export default function CovaPetsSection({
                         <PetList>
                             {modalPetList.map((pet, idx) => (
                                 <PetCard key={pet.id ?? `${pet.nome_pet}-${idx}`}>
-                                    <BtnUpdate type="button" onClick={() => handleEditPetId(pet)}><RxUpdate /></BtnUpdate>
-                                    <BtnDelete type="button" onClick={() => handleDeletePet(pet)}><TiDelete /></BtnDelete>
+                                    <PetActionsRow>
+                                        <BtnUpdate type="button" onClick={() => handleEditPetId(pet)}>
+                                            <RxUpdate />
+                                        </BtnUpdate>
+                                        <BtnDelete type="button" onClick={() => handleDeletePet(pet)}>
+                                            <TiDelete />
+                                        </BtnDelete>
+                                    </PetActionsRow>
+
                                     <PetName>{pet.nome_pet || "Pet sem nome"}</PetName>
                                     <PetMeta>Espécie: {pet.especie || "-"}</PetMeta>
                                     <PetMeta>Raça: {pet.raca || "-"}</PetMeta>
@@ -256,6 +264,7 @@ export default function CovaPetsSection({
                                     <PetMeta>Data/Hora do sepultamento: {pet.dh_sep_pet || "-"}</PetMeta>
                                     <PetMeta>Observações: {pet.obs_pet || "-"}</PetMeta>
                                     <PetMeta>Falecido(a)/família vinculado(a): {pet.nome_sep || "-"}</PetMeta>
+
                                 </PetCard>
                             ))}
                         </PetList>
@@ -346,7 +355,7 @@ export default function CovaPetsSection({
                                 Cancelar
                             </BtnCancel>
                             <BtnSave type="submit" disabled={saving}>
-                                {saving ? "Salvando..." : (editingPetId ? "Atualizar":"Salvar")}
+                                {saving ? "Salvando..." : (editingPetId ? "Atualizar" : "Salvar")}
                             </BtnSave>
                         </ModalButtonsRow>
                     </ModalCard>

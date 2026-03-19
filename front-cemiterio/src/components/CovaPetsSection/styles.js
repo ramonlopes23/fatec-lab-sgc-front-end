@@ -27,6 +27,7 @@ export const AddPetButton = styled.button`
   padding: 8px 12px;
   font-weight: 600;
   cursor: pointer;
+  &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 
 export const PetList = styled.div`
@@ -40,7 +41,14 @@ export const PetCard = styled.div`
   border: 1px solid #dfe4ff;
   background: #fff;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 5px 12px;
+`;
+
+export const PetActionsRow = styled.div`
+    display:flex;
+    gap:6px;
+    justify-content:flex-end;
+    margin-bottom:-25px;
 `;
 
 export const PetName = styled.div`
@@ -161,14 +169,14 @@ export const BtnSave = styled.button`
     opacity: 0.6;
     cursor: not-allowed;
   }
+     
+  &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 
 export const BtnUpdate = styled.button`
-  position:relative;
-  left:40vh;
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: #337c33;
   color: #fff;
   font-weight: 600;
@@ -178,22 +186,23 @@ export const BtnUpdate = styled.button`
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 
 export const BtnDelete = styled.button`
-  position:relative;
-  left:40vh;
   border: none;
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: #cd0606;
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
-  margin-left:5px;
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
