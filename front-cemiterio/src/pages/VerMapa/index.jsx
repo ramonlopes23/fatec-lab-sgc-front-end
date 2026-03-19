@@ -9,7 +9,7 @@ import { GiCoffin } from "react-icons/gi";
 import { FaChartPie } from "react-icons/fa";
 import { CiCirclePlus } from "react-icons/ci";
 import { useLocation } from "react-router-dom";
-import {MdPets} from "react-icons/md";
+import { MdPets } from "react-icons/md";
 import {
     QuadraDropdown,
     QuadraDropdownWrapper,
@@ -778,7 +778,7 @@ export default function VerMapa() {
 
         if (cova.sep && !list.find(s => String(s.id) === String(cova.sep.id))) list.unshift(cova.sep);
         setModalSepList(list);
-        setModalExpandedIndex(0);
+        setModalExpandedIndex(null);
 
         (async () => {
             const first = list[0] ?? cova.sep ?? null;
@@ -831,7 +831,7 @@ export default function VerMapa() {
             cova.numero ?? cova.num_cova ?? cova.num_sepultura_sep ?? ""
         );
 
-        if (!quadraKey || !numero) return;
+        if (!quadraKey || !numero) return 0;
 
         const ids = new Set();
         (petsAll || []).forEach((p) => {
@@ -929,13 +929,19 @@ export default function VerMapa() {
                                     borderColor={(displayStatus === "reservada" || displayStatus === "particular_ocupada") ? "#d2b24a" : undefined}
                                     borderWidth={(displayStatus === "reservada" || displayStatus === "particular_ocupada") ? 5 : undefined}
                                     onClick={() => handleClickCova(cova)}
-                                    title={`Cova ${cova.numero} - ${displayStatus} (H ${sepCount}/${capacidadeTotal}${petCount > 0 ? ` | P ${petCount}` : ""})`}
+                                    title={`Cova ${cova.numero} - ${displayStatus} (⚰️ ${sepCount}/${capacidadeTotal}${petCount > 0 ? ` | 🐾 ${petCount}` : ""})`}
                                 >
-                                   {/*  <GiCoffin aria-hidden="true" /> */}
+                                    {/*  <GiCoffin aria-hidden="true" /> */}
                                     <span className="cova-number" aria-hidden="true">{cova.numero}  </span>
                                     <span className="cova-capacity" aria-hidden="true"><GiCoffin />{`${sepCount}/${capacidadeTotal}`}  </span>
-                                    {petCount > 0 &&(
-                                        <span className="cova-capacity" aria-hidden="true"><MdPets />{`${petCount}`}</span>
+                                    {petCount > 0 && (
+                                        <>
+                                            <span className="cova-divider" aria-hidden="true" />
+                                            <span className="cova-petCap" aria-hidden="true">
+                                                <MdPets size={12} />
+                                                {petCount}
+                                            </span>
+                                        </>
                                     )}
                                 </CovaItem>
                             )
@@ -1197,14 +1203,14 @@ export default function VerMapa() {
                                         return [...prev, createdPet];
                                     });
                                 }}
+                                onPetDeleted={(petId)=>{
+                                    setPetsAll((prev)=> prev.filter((p)=>String(p.id) !== String(petId)));
+                                }}
                             >
 
                                 {(modalSepList && modalSepList.length > 0) ? (
                                     <>
-                                        <SepDivider />
-                                        <SepHeader>
-                                            <strong>Sepultamentos({modalSepList.length})</strong>
-                                        </SepHeader>
+                                        <SepDivider />                                    
                                         <SepList>
                                             {modalSepList.map((s, idx) => {
                                                 const expanded = modalExpandedIndex === idx;

@@ -76,11 +76,12 @@ export const CovaItem = styled.button`
   justify-content: center;
   gap: 3px;
   width: 64px;
-  height: 70px;
+  height: ${p=>(p.hasPets ? "88px" : "70px")};
   border-radius: 8px;
   cursor: pointer;
   box-sizing: border-box;
   position:relative;
+  padding-top:12px;
 
   background: ${p => {
     const s = String(p.status || "").toLowerCase();
@@ -88,7 +89,7 @@ export const CovaItem = styled.button`
     if (s === "particular_ocupada") return "#000";
     if (s === "ocupada") return "#000";
     if (s === "indisponível") return "rgba(170, 24, 24, 1)";
-    if (s === "disponível" || s === "livre" || s === "livre") return "#9e9e9e";
+    if (s === "disponível" || s === "livre") return "#9e9e9e";
     return "#fff";
   }};
 
@@ -98,25 +99,58 @@ export const CovaItem = styled.button`
   }};
 
   border: ${p => (p.borderColor ? `${p.borderWidth ?? 2}px solid ${p.borderColor}` : "transparent")};
-  svg { width: 18px; height: 18px; }
+  svg { 
+    width: 14px; 
+    height: 14px; 
+    flex-shrink:0; 
+  }
+
   & .cova-number {
+    position:absolute;
     top: 4px;
     right: 6px;
     margin: 0;
     font-weight: 700;
-    font-size: 19px;
+    font-size: 17px;
     line-height: 1;
     pointer-events: none;
   }
+
   & .cova-capacity{
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 0.9;
+    color: inherit;
+    opacity: 0.9;
+    display:inline-fledx;
+    align-items:center;
+    gap:4px;
+  }
+  & .cova-petCap{    
     font-size: 10px;
     font-weight: 600;
     line-height: 0.9;
     color: inherit;
     opacity: 0.9;
+    display:inline-fledx;
+    align-items:center;
+    gap:4px;
   }
 
-  &:hover { transform: translateY(-5px); transition: .40s; border-color:#000; border-width:1.5px; }
+  &:cova-divider { 
+    width: 80%;
+    height:1px;
+    background:currentColor;
+    opacity:0.35;
+    margin: 2px 0 1px;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    transition: .40s;
+    border-color:#000;
+    border-width:1.5px;
+  }
 `;
 
 export const LegendRow = styled.div`

@@ -3,7 +3,9 @@ import api from "../../services/api";
 import {
     AddPetButton,
     BtnCancel,
+    BtnDelete,
     BtnSave,
+    BtnUpdate,
     EmptyText,
     Field,
     FormGrid,
@@ -21,6 +23,9 @@ import {
     TabsBar,
     Textarea,
 } from "./styles";
+import { MdPets } from "react-icons/md";
+import { RxUpdate } from "react-icons/rx";
+import { TiDelete } from "react-icons/ti";
 
 const makeInitialForm = (sep = null) => ({
     nome_pet: "",
@@ -39,12 +44,19 @@ export default function CovaPetsSection({
     sepultamentos = [],
     petsAll = [],
     onPetCreated,
+    onPetDeleted,
     children,
 }) {
     const [activeTab, setActiveTab] = useState("sepultamentos");
     const [modalAddPetOpen, setModalAddPetOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [formPet, setFormPet] = useState(makeInitialForm(sepultamentos[0] ?? null));
+    const [editingPetId, setEditingPetId] = useState(null);
+
+    const resetPetForm = () => {
+        setFormPet(makeInitialForm(sepultamentos[0] ?? null))
+        setEditingPetId(null);
+    }
 
     const quadraKey = useMemo(
         () =>
@@ -80,7 +92,7 @@ export default function CovaPetsSection({
     }, [petsAll, quadraKey, numero]);
 
     useEffect(() => {
-        setActiveTab(modalPetList.length > 0 ? "pets" : "sepultamentos")
+        setActiveTab("sepultamentos")
     }, [quadraKey, numero])
 
     useEffect(() => {
@@ -101,9 +113,43 @@ export default function CovaPetsSection({
     };
 
     const openPetModal = () => {
-        setFormPet(makeInitialForm(sepultamentos[0] ?? null));
+        resetPetForm();
         setModalAddPetOpen(true);
     }
+
+    const handleEditPetId = (pet) => {
+        if (!pet) return;
+
+        setEditingPetId(pet.id ?? null);
+        setFormPet({
+            nome_pet: pet.nome_pet || "",
+            especie: pet.especie || "",
+            raca: pet.raca || "",
+            data_obito_pet: pet.data_obito_pet || "",
+            dh_sep_pet: pet.dh_sep_pet || "",
+            obs_pet: pet.obs_pet || "",
+            status: pet.status || "concluido",
+            confirmado: pet.confirmado ?? true,
+            sepultamento_id: pet.sepultamento_id ? String(pet.sepultamento_id) : "",
+            falecido_id: pet.falecido_id ?? "",
+        });
+        setModalAddPetOpen(true);
+    }
+
+    const handleDeletePet = async (pet) => {
+        if (!pet?.id) return alert("Não foi possivel excluir. Pet sem ID");
+        const ok = confirm(`Excluir o pet ${pet.nome_pet || "sem nome"}"?`);
+        if (!ok) return;
+
+        try {
+            await api.delete(`/pets/${pet.id}`);
+            if (typeof onPetDeleted === "function") onPetDeleted(pet.id);
+            alert("Pet excluído com sucesso.");
+        } catch (err) {
+            console.error("Erro ao excluir pet", err);
+            alert("Erro ao excluir pet")
+        }
+    };
 
     const submitPet = async (ev) => {
         ev.preventDefault();
@@ -136,14 +182,27 @@ export default function CovaPetsSection({
 
         try {
             setSaving(true);
-            const res = await api.post("/pets", payload);
-            const created = res?.data ?? payload;
 
-            if (typeof onPetCreated === "function") onPetCreated(created);
+            if (editingPetId) {
+                const res = await api.put(`/pets/${editingPetId}`, {
+                    ...payload,
+                    id: editingPetId,
+                });
+
+                const updated = res?.data ?? { ...payload, id: editingPetId };
+                if (typeof onPetCreated === "function") onPetCreated(updated);
+                alert("Dados do pet atualizados com sucesso");
+            } else {
+                const res = await api.post("/pets", payload);
+                const created = res?.data ?? payload;
+
+                if (typeof onPetCreated === "function") onPetCreated(created);
+                alert("Pet cadastrado com sucesso")
+            }
 
             setModalAddPetOpen(false);
             setActiveTab("pets");
-            alert("Pet cadastrado com sucesso.");
+            resetPetForm();
         } catch (err) {
             console.error("Erro ao cadastrar pet", err);
             alert("Erro ao cadastrar pet.");
@@ -169,7 +228,7 @@ export default function CovaPetsSection({
                         $active={activeTab === "pets"}
                         onClick={() => setActiveTab("pets")}
                     >
-                        Pets ({modalPetList.length})
+                        <MdPets />Pets ({modalPetList.length})
                     </TabButton>
                 )}
 
@@ -188,12 +247,15 @@ export default function CovaPetsSection({
                         <PetList>
                             {modalPetList.map((pet, idx) => (
                                 <PetCard key={pet.id ?? `${pet.nome_pet}-${idx}`}>
+                                    <BtnUpdate type="button" onClick={() => handleEditPetId(pet)}><RxUpdate /></BtnUpdate>
+                                    <BtnDelete type="button" onClick={() => handleDeletePet(pet)}><TiDelete /></BtnDelete>
                                     <PetName>{pet.nome_pet || "Pet sem nome"}</PetName>
                                     <PetMeta>Espécie: {pet.especie || "-"}</PetMeta>
                                     <PetMeta>Raça: {pet.raca || "-"}</PetMeta>
                                     <PetMeta>Data do óbito: {pet.data_obito_pet || "-"}</PetMeta>
                                     <PetMeta>Data/Hora do sepultamento: {pet.dh_sep_pet || "-"}</PetMeta>
                                     <PetMeta>Observações: {pet.obs_pet || "-"}</PetMeta>
+                                    <PetMeta>Falecido(a)/família vinculado(a): {pet.nome_sep || "-"}</PetMeta>
                                 </PetCard>
                             ))}
                         </PetList>
@@ -208,7 +270,9 @@ export default function CovaPetsSection({
                     }}
                 >
                     <ModalCard onSubmit={submitPet}>
-                        <h3 style={{ marginTop: 0 }}>Cadastrar pet</h3>
+                        <h3 style={{ marginTop: 0 }}>
+                            {editingPetId ? "Atualizar pet" : "Cadastrar Pet"}
+                        </h3>
 
                         <FormGrid>
                             <Field>
@@ -282,7 +346,7 @@ export default function CovaPetsSection({
                                 Cancelar
                             </BtnCancel>
                             <BtnSave type="submit" disabled={saving}>
-                                {saving ? "Salvando..." : "Salvar"}
+                                {saving ? "Salvando..." : (editingPetId ? "Atualizar":"Salvar")}
                             </BtnSave>
                         </ModalButtonsRow>
                     </ModalCard>
