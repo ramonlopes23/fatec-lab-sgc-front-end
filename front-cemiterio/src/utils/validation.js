@@ -93,7 +93,6 @@ export const RULES_FALECIDO = {
     causa_mortis: { required: true, label: "Causa da morte do falecido" },
     cpf: { required: true, label: "CPF do falecido" },
     rg: { required: true, label: "RG do falecido" },
-    certidao_obito: { required: true, label: "Certidão de óbito do falecido" },
     nome_doutor: { required: true, label: "Nome do médico" },
 };
 
@@ -104,7 +103,6 @@ export const RULES_SEPULTAMENTO = {
     quadra_sep: { required: true, label: "Quadra" },
     num_sepultura_sep: { required: true, label: "Nº da sepultura" },
     taxa: { required: true, label: "Tipo de taxa" },
-    coveiro_sep: { required: true, label: "Funcionário designado" },
 };
 
 export const RULES_RESPONSAVEL = {

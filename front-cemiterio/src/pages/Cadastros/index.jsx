@@ -39,7 +39,7 @@ export default function Cadastros() {
         certidao_obito: "",
         obs_fal: "",
         residencia: "",
-        residenciaPreview: "",
+        residencia_preview: "",
         nome_resp: "",
         doc_resp: "",
         prof_resp: "",
@@ -455,54 +455,78 @@ export default function Cadastros() {
         })
     }
 
+    const hasAnyMeaningfulValue = (obj, ignore = []) => {
+        const ignoreSet = new Set(ignore);
+        return Object.entries(obj).some(([k, v]) => {
+            if (ignoreSet.has(k)) return false;
+            if (typeof v === "boolean") return v === true;
+            if (v instanceof File) return true;
+            return !isEmpty(v);
+        })
+    };
+
     const validateBeforeSubmit = () => {
+        const ignoreForEmptyCheck = [
+            "taxa_valor",
+            "foi_exumado",
+            "residencia_preview",
+            "falecido",
+            "falecido_id",
+        ];
+
+        const hasAnyFormValue = hasAnyMeaningfulValue(form, ignoreForEmptyCheck);
+        const hasSearchValue = processType === "Cadastro de sepultamento" && !isEmpty(searchFal);
+
+        if (!hasAnyFormValue && !hasSearchValue) {
+            const errors = { _form: "Preencha ao menos um campo antes de salvar." };
+            setFieldErrors(errors);
+            return false;
+        }
+
         let rules = {};
+        let extra_errors = {};
 
         if (processType === "Cadastro de falecido") {
             if (isIndigente) {
-                rules = {};
-                ALLOWED_FAL_INDI.forEach(k => {
+                ALLOWED_FAL_INDI.forEach((k) => {
                     if (RULES_FALECIDO[k]) rules[k] = RULES_FALECIDO[k];
                 });
-
-                setFieldErrors(prev => {
-                    const out = { ...prev };
-                    Object.keys(out).forEach(k => {
-                        if (!ALLOWED_FAL_INDI.has(k)) delete out[k];
-                    });
-                    return out;
-                });
             } else {
-
                 rules = { ...RULES_FALECIDO, ...RULES_RESPONSAVEL };
 
-                if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
-                    if (!isValidDateRange(form.data_nasc, form.dh_falec)) {
-                        setFieldErrors(prev => ({
-                            ...prev,
-                            dh_falec: "Data de falecimento não pode ser anterior à data de nascimento"
-                        }));
-                        return false
-                    }
+                delete rules.certidao_obito;
+            }
+
+            if (!isEmpty(form.data_nasc) && !isEmpty(form.dh_falec)) {
+                if (!isValidDateRange(form.data_nasc, form.dh_falec)) {
+                    extra_errors.dh_falec = "Data de falecimento não pode ser anterior à data de nascimento";
                 }
             }
-        } else if (processType === "Cadastro de sepultamento") {
-            rules = { ...RULES_SEPULTAMENTO, ...RULES_RESPONSAVEL };
         }
 
-        const errors = validateForm(form, rules);
+        if (processType === "Cadastro de sepultamento") {
+            rules = { ...RULES_SEPULTAMENTO };
+
+            if (isEmpty(form.falecido) && isEmpty(form.falecido_id)) {
+                extra_errors.nome_fal = "Selecione um falecido.";
+            }
+        }
+
+        const errors = { ...validateForm(form, rules), ...extra_errors };
         setFieldErrors(errors);
-        return !hasErrors(errors);
+        return !hasErrors(errors)
+
     }
+
 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        /* if (!validateBeforeSubmit()) {
+        if (!validateBeforeSubmit()) {
             alert("Por favor, corrija os erros no formulário");
             return
-        } */
+        }
 
         setConfirmOpen(true);
     };
@@ -585,7 +609,6 @@ export default function Cadastros() {
                         }
                     }
 
-                    setRegistros(prev => ([...prev, { processType, data: form }]));
                 }
                 catch (err) {
                     console.error(err);
@@ -607,12 +630,12 @@ export default function Cadastros() {
     const handleFileChange = (e, fieldName) => {
         const file = e.target.files && e.target.files[0];
         if (!file) {
-            setForm(prev => ({ ...prev, [fieldName]: null, [`${fieldName}Preview`]: "" }))
+            setForm(prev => ({ ...prev, [fieldName]: null, [`${fieldName}residencia_preview`]: "" }))
             return;
         }
         const reader = new FileReader();
         reader.onload = () => {
-            setForm(prev => ({ ...prev, [fieldName]: file, [`${fieldName}Preview`]: reader.result }))
+            setForm(prev => ({ ...prev, [fieldName]: file, [`${fieldName}residencia_preview`]: reader.result }))
         };
         reader.readAsDataURL(file);
 
@@ -699,7 +722,7 @@ export default function Cadastros() {
     /* const returnCPF = useMemo(() => {
         if (!form.nome_fal) return "";
         const target = String(form.nome_fal);
-
+    
     }) */
 
     const ALLOWED_FAL_INDI = new Set([
@@ -1299,8 +1322,8 @@ export default function Cadastros() {
                                         </Field>
                                         <Field>
                                             <input type="file" accept="image/*" onChange={e => handleFileChange(e, "residencia")} />
-                                            {form.residenciaPreview && (
-                                                <img src={form.residenciaPreview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
+                                            {form.residencia_preview && (
+                                                <img src={form.residencia_preview} alt="preview comprovante" style={{ width: 160, height: 120, objectFit: "cover", marginTop: 8, borderRadius: 6 }} />
                                             )}
                                         </Field>
 
@@ -1372,7 +1395,7 @@ export default function Cadastros() {
                                             />
                                         </Field>
 
-                                       {/*  <Field>
+                                        {/*  <Field>
                                             <TextField
                                                 fullWidth
                                                 variant="outlined"
