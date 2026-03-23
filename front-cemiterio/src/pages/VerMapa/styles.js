@@ -237,10 +237,13 @@ export const BtnAdd = styled.button`
 `;
 
 export const BtnClose = styled.button`
+  display:flex;
   gap:8px;
   font-size:15px;
-  background: #e6e6f1ff;
-  margin-left:370px;
+  align-items:center;
+  margin-left: 370px; 
+  margin-top: 15px;
+  background: #f4f4f4;
   color: #191970;
   border: none;
   padding: 8px 16px;
@@ -248,6 +251,8 @@ export const BtnClose = styled.button`
   cursor: pointer;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(15,13,58,0.18);
+  position: static; 
+  right: auto;
   &:hover { opacity: 0.7; transform: translateY(-1px); }
 `;
 

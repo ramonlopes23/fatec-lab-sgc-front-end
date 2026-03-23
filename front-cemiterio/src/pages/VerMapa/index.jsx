@@ -1111,7 +1111,7 @@ export default function VerMapa() {
                                             <Field>
                                                 <Label>Tipo: </Label>
                                                 <SmallSelect style={{ width: 80 }} name="tipo_cova" value={formCova.tipo_cova} onChange={handleCovaChange}>
-                                                    <option value="cova">Cova</option>
+                                                    <option value="cova">Cova (Terra)</option>
                                                     <option value="gaveta">Gaveta</option>
                                                     <option value="nicho">Nicho</option>
                                                 </SmallSelect>

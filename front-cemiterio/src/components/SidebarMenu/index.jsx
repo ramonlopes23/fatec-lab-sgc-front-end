@@ -17,12 +17,12 @@ export default function SidebarMenu() {
     const menuItems = [
         { name: "DASHBOARD", icon: <MdDashboard size={20} />, path: "/Home" },
         { name: "CADASTRAR PROCESSO", icon: <GiArchiveRegister size={25} />, path: "/Cadastros" },
-        { name: "CALENDÁRIO", icon: <LuCalendarSearch size={20} />, path: "/Calendario" },
+        /* { name: "CALENDÁRIO", icon: <LuCalendarSearch size={20} />, path: "/Calendario" }, */
         { name: "SEPULTURAS", icon: <BsGrid3X3GapFill size={20} />, path: "/VerMapa" },
-        { name: "RELATÓRIOS", icon: <GrNotes size={20} />, path: "/Relatorios" },
+        /* { name: "RELATÓRIOS", icon: <GrNotes size={20} />, path: "/Relatorios" },
         { name: "REGISTROS", icon: <LuFileSearch2 size={22} />, path: "/Registros" },
         { name: "CONTRATOS", icon: <ImProfile size={20} />, path: "/Contratos" },
-        { name: "CONFIGURAR", icon: <FaCog size={20} />, path: "/Configurar" },
+        { name: "CONFIGURAR", icon: <FaCog size={20} />, path: "/Configurar" }, */
     ];
 
     return (
