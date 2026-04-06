@@ -14,13 +14,13 @@ export default function AppRoutes() {
         <Routes>
             <Route path='/' element={<Navigate to="/home" />} />
             <Route path='/home' element={<Home />} />
-           {/*  <Route path='/calendario' element={<Calendario />} /> */}
+            <Route path='/calendario' element={<Calendario />} />
             <Route path='/cadastros' element={<Cadastros />} />
-           {/*  <Route path='/configurar' element={<Configurar />} />
-            <Route path='/registros' element={<Registros />} /> */}
+            <Route path='/configurar' element={<Configurar />} />
+            <Route path='/registros' element={<Registros />} />
             <Route path='/vermapa' element={<VerMapa />} />
-           {/*  <Route path='/relatorios' element={<Relatorios />} />
-            <Route path='/contratos' element={<Contratos />} /> */}
+            <Route path='/relatorios' element={<Relatorios />} />
+            <Route path='/contratos' element={<Contratos />} />
         </Routes>
     );
 }
