@@ -3,7 +3,7 @@ import {HiBars4} from "react-icons/hi2";
 import { HeaderContainer, MenuButton, UserAvatar, UserContainer, UserName } from "./styles";
 import { FaRegUserCircle } from "react-icons/fa";
 
-    export default function Header ({userName = "Ramon", onMenuClick }){
+    export default function Header ({userName = "Administrador", onMenuClick }){
         const [photo, setPhoto] = useState(null);
 
         useEffect(() => {

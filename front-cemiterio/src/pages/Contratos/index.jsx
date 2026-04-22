@@ -8,6 +8,7 @@ import { ImProfile } from "react-icons/im";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 import api from "../../services/api";
 import React, { useEffect, useMemo, useState } from "react"
+import { BtnAdd } from "../VerMapa/styles";
 
 const STATUS_OPTIONS = [
     { value: "ativo", label: "Ativo" },
@@ -22,6 +23,7 @@ const INITIAL_FORM = {
     validade_titulo: "",
     sepultura: "",
     quadra: "",
+    capacidade: "",
 };
 
 function formatDateBR(value) {
@@ -41,6 +43,7 @@ export default function Contratos() {
     const [query, setQuery] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
     const [titulos, setTitulos] = useState([]);
+    const [quadrasDisponiveis, setQuadrasDisponiveis] = useState([]);
     const [form, setForm] = useState(INITIAL_FORM);
     const [errors, setErrors] = useState({});
     const [editingId, setEditingId] = useState(null);
@@ -59,6 +62,15 @@ export default function Contratos() {
     const updateField = (key, value) => {
         setForm((prev) => ({ ...prev, [key]: value }));
         setErrors((prev) => ({ ...prev, [key]: "" }));
+    };
+
+    const getQuadraLabel = (quadraValue) => {
+        const value = String(quadraValue || "");
+        const found = (quadrasDisponiveis || []).find(
+            (q) => String(q?.id) === value || String(q?.num_quadra) === value
+        );
+        if (!found) return quadraValue || "-";
+        return found?.num_quadra ? String(found.num_quadra) : String(found.id);
     };
 
     const openModal = () => {
@@ -82,11 +94,19 @@ export default function Contratos() {
         if (!form.validade_titulo.trim()) nextErrors.validade_titulo = "Informe a validade do título";
         if (!form.sepultura.trim()) nextErrors.sepultura = "Informe o número da sepultura";
         if (!form.quadra.trim()) nextErrors.quadra = "Informe o número da quadra";
+        if (!form.capacidade.trim()) nextErrors.capacidade = "Informe a capacidade da sepultura";
 
         if (form.validade_titulo) {
             const date = new Date(`${form.validade_titulo}`);
             if (Number.isNaN(date.getTime())) {
                 nextErrors.validade_titulo = "Data de validade em formato inválido";
+            }
+        }
+
+        if (String(form.capacidade || "").trim()) {
+            const capacidadeNum = Number(form.capacidade);
+            if (Number.isNaN(capacidadeNum) || capacidadeNum <= 0) {
+                nextErrors.capacidade = "A capacidade deve ser maior que zero";
             }
         }
 
@@ -104,6 +124,64 @@ export default function Contratos() {
 
     const errorStyle = { margin: "6px 0 0", color: "#b42318", fontSize: 12 };
 
+    const createParticularCovaFromContrato = async () => {
+        const quadraInput = String(form.quadra || "").trim();
+        const num_cova = String(form.sepultura || "").trim();
+        const nomeTitular = String(form.nome_titular || "").trim();
+        const numeroTitulo = String(form.numero_titulo || "").trim();
+        const capacidadeNum = Number(form.capacidade);
+
+        const { data: quadrasData } = await api.get("/quadras");
+        const quadras = Array.isArray(quadrasData) ? quadrasData : [];
+
+        const quadraEncontrada = quadras.find((q) => {
+            const byId = String(q?.id ?? "") === quadraInput;
+            const byNumero = String(q?.num_quadra ?? "") === quadraInput;
+            const byNome = String(q?.nome ?? "").replace("Quadra ", "") === quadraInput;
+            return byId || byNumero || byNome;
+        });
+
+        if (!quadraEncontrada?.id) {
+            throw new Error("Quadra não encontrada. Informe uma quadra já cadastrada.");
+        }
+
+        const quadraSelecionada = (quadrasDisponiveis || []).find(
+            (q) => String(q?.id) === String(form.quadra)
+        )
+
+        if (!quadraSelecionada?.id) {
+            throw new Error("Quadra inválida. Selecione uma quadra já cadastrada");
+        }
+
+        const quadra_cova = String(quadraSelecionada.id);
+
+        const { data: existingCovas } = await api.get("/covas", {
+            params: { quadra_cova, num_cova },
+        });
+
+        if (Array.isArray(existingCovas) && existingCovas.length > 0) {
+            throw new Error("Já existe uma cova com essa quadra e número");
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        await api.post("/covas", {
+            quadra_cova,
+            num_cova,
+            tipo_cova: "cova",
+            status: "reservada",
+            capacidade: capacidadeNum,
+            concessao: {
+                ativa: true,
+                responsavel: nomeTitular,
+                prazo_anos: 0,
+                data_inicio: today,
+                data_fim: form.validade_titulo || "",
+            },
+            obs: `Título ${numeroTitulo}`,
+        });
+    };
+
     const handleSaveTitulo = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
@@ -118,6 +196,7 @@ export default function Contratos() {
                 validade_titulo: form.validade_titulo,
                 sepultura: form.sepultura.trim(),
                 quadra: form.quadra.trim(),
+                capacidade: Number(form.capacidade),
                 update_at: now,
             }
 
@@ -127,6 +206,7 @@ export default function Contratos() {
                     id: editingId,
                 });
             } else {
+                await createParticularCovaFromContrato();
                 await api.post("/contratos", {
                     ...payload,
                     created_at: now,
@@ -138,11 +218,11 @@ export default function Contratos() {
             setEditingId(null);
         } catch (error) {
             console.error("Erro ao salvar contrato/titulo", error);
-            alert("Não foi possivel salvar o título")
+            alert(error?.message || "Não foi possivel salvar o título")
         }
     }
 
-    const handleEditTitulo = (item) =>{
+    const handleEditTitulo = (item) => {
         setEditingId(item.id);
         setForm({
             nome_titular: item.nome_titular || "",
@@ -151,19 +231,20 @@ export default function Contratos() {
             validade_titulo: item.validade_titulo || "",
             sepultura: item.sepultura || "",
             quadra: item.quadra || "",
+            capacidade: item.capacidade || "",
         });
         setErrors({});
         setModalOpen(true);
     }
 
-    const handleDeleteTitulo = async (id) =>{
+    const handleDeleteTitulo = async (id) => {
         const ok = window.confirm("Deseja realmente excluir este título?");
-        if(!ok) return;
+        if (!ok) return;
 
-        try{
+        try {
             await api.delete(`/contratos/${id}`);
             await loadContratos();
-        } catch(error){
+        } catch (error) {
             console.error("Error ao excluir título", error);
             alert("Não foi possível excluiro título");
         }
@@ -180,6 +261,28 @@ export default function Contratos() {
                 setTitulos([]);
             }
         };
+
+        const loadQuadras = async () => {
+            try {
+                const { data } = await api.get("/quadras");
+                const normalized = Array.isArray(data) ? data : [];
+                normalized.sort((a, b) => {
+                    const av = Number(a?.num_quadra);
+                    const bv = Number(b?.num_quadra);
+                    if (!Number.isNaN(av) && !Number.isNaN(bv)) return av - bv;
+                    return String(a?.num_quadra ?? a?.id ?? "").localeCompare(
+                        String(b?.num_quadra ?? b?.id ?? "")
+                    );
+                });
+                setQuadrasDisponiveis(normalized);
+            } catch (error) {
+                console.error("Erro ao carregar quadras", error);
+                setQuadrasDisponiveis([]);
+            }
+        };
+
+        loadContratos();
+        loadQuadras();
     }, []);
 
 
@@ -246,6 +349,8 @@ export default function Contratos() {
                                             <Th>Validade</Th>
                                             <Th>Sepultura</Th>
                                             <Th>Quadra</Th>
+                                            <Th>Capacidade</Th>
+                                            {/*  <Th>Ações</Th> */}
                                         </tr>
                                     </THead>
                                     <TBody>
@@ -257,16 +362,17 @@ export default function Contratos() {
                                                     <Td>{statusLabel(item.status)}</Td>
                                                     <Td>{formatDateBR(item.validade_titulo)}</Td>
                                                     <Td>{item.sepultura}</Td>
-                                                    <Td>{item.quadra}</Td>
-                                                    <Td>
-                                                        <button type="button" onClick={()=>handleEditTitulo(item)}>Editar</button>
-                                                        <button type="button" onClick={()=>handleDeleteTitulo(item.id)}>Excluir</button>
-                                                    </Td>
+                                                    <Td>{getQuadraLabel(item.quadra)}</Td>
+                                                    <Td>{item.capacidade}</Td>
+                                                    {/* <Td>
+                                                        <BtnAdd type="button" onClick={() => handleEditTitulo(item)}>Editar</BtnAdd>
+                                                        <BtnPrimaryClose type="button" onClick={() => handleDeleteTitulo(item.id)}>Excluir</BtnPrimaryClose>
+                                                    </Td> */}
                                                 </Tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <Td colSpan={6}>Nenhum título encontrado.</Td>
+                                                <Td colSpan={8}>Nenhum título encontrado.</Td>
                                             </tr>
                                         )}
                                     </TBody>
@@ -344,11 +450,30 @@ export default function Contratos() {
 
                                 <div>
                                     <label>Quadra</label>
-                                    <Input
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        size="small"
                                         value={form.quadra}
                                         onChange={(e) => updateField("quadra", e.target.value)}
-                                        placeholder="Exemplo: 12"
-                                    />
+                                        sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                borderRadius: "18px",
+                                            },
+                                            "& .MuiOutlinedInput-input": {
+                                                fontSize: "14px",
+                                            },
+                                        }}
+                                    >
+                                        <MenuItem value="">
+                                            Selecione uma quadra
+                                        </MenuItem>
+                                        {quadrasDisponiveis.map((q) => (
+                                            <MenuItem key={String(q.id)} value={String(q.id)}>
+                                                {q?.num_quadra ? `Quadra ${q.num_quadra}` : `Quadra ${q.id}`}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
                                     {errors.quadra ? <p style={errorStyle}>{errors.quadra}</p> : null}
                                 </div>
 
@@ -361,13 +486,26 @@ export default function Contratos() {
                                     />
                                     {errors.validade_titulo ? <p style={errorStyle}>{errors.validade_titulo}</p> : null}
                                 </div>
+
+                                <div>
+                                    <label>Capacidade</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        value={form.capacidade}
+                                        onChange={(e) => updateField("capacidade", e.target.value)}
+                                        placeholder="Exemplo: 3"
+                                    />
+                                    {errors.capacidade ? <p style={errorStyle}>{errors.capacidade}</p> : null}
+                                </div>
                             </ModalGrid>
+
 
                             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
                                 <BtnPrimaryClose type="button" onClick={closeModal}>
                                     Cancelar
                                 </BtnPrimaryClose>
-                                <BtnPrimarySave type="button">Salvar título</BtnPrimarySave>
+                                <BtnPrimarySave type="submit">Salvar título</BtnPrimarySave>
                             </div>
                         </form>
                     </ModalContent>

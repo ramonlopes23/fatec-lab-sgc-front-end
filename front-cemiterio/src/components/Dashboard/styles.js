@@ -2,7 +2,10 @@ import styled from "styled-components";
 
 export const DashboardWrapper = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
   padding: 2rem;
 `;
 
@@ -12,7 +15,7 @@ export const Card = styled.div`
   border-radius: 12px;
   padding: 1rem;
   width: 100%;
-  max-width: 800px;
+  max-width: 960px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
@@ -39,12 +42,19 @@ export const ProcessItem = styled.div`
   border: 1px solid #e5e7eb;
   padding: 1rem;
   border-radius: 8px;
+  gap: 1rem;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
 
 export const ProcessInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
 
   strong {
     font-size: 1rem;
@@ -59,7 +69,7 @@ export const ProcessInfo = styled.div`
 
 export const ProcessAction = styled.div`
   font-weight: bold;
-  color: #191970
+  color: #191970;
 `;
 
 

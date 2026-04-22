@@ -587,7 +587,6 @@ export default function VerMapa() {
                 }
             });
 
-
             covasData.forEach(cova => {
                 const qKey = cova.quadra_cova ?? cova.quadra ?? "0";
                 const qId = /^\d+$/.test(String(qKey)) ? Number(qKey) : String(qKey);

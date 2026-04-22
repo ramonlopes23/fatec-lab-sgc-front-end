@@ -65,8 +65,21 @@ export const Tile = styled.button`
       border-color: #191970;
     `}
 
-  /* Status dinâmico */
-  ${(props) => props.status [props.status]}
+  /* Status dinâmico (seguro quando status vier vazio/undefined) */
+  ${(props) => {
+    const status = String(props.status || "").toLowerCase();
+    if (status.includes("desat") || status.includes("inativ")) {
+      return css`
+        opacity: 0.65;
+     `;
+    }
+    if (status.includes("ativ")) {
+      return css`
+        border-color: rgba(25, 25, 112, 0.25);
+      `;
+    }
+    return "";
+  }}
 
   @media (max-width: 420px) {
     min-height: 56px;

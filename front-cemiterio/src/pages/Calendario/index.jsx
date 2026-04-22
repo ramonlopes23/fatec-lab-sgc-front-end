@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Footer from "../../components/Footer";
 import MainLayout from "../../layout/MainLayout";
 import Calendar from "../../components/Calendar";
+import api from "../../services/api";
 
 export default function Calendario() {
   const [sepultamentos, setSepultamentos] = useState([]);
@@ -11,22 +12,32 @@ export default function Calendario() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    fetch("/db.json")
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        setSepultamentos(data.sepultamentos || []);
-        setExumacoes(data.exumacoes || []);
-        setQuadras(data.quadras || []);
-      })
-      .catch((err) => {
-        console.warn("Erro ao carregar db.json", err);
+    const loadCalendario = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const [sepultamentosRes, exumacoesRes, quadrasRes] = await Promise.all([
+          api.get("/sepultamentos"),
+          api.get("/exumacoes"),
+          api.get("/quadras"),
+        ]);
+
+        setSepultamentos(Array.isArray(sepultamentosRes.data) ? sepultamentosRes.data : []);
+        setExumacoes(Array.isArray(exumacoesRes.data) ? exumacoesRes.data : []);
+        setQuadras(Array.isArray(quadrasRes.data) ? quadrasRes.data : []);
+      } catch (err) {
+        console.warn("Erro ao carregar dados do calendario via API", err);
         setError(err);
-      })
-      .finally(() => setLoading(false));
+        setSepultamentos([]);
+        setExumacoes([]);
+        setQuadras([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCalendario();
   }, []);
 
   return (
