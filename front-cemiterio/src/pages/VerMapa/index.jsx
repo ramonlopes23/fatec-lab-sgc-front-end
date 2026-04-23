@@ -68,6 +68,7 @@ export default function VerMapa() {
     const dropdownRef = useRef(null);
     const [isPieChartOpen, setIsPieChartOpen] = useState(false);
     const [sepultamentosAll, setSepultamentosAll] = useState([]);
+    const [contratosAll, setContratosAll] = useState([]);
     const [sepCountsByQuadra, setSepCountsByQuadra] = useState({});
     const [modalSepList, setModalSepList] = useState([]);
     const [modalExpandedIndex, setModalExpandedIndex] = useState(null);
@@ -301,15 +302,8 @@ export default function VerMapa() {
             quadra_cova: "",
             num_cova: "",
             tipo_cova: "cova",
-            status: "disponivel",
+            status: "",
             capacidade: "",
-            concessao: {
-                ativa: false,
-                responsavel: "",
-                prazo_anos: 0,
-                data_inicio: "",
-                data_fim: ""
-            },
             obs: "",
         });
         setModalAddCovaOpen(true)
@@ -474,13 +468,6 @@ export default function VerMapa() {
             tipo_cova: tipo || "cova",
             status: normalizeStatus(formCova.status),
             capacidade: formCova.capacidade || "",
-            concessao: {
-                ativa: !!(formCova.concessao && formCova.concessao.ativa),
-                responsavel: formCova.concessao?.responsavel || "",
-                prazo_anos: Number(formCova.concessao?.prazo_anos || 0),
-                data_inicio: formCova.concessao?.data_inicio || "",
-                data_fim: formCova.concessao?.data_fim || ""
-            },
             obs: formCova.obs || "",
         };
         try {
@@ -514,11 +501,13 @@ export default function VerMapa() {
 
     const loadMapData = useCallback(async () => {
         try {
-            const [rCovas, rSep, rQuadras, rExu, rPets] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras"), api.get("/exumacoes"), api.get("/pets")]);
+            const [rCovas, rSep, rQuadras, rExu, rPets, rContratos] = await Promise.all([api.get("/covas"), api.get("/sepultamentos"), api.get("/quadras"), api.get("/exumacoes"), api.get("/pets"), api.get("/contratos")]);
             const covasData = Array.isArray(rCovas.data) ? rCovas.data : [];
             const sepData = Array.isArray(rSep.data) ? rSep.data : [];
             const petsData = Array.isArray(rPets.data) ? rPets.data : [];
+            const contratosData = Array.isArray(rContratos.data) ? rContratos.data : [];
             setPetsAll(petsData);
+            setContratosAll(contratosData);
 
             try {
                 const exuData = Array.isArray(rExu.data) ? rExu.data : [];
@@ -817,6 +806,18 @@ export default function VerMapa() {
     const capacidadeForModal = selectedCova?.capacidade ?? selectedCova?.cova?.capacidade ?? selectedCova?.sep?.capacidade ?? sepDataForModal?.capacidade ?? "-";
     const observacoesForModal = selectedCova?.obs ?? selectedCova?.cova?.obs ?? "-";
     const numeroForModal = sepDataForModal?.num_sepultura_sep ?? sepDataForModal?.num_sepultura ?? sepDataForModal?.numero ?? selectedCova?.numero ?? "-";
+    const quadraForModal = selectedCova?.cova?.quadra_cova ?? selectedCova?.quadra_cova ?? sepDataForModal?.quadra_sep ?? sepDataForModal?.quadra ?? selectedQuadraId ?? "";
+    const contratoForModal = (contratosAll || []).find((contrato) => {
+        const contratoQuadra = String(contrato?.quadra ?? "").trim();
+        const contratoSepultura = String(contrato?.sepultura ?? "").trim();
+        return contratoQuadra === String(quadraForModal).trim() && contratoSepultura === String(numeroForModal).trim();
+    });
+    const titularForModal = contratoForModal?.nome_titular
+        ?? selectedCova?.cova?.nome_titular
+        ?? selectedCova?.cova?.concessao?.responsavel
+        ?? selectedCova?.nome_titular
+        ?? sepDataForModal?.nome_titular
+        ?? "-";
     /* const nomeSepForModal = sepDataForModal?.nome_sep ?? sepDataForModal?.falecido?.nome_fal ?? sepDataForModal?.falecido?.nome ?? null; */
 
     const getPetsCountBySep = (cova, quadraId) => {
@@ -1021,8 +1022,6 @@ export default function VerMapa() {
                     </div>
                 )}
 
-
-
                 {modalAddQuadraOpen && (
                     <ModalOverlay>
                         <div style={{
@@ -1095,8 +1094,8 @@ export default function VerMapa() {
                                         <Field>
                                             <Label>Status: </Label>
                                             <SmallSelect style={{ width: 200 }} name="status" value={formCova.status} onChange={handleCovaChange}>
-                                                <option value="livre">Disponível</option>
-                                                <option value="reservada">Particular</option>
+                                                <option value="">Selecione o status</option>
+                                                <option value="disponivel">Disponível</option>
                                                 <option value="indisponível">Indisponível</option>
                                             </SmallSelect>
                                         </Field>
@@ -1126,35 +1125,6 @@ export default function VerMapa() {
                                     </ColumnLeft>
 
                                     <ColumnRight>
-
-                                        <Field>
-                                            <Label>
-                                                Possui título de posse?<input type="checkbox" name="concessao.ativa" checked={!!formCova.concessao?.ativa} onChange={handleCovaChange} />
-                                            </Label>
-                                        </Field>
-
-                                        {formCova.concessao?.ativa ? (
-                                            <>
-                                                <Field>
-                                                    <Label>Responsável: </Label>
-                                                    <Input name="concessao.responsavel" value={formCova.concessao?.responsavel || ""} onChange={handleCovaChange} />
-                                                </Field>
-                                                <Field>
-                                                    <Label>Prazo (anos): </Label>
-                                                    <Input type="number" name="concessao.prazo_anos" value={formCova.concessao?.prazo_anos || 0} onChange={handleCovaChange} />
-                                                </Field>
-                                                <Field>
-                                                    <Label>Data Início: </Label>
-                                                    <Input type="date" name="concessao.data_inicio" value={formCova.concessao?.data_inicio || ""} onChange={handleCovaChange} />
-                                                </Field>
-
-                                                <Field>
-                                                    <Label>Data Fim: </Label>
-                                                    <Input type="date" name="concessao.data_fim" value={formCova.concessao?.data_fim || ""} onChange={handleCovaChange} />
-                                                </Field>
-                                            </>
-                                        ) : null}
-
                                         <Field>
                                             <Label>Observações: </Label>
                                             <Textarea name="obs" value={formCova.obs || ""} onChange={handleCovaChange}></Textarea>
@@ -1184,6 +1154,7 @@ export default function VerMapa() {
                             <p><strong>Tipo:</strong> {tipoForModal}</p>
                             <p><strong>Espaços disponíveis na sepultura:</strong> {capacidadeForModal}</p>
                             <p><strong>Observações:</strong> {observacoesForModal}</p>
+                            <p><strong>Titular da posse:</strong> {titularForModal}</p>
 
                             <CovaPetsSection
                                 selectedCova={selectedCova}
@@ -1202,14 +1173,14 @@ export default function VerMapa() {
                                         return [...prev, createdPet];
                                     });
                                 }}
-                                onPetDeleted={(petId)=>{
-                                    setPetsAll((prev)=> prev.filter((p)=>String(p.id) !== String(petId)));
+                                onPetDeleted={(petId) => {
+                                    setPetsAll((prev) => prev.filter((p) => String(p.id) !== String(petId)));
                                 }}
                             >
 
                                 {(modalSepList && modalSepList.length > 0) ? (
                                     <>
-                                        <SepDivider />                                    
+                                        <SepDivider />
                                         <SepList>
                                             {modalSepList.map((s, idx) => {
                                                 const expanded = modalExpandedIndex === idx;
@@ -1301,8 +1272,8 @@ export default function VerMapa() {
                             </CovaPetsSection>
 
                             <ModalButtonsRow>
-                                <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
-                            </ModalButtonsRow>
+                                {/*                                 <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
+ */}                            </ModalButtonsRow>
 
                         </ModalContent>
                     </div>

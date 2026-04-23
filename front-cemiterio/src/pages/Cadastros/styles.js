@@ -262,7 +262,7 @@ export const CheckboxInput = styled.input.attrs({ type: "checkbox" })`
 export const CheckboxLabel = styled.label`
   display: inline-block;
   vertical-align: middle;
-  margin-left: 6px;
+  margin-left: 2px;
   cursor: pointer;
 `;
 

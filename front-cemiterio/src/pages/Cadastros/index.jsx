@@ -1,4 +1,4 @@
-import MainLayout from "../../layout/MainLayout";
+﻿import MainLayout from "../../layout/MainLayout";
 import Footer from "../../components/Footer";
 import api from "../../services/api";
 import React, { useState, useMemo, useEffect } from "react";
@@ -52,6 +52,19 @@ export default function Cadastros() {
         nome_sep: "",
         data_obito_sep: "",
         dh_sep: "",
+        incluir_velorio: false,
+        nome_vel: "",
+        data_velorio: "",
+        sala: "",
+        hora_inicio: "",
+        hora_fim: "",
+        responsavel_familia: "",
+        funeraria: "",
+        funcionario: "",
+        servico_religioso: false,
+        ornamentacao: false,
+        musica: false,
+        obs_vel: "",
         titulo_posse: "",
         quadra_sep: "",
         num_sepultura_sep: "",
@@ -59,7 +72,10 @@ export default function Cadastros() {
         obs_sep: "",
         taxa: "",
         taxa_valor: 0,
-        foi_exumado: false
+        foi_exumado: false,
+        contrato_id: "",
+        numero_titulo: "",
+        nome_titular: ""
     }
 
     const taxa_map = {
@@ -137,6 +153,7 @@ export default function Cadastros() {
     const [loadingCep, setLoadingCep] = useState(false);
     const [quadras, setQuadras] = useState([]);
     const [covas, setCovas] = useState([]);
+    const [contratos, setContratos] = useState([]);
     const [availableCovas, setAvailableCovas] = useState([]);
     const [fieldErrors, setFieldErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -275,6 +292,17 @@ export default function Cadastros() {
 
     useEffect(() => {
         let mounted = true;
+        api.get("/contratos").then(res => {
+            if (!mounted) return;
+            setContratos(Array.isArray(res.data) ? res.data : []);
+        }).catch(() => {
+            if (mounted) setContratos([]);
+        })
+        return () => { mounted = false; };
+    }, []);
+
+    useEffect(() => {
+        let mounted = true;
         api.get("/falecidos").then(res => {
             if (!mounted) return;
             setFalecidos(res.data || []);
@@ -283,7 +311,11 @@ export default function Cadastros() {
     }, []);
 
     const handleQuadraSepChange = (val) => {
-        setForm(prev => ({ ...prev, quadra_sep: val, num_sepultura_sep: "" }));
+        setForm(prev => ({
+            ...prev,
+            quadra_sep: val,
+            num_sepultura_sep: ""
+        }));
         setAvailableCovas(computeAvailableCovas(val, form.titulo_posse));
     };
 
@@ -328,6 +360,15 @@ export default function Cadastros() {
 
         updateFieldByName(name, maskedValue);
 
+        if (name === "titulo_posse" && maskedValue !== "Sim") {
+            setForm(prev => ({
+                ...prev,
+                contrato_id: "",
+                numero_titulo: "",
+                nome_titular: ""
+            }));
+        }
+
         validateFieldOnChange(name, maskedValue);
 
 
@@ -342,7 +383,7 @@ export default function Cadastros() {
                 const dhFalec = new Date(dhFalec);
 
                 if (dhFalec < dataNasc) {
-                    console.warn("Data de falecimento é anterior a data de nascimento.")
+                    console.warn("Data de falecimento é anterior à data de nascimento.")
                 }
             }
         }
@@ -354,7 +395,7 @@ export default function Cadastros() {
                 const dhFalec = new Date(newDhFalec);
 
                 if (dhFalec < dataNasc) {
-                    console.warn("Data de falecimento é anterior a data de nascimento.")
+                    console.warn("Data de falecimento é anterior à data de nascimento.")
                 }
             }
         }
@@ -368,6 +409,35 @@ export default function Cadastros() {
 
         /* updateFieldByName(name, incoming) */
     };
+
+    const handleContratoChange = (e) => {
+        const contratoId = e.target.value;
+        const selectedContrato = contratos.find((c) => String(c.id) === String(contratoId));
+
+        setForm(prev => ({
+            ...prev,
+            contrato_id: contratoId,
+            numero_titulo: selectedContrato?.numero_titulo || "",
+            nome_titular: selectedContrato?.nome_titular || ""
+        }));
+    };
+
+    useEffect(() => {
+        if (processType !== "Cadastro de sepultamento") return;
+        if (form.incluir_velorio) {
+            if (!form.nome_vel && (searchFal || form.nome_sep)) {
+                setForm(prev => ({ ...prev, nome_vel: searchFal || form.nome_sep || "" }));
+            }
+            return;
+        }
+        setFieldErrors(prev => {
+            const next = { ...prev };
+            delete next.data_velorio;
+            delete next.hora_inicio;
+            delete next.sala;
+            return next;
+        });
+    }, [form.incluir_velorio, form.nome_vel, form.nome_sep, processType, searchFal]);
 
 
     const handleSelectFalecido = (val) => {
@@ -388,7 +458,13 @@ export default function Cadastros() {
             console.warn("Falecido não encontrado para o valor selecionado:", raw);
         }
         const id = f ? f.id : (Number.isNaN(parseInt(raw, 10)) ? "" : parseInt(raw, 10));
-        setForm(prev => ({ ...prev, falecido_id: id, falecido: id, nome_sep: f ? (f.nome_fal || f.nome) : "" }));
+        setForm(prev => ({
+            ...prev,
+            falecido_id: id,
+            falecido: id,
+            nome_sep: f ? (f.nome_fal || f.nome) : "",
+            nome_vel: f ? (f.nome_fal || f.nome) : prev.nome_vel || "",
+        }));
     };
 
 
@@ -408,6 +484,19 @@ export default function Cadastros() {
             nome_fal: "",
             data_obito_sep: "",
             dh_sep: "",
+            incluir_velorio: false,
+            nome_vel: "",
+            data_velorio: "",
+            sala: "",
+            hora_inicio: "",
+            hora_fim: "",
+            responsavel_familia: "",
+            funeraria: "",
+            funcionario: "",
+            servico_religioso: false,
+            ornamentacao: false,
+            musica: false,
+            obs_vel: "",
             titulo_posse: "",
             quadra_sep: "",
             num_sepultura_sep: "",
@@ -439,6 +528,7 @@ export default function Cadastros() {
         } else if (processType === "Cadastro de sepultamento") {
             rule = RULES_SEPULTAMENTO[fieldName];
         }
+
         if (!rule && (fieldName === "nome_resp" || fieldName === "tel_resp" || fieldName === "doc_resp" || fieldName === "prof_resp")) {
             rule = RULES_RESPONSAVEL[fieldName];
         }
@@ -463,6 +553,14 @@ export default function Cadastros() {
             if (v instanceof File) return true;
             return !isEmpty(v);
         })
+    };
+
+    const getVelorioErrors = (payload) => {
+        const errors = {};
+        if (!payload?.data_velorio) errors.data_velorio = "Informe a data do velório.";
+        if (!payload?.hora_inicio) errors.hora_inicio = "Informe o horário de início do velório.";
+        if (!payload?.sala) errors.sala = "Informe a sala do velório.";
+        return errors;
     };
 
     const validateBeforeSubmit = () => {
@@ -510,6 +608,14 @@ export default function Cadastros() {
             if (isEmpty(form.falecido) && isEmpty(form.falecido_id)) {
                 extra_errors.nome_fal = "Selecione um falecido.";
             }
+
+            if (String(form.titulo_posse || "").trim() === "Sim" && isEmpty(form.contrato_id)) {
+                extra_errors.contrato_id = "Selecione um título de posse. ";
+            }
+
+            if (form.incluir_velorio) {
+                Object.assign(extra_errors, getVelorioErrors(form));
+            }
         }
 
         const errors = { ...validateForm(form, rules), ...extra_errors };
@@ -517,8 +623,6 @@ export default function Cadastros() {
         return !hasErrors(errors)
 
     }
-
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -532,6 +636,7 @@ export default function Cadastros() {
     };
 
     const handleConfirmSubmit = async (e) => {
+        e.preventDefault();
         setConfirmOpen(false);
         setIsSubmitting(true);
         try {
@@ -561,6 +666,14 @@ export default function Cadastros() {
                     ...form,
                     nome: searchFal || form.nome_sep || form.nome_fal
                 };
+
+                const selectedContrato = contratos.find((c) => String(c.id) === String(payload.contrato_id));
+                if (selectedContrato) {
+                    payload.contrato_id = selectedContrato.id;
+                    payload.numero_titulo = selectedContrato.numero_titulo || "";
+                    payload.nome_titular = selectedContrato.nome_titular || "";
+                }
+
                 if (!payload.nome_sep && payload.falecido) {
                     const f = falecidos.find(x => Number(x.id) === Number(payload.falecido));
                     if (f) payload.nome_sep = f.nome_fal || f.nome;
@@ -568,8 +681,42 @@ export default function Cadastros() {
 
                 payload.taxa_valor = Number(payload.taxa_valor ?? taxa_map[payload.taxa] ?? 0);
                 payload.taxa_label = taxa_label[payload.taxa] ?? "";
-
                 payload.foi_exumado = false;
+
+                const velorioPayload = payload.incluir_velorio ? {
+                    falecido: payload.falecido_id || payload.falecido || "",
+                    nome_vel: payload.nome_vel || payload.nome_sep || payload.nome,
+                    data_velorio: payload.data_velorio && payload.hora_inicio
+                        ? `${payload.data_velorio}T${payload.hora_inicio}`
+                        : payload.data_velorio || "",
+                    hora_inicio: payload.hora_inicio || "",
+                    hora_fim: payload.hora_fim || "",
+                    sala: payload.sala || "",
+                    responsavel_familia: payload.responsavel_familia || payload.nome_resp || "",
+                    funeraria: payload.funeraria || "",
+                    funcionario: payload.funcionario || "",
+                    servico_religioso: !!payload.servico_religioso,
+                    ornamentacao: !!payload.ornamentacao,
+                    musica: !!payload.musica,
+                    obs_vel: payload.obs_vel || "",
+                    status: "Pendente",
+                    confirmado: false,
+                } : null;
+
+                const sepultamentoPayload = { ...payload };
+                delete sepultamentoPayload.incluir_velorio;
+                delete sepultamentoPayload.nome_vel;
+                delete sepultamentoPayload.data_velorio;
+                delete sepultamentoPayload.sala;
+                delete sepultamentoPayload.hora_inicio;
+                delete sepultamentoPayload.hora_fim;
+                delete sepultamentoPayload.responsavel_familia;
+                delete sepultamentoPayload.funeraria;
+                delete sepultamentoPayload.funcionario;
+                delete sepultamentoPayload.servico_religioso;
+                delete sepultamentoPayload.ornamentacao;
+                delete sepultamentoPayload.musica;
+                delete sepultamentoPayload.obs_vel;
 
 
                 try {
@@ -581,18 +728,39 @@ export default function Cadastros() {
                         const cap = Number(foundCheck.capacidade ?? 0);
                         if (cap > 0) {
                             try {
-                                const res = await api.post("/sepultamentos", payload);
+                                let createdVelorio = null;
+                                if (velorioPayload) {
+                                    const velorioRes = await api.post("/velorios", velorioPayload);
+                                    createdVelorio = velorioRes?.data ?? null;
+                                }
+
+                                const res = await api.post("/sepultamentos", sepultamentoPayload);
                                 const created = res?.data ?? null;
+                                const createdVelorioEvent = createdVelorio ? {
+                                    ...createdVelorio,
+                                    _type: "Velorio",
+                                    nome_vel: createdVelorio.nome_vel || velorioPayload?.nome_vel || payload.nome_sep || payload.nome,
+                                } : null;
+                                const createdSepultamentoEvent = created ? {
+                                    ...created,
+                                    _type: "Sepultamento",
+                                    nome_sep: created.nome_sep || sepultamentoPayload.nome_sep || payload.nome_sep || payload.nome,
+                                } : null;
 
                                 try {
-                                    if (created)
-                                        window.dispatchEvent(new CustomEvent("processoCriado", { detail: created }));
+                                    if (createdVelorioEvent) {
+                                        window.dispatchEvent(new CustomEvent("processoCriado", { detail: createdVelorioEvent }));
+                                    }
+                                    if (createdSepultamentoEvent)
+                                        window.dispatchEvent(new CustomEvent("processoCriado", { detail: createdSepultamentoEvent }));
 
                                 } catch (e) {
                                     { e }
                                 }
-                                setRegistros(prev => ([...prev, { processType, data: payload }]));
-                                alert("Sepultamento cadastrado (pendente). Confirme na Dashboard para concluir.");
+                                setRegistros(prev => ([...prev, { processType, data: sepultamentoPayload }]));
+                                alert(velorioPayload
+                                    ? "Velório e sepultamento cadastrados (pendentes). Confirme na Dashboard para concluir."
+                                    : "Sepultamento cadastrado (pendente). Confirme na Dashboard para concluir.");
                                 clearSavedState();
                                 setForm(sepultamento);
                                 setFieldErrors({});
@@ -783,83 +951,6 @@ export default function Cadastros() {
                         </FormTop>
 
                         <FormGrid>
-                            {/* {processType === "Cadastro de velório" ? (
-                                <>
-                                    <ColumnLeft>
-                                        <Field>
-                                            <label>Nome do falecido</label>
-                                            <Input name="nome_vel" value={form.nome_vel} onChange={handleChange} placeholder="Digite o nome do falecido" />
-                                        </Field>
-                                        <TwoCols>
-                                            <Field>
-                                                <label>Data do velório</label>
-                                                <Input type="date" name="data_velorio" value={form.data_velorio} onChange={handleChange} />
-                                            </Field>
-                                            <Field>
-                                                <label>Sala</label>
-                                                <Input name="sala" value={form.sala} onChange={handleChange} placeholder="Sala" />
-                                            </Field>
-                                        </TwoCols>
-
-                                        <TwoCols>
-                                            <Field>
-                                                <label>Hora início</label>
-                                                <Input type="time" name="hora_inicio" value={form.hora_inicio} onChange={handleChange} />
-                                            </Field>
-                                            <Field>
-                                                <label>Hora fim</label>
-                                                <Input type="time" name="hora_fim" value={form.hora_fim} onChange={handleChange} />
-                                            </Field>
-                                        </TwoCols>
-
-                                        <Field>
-                                            <label>Responsável da família</label>
-                                            <Input name="responsavel_familia" value={form.responsavel_familia} onChange={handleChange} placeholder="Digite o nome do responsável" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>Funerária responsável</label>
-                                            <Input name="funeraria" value={form.funeraria} onChange={handleChange} placeholder="Digite o nome da funerária" />
-                                        </Field>
-                                    </ColumnLeft>
-
-                                    <ColumnRight>
-                                        <Field>
-                                            <label>Funcionário designado</label>
-                                            <Input name="funcionario" value={form.funcionario} onChange={handleChange} placeholder="Digite o nome do funcionário" />
-                                        </Field>
-
-                                        <Field>
-                                            <label>
-                                                <input type="checkbox" name="servico_religioso" checked={!!form.servico_religioso} onChange={handleChange} />
-                                                {" "}Serviço religioso
-                                            </label>
-                                        </Field>
-
-                                        <Field>
-                                            <label>
-                                                <input type="checkbox" name="ornamentacao" checked={!!form.ornamentacao} onChange={handleChange} />
-                                                {" "}Ornamentação
-                                            </label>
-                                        </Field>
-
-                                        <Field>
-                                            <label>
-                                                <input type="checkbox" name="musica" checked={!!form.musica} onChange={handleChange} />
-                                                {" "}Música / Homenagem
-                                            </label>
-                                        </Field>
-
-                                        <Field>
-                                            <label>Observações</label>
-                                            <Textarea name="obs_vel" value={form.obs_vel} onChange={handleChange} placeholder="Observações..." />
-                                        </Field>
-
-                                        <FormActions>
-                                            <BtnPrimary type="submit">Salvar</BtnPrimary>
-                                        </FormActions>
-                                    </ColumnRight>
-                                </> */}
                             {processType === "Cadastro de sepultamento" ? (
                                 <>
                                     <ColumnLeft>
@@ -941,6 +1032,31 @@ export default function Cadastros() {
                                                     </Select>
                                                     {fieldErrors.titulo_posse && <FormHelperText>{fieldErrors.titulo_posse}</FormHelperText>}
                                                 </FormControl>
+
+                                            </Field>
+                                            <Field>
+
+                                                {form.titulo_posse === "Sim" ? (
+                                                    <FormControl fullWidth error={!!fieldErrors.contrato_id}>
+                                                        <InputLabel sx={labelSxStyle}>Título de posse</InputLabel>
+                                                        <Select
+                                                            label="Título de posse"
+                                                            name="contrato_id"
+                                                            value={form.contrato_id || ""}
+                                                            onChange={handleContratoChange}
+                                                            sx={selectSxStyle}
+                                                        >
+                                                            <MenuItem value="">Selecione o título</MenuItem>
+                                                            {contratos.map((c) => (
+                                                                <MenuItem key={String(c.id)} value={String(c.id)}>
+                                                                    Título {c.numero_titulo || "-"} - {c.nome_titular || "-"}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                        {fieldErrors.contrato_id && <FormHelperText>{fieldErrors.contrato_id}</FormHelperText>}
+                                                    </FormControl>
+                                                ) : null}
+
                                             </Field>
                                         </TwoCols>
 
@@ -1071,6 +1187,99 @@ export default function Cadastros() {
                                             />
                                         </Field>
 
+                                        <Field>
+                                            <CheckboxWrapper>
+                                                <CheckboxInput
+                                                    name="incluir_velorio"
+                                                    checked={!!form.incluir_velorio}
+                                                    onChange={handleChange}
+                                                    disabled={isSubmitting}
+                                                />
+                                                <CheckboxLabel>Possui velório?</CheckboxLabel>
+                                            </CheckboxWrapper>
+                                        </Field>
+
+                                        {form.incluir_velorio ? (
+                                            <>
+                                                <Field>
+                                                    <label>Nome para o velório</label>
+                                                    <Input
+                                                        name="nome_vel"
+                                                        value={form.nome_vel || ""}
+                                                        onChange={handleChange}
+                                                        placeholder="Digite o nome do falecido"
+                                                    />
+                                                </Field>
+
+                                                <TwoCols>
+                                                    <Field>
+                                                        <label>Data do velório</label>
+                                                        <Input type="date" name="data_velorio" value={form.data_velorio || ""} onChange={handleChange} />
+                                                        {fieldErrors.data_velorio ? <small style={{ color: "#b42318" }}>{fieldErrors.data_velorio}</small> : null}
+                                                    </Field>
+                                                    <Field>
+                                                        <label>Sala</label>
+                                                        <Input name="sala" value={form.sala || ""} onChange={handleChange} placeholder="Sala" />
+                                                        {fieldErrors.sala ? <small style={{ color: "#b42318" }}>{fieldErrors.sala}</small> : null}
+                                                    </Field>
+                                                </TwoCols>
+
+                                                <TwoCols>
+                                                    <Field>
+                                                        <label>Hora início</label>
+                                                        <Input type="time" name="hora_inicio" value={form.hora_inicio || ""} onChange={handleChange} />
+                                                        {fieldErrors.hora_inicio ? <small style={{ color: "#b42318" }}>{fieldErrors.hora_inicio}</small> : null}
+                                                    </Field>
+                                                    <Field>
+                                                        <label>Hora fim</label>
+                                                        <Input type="time" name="hora_fim" value={form.hora_fim || ""} onChange={handleChange} />
+                                                    </Field>
+                                                </TwoCols>
+
+                                                <Field>
+                                                    <label>Responsável da família</label>
+                                                    <Input name="responsavel_familia" value={form.responsavel_familia || ""} onChange={handleChange} placeholder="Digite o nome do responsável" />
+                                                </Field>
+
+                                                <TwoCols>
+                                                    <Field>
+                                                        <label>Funerária responsável</label>
+                                                        <Input name="funeraria" value={form.funeraria || ""} onChange={handleChange} placeholder="Digite o nome da funerária" />
+                                                    </Field>
+                                                    <Field>
+                                                        <label>Funcionário designado</label>
+                                                        <Input name="funcionario" value={form.funcionario || ""} onChange={handleChange} placeholder="Digite o nome do funcionário" />
+                                                    </Field>
+                                                </TwoCols>
+
+                                                <TwoCols>
+                                                    <Field>
+                                                        <CheckboxWrapper>
+                                                            <CheckboxInput name="servico_religioso" checked={!!form.servico_religioso} onChange={handleChange} disabled={isSubmitting} />
+                                                            <CheckboxLabel>Serviço religioso</CheckboxLabel>
+                                                        </CheckboxWrapper>
+                                                    </Field>
+                                                    <Field>
+                                                        <CheckboxWrapper>
+                                                            <CheckboxInput name="ornamentacao" checked={!!form.ornamentacao} onChange={handleChange} disabled={isSubmitting} />
+                                                            <CheckboxLabel>Ornamentação</CheckboxLabel>
+                                                        </CheckboxWrapper>
+                                                    </Field>
+                                                </TwoCols>
+
+                                                <Field>
+                                                    <CheckboxWrapper>
+                                                        <CheckboxInput name="musica" checked={!!form.musica} onChange={handleChange} disabled={isSubmitting} />
+                                                        <CheckboxLabel>Música / homenagem</CheckboxLabel>
+                                                    </CheckboxWrapper>
+                                                </Field>
+
+                                                <Field>
+                                                    <label>Observações do velório</label>
+                                                    <Textarea name="obs_vel" value={form.obs_vel || ""} onChange={handleChange} placeholder="Observações do velório..." />
+                                                </Field>
+                                            </>
+                                        ) : null}
                                         <FormActions>
                                             <BtnClear type="button" onClick={handleClearSepultamento} disabled={isSubmitting}>Limpar</BtnClear>
                                             <BtnPrimary type="submit" disabled={isSubmitting || hasErrors(fieldErrors)}>Salvar</BtnPrimary>
@@ -1598,4 +1807,7 @@ export default function Cadastros() {
         </div>
     )
 }
+
+
+
 
