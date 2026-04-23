@@ -1,6 +1,6 @@
 import Footer from "../../components/Footer";
 import MainLayout from "../../layout/MainLayout";
-import { BtnPrimaryClose, BtnPrimarySave, Container, FormStyled, SearchBar, SearchIcon, SearchWrapper, TableWrapper, Title, Card, TableScroller, TBody, THead, Table, Td, Th, Tr, ModalOverlay, ModalContent, ModalGrid, Input } from "./styles";
+import { BtnPrimaryClose, BtnPrimarySave, Container, FormStyled, SearchBar, SearchIcon, SearchWrapper, TableWrapper, Title, Card, TableScroller, TBody, THead, Table, Td, Th, Tr, ModalOverlay, ModalContent, ModalGrid, Input, Actions, IconBtn } from "./styles";
 import TextField from "@mui/material/TextField";
 import { MenuItem } from "@mui/material";
 import { FaSearch } from "react-icons/fa";
@@ -8,7 +8,7 @@ import { ImProfile } from "react-icons/im";
 import { AiOutlineUserSwitch } from "react-icons/ai";
 import api from "../../services/api";
 import React, { useEffect, useMemo, useState } from "react"
-import { BtnAdd } from "../VerMapa/styles";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const STATUS_OPTIONS = [
     { value: "ativo", label: "Ativo" },
@@ -350,7 +350,7 @@ export default function Contratos() {
                                             <Th>Sepultura</Th>
                                             <Th>Quadra</Th>
                                             <Th>Capacidade</Th>
-                                            {/*  <Th>Ações</Th> */}
+                                            <Th>Ações</Th>
                                         </tr>
                                     </THead>
                                     <TBody>
@@ -364,15 +364,21 @@ export default function Contratos() {
                                                     <Td>{item.sepultura}</Td>
                                                     <Td>{getQuadraLabel(item.quadra)}</Td>
                                                     <Td>{item.capacidade}</Td>
-                                                    {/* <Td>
-                                                        <BtnAdd type="button" onClick={() => handleEditTitulo(item)}>Editar</BtnAdd>
-                                                        <BtnPrimaryClose type="button" onClick={() => handleDeleteTitulo(item.id)}>Excluir</BtnPrimaryClose>
-                                                    </Td> */}
+                                                    <Td>
+                                                        <Actions>
+                                                            <IconBtn type="button" onClick={() => handleEditTitulo(item)} aria-label="Editar titulo">
+                                                                <FaEdit />
+                                                            </IconBtn>
+                                                            <IconBtn type="button" onClick={() => handleDeleteTitulo(item.id)} aria-label="Excluir titulo" data-danger="true">
+                                                                <FaTrash />
+                                                            </IconBtn>
+                                                        </Actions>
+                                                    </Td>
                                                 </Tr>
                                             ))
                                         ) : (
                                             <tr>
-                                                <Td colSpan={8}>Nenhum título encontrado.</Td>
+                                                <Td colSpan={9}>Nenhum título encontrado.</Td>
                                             </tr>
                                         )}
                                     </TBody>
