@@ -2,11 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { DashboardWrapper, Card, CardHeader, CardBody, ProcessItem, ProcessInfo, ProcessAction, Btn } from "./styles";
 import { FaCross, FaSkullCrossbones, FaTools } from "react-icons/fa";
 import api from "../../services/api";
-import { getContratoRenewalAlerts } from "../../utils/contractAlerts";
 
 export default function Dashboard() {
     const [processos, setProcessos] = useState([]);
-    const [contractAlerts, setContractAlerts] = useState([]);
     const mountedRef = useRef(true);
 
     const icones = {
@@ -23,13 +21,12 @@ export default function Dashboard() {
 
     const loadProcessos = async () => {
         try {
-            const [rFalecidos, rSep, rVel, rExu, rQuadras, rContratos] = await Promise.all([
+            const [rFalecidos, rSep, rVel, rExu, rQuadras] = await Promise.all([
                 api.get("/falecidos"),
                 api.get("/sepultamentos"),
                 api.get("/velorios"),
                 api.get("/exumacoes"),
                 api.get("/quadras"),
-                api.get("/contratos"),
             ]);
 
             const falecidos = rFalecidos.data || [];
@@ -37,7 +34,6 @@ export default function Dashboard() {
             const vel = (rVel.data || []).map((item) => ({ ...item, _type: "Velorio" }));
             const exu = (rExu.data || []).map((item) => ({ ...item, _type: "Exumacao" }));
             const quadras = rQuadras.data || [];
-            const contratos = Array.isArray(rContratos.data) ? rContratos.data : [];
 
             const all = [...vel, ...sep, ...exu].map((item) => {
                 const fk = item.falecido ?? item.falecido_id ?? item.falecidoId;
@@ -80,7 +76,6 @@ export default function Dashboard() {
                     )
                 )
             );
-            setContractAlerts(getContratoRenewalAlerts(contratos));
         } catch (err) {
             console.error("Erro ao carregar dashboard", err);
         }
@@ -154,19 +149,6 @@ export default function Dashboard() {
         return da.getFullYear() === db.getFullYear()
             && da.getMonth() === db.getMonth()
             && da.getDate() === db.getDate();
-    };
-
-    const formatDateBR = (value) => {
-        if (!value) return "-";
-        const [y, m, d] = String(value).split("-");
-        if (!y || !m || !d) return value;
-        return `${d}/${m}/${y}`;
-    };
-
-    const getAlertAccent = (type) => {
-        if (type === "overdue") return "#b42318";
-        if (type === "today") return "#b54708";
-        return "#1d4ed8";
     };
 
     const processosHoje = processos.filter((item) => {
@@ -306,7 +288,7 @@ export default function Dashboard() {
     return (
         <DashboardWrapper>
             <Card>
-                <CardHeader>PROXIMOS PROCESSOS</CardHeader>
+                <CardHeader>PRÓXIMOS PROCESSOS</CardHeader>
                 <CardBody>
                     {processosHoje.length ? processosHoje.map((item) => (
                         <ProcessItem key={`${item._type}-${item.id}`}>
@@ -330,30 +312,6 @@ export default function Dashboard() {
                             </ProcessAction>
                         </ProcessItem>
                     )) : <div style={{ padding: 12 }}>Nenhum evento agendado para hoje.</div>}
-                </CardBody>
-            </Card>
-
-            <Card>
-                <CardHeader>ALERTAS DE RENOVAÇÃO DE TÍTULOS</CardHeader>
-                <CardBody>
-                    {contractAlerts.length ? contractAlerts.map((item) => (
-                        <ProcessItem key={`contrato-alert-${item.id}`}>
-                            <ProcessInfo>
-                                <strong>{item.nome_titular || "Titular nao informado"}</strong>
-                                <span>Titulo: {item.numero_titulo || "-"}</span>
-                                <span>Validade: {formatDateBR(item.validade_titulo)}</span>
-                                <span>Sepultura: {item.sepultura || "-"}{item.quadra ? ` - Quadra ${item.quadra}` : ""}</span>
-                                <span style={{ color: getAlertAccent(item.alertType), fontWeight: 600 }}>
-                                    {item.alertMessage}
-                                </span>
-                            </ProcessInfo>
-                            <ProcessAction style={{ color: getAlertAccent(item.alertType), minWidth: 180 }}>
-                                {item.daysUntilExpiry < 0
-                                    ? `Vencido ha ${Math.abs(item.daysUntilExpiry)} dias`
-                                    : `Vence em ${item.daysUntilExpiry} dias`}
-                            </ProcessAction>
-                        </ProcessItem>
-                    )) : <div style={{ padding: 12 }}>Nenhum titulo precisa de contato para renovacao no momento.</div>}
                 </CardBody>
             </Card>
         </DashboardWrapper>
