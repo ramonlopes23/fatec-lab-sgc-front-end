@@ -1274,7 +1274,7 @@ export default function VerMapa() {
                             <ModalButtonsRow>
                                 {/*                                 <BtnPrimaryClose onClick={() => { setModalOpen(false); setSelectedCova(null); setModalForm(null); }} style={{ padding: "8px 10px" }}>Fechar</BtnPrimaryClose>
  */}                            </ModalButtonsRow>
-
+notea
                         </ModalContent>
                     </div>
                 )}

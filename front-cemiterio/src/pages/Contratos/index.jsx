@@ -94,7 +94,7 @@ export default function Contratos() {
         if (!form.validade_titulo.trim()) nextErrors.validade_titulo = "Informe a validade do título";
         if (!form.sepultura.trim()) nextErrors.sepultura = "Informe o número da sepultura";
         if (!form.quadra.trim()) nextErrors.quadra = "Informe o número da quadra";
-        if (!form.capacidade.trim()) nextErrors.capacidade = "Informe a capacidade da sepultura";
+        if (!String(form.capacidade ?? "").trim()) nextErrors.capacidade = "Informe a capacidade da sepultura";
 
         if (form.validade_titulo) {
             const date = new Date(`${form.validade_titulo}`);
@@ -231,7 +231,7 @@ export default function Contratos() {
             validade_titulo: item.validade_titulo || "",
             sepultura: item.sepultura || "",
             quadra: item.quadra || "",
-            capacidade: item.capacidade || "",
+            capacidade: String(item.capacidade || ""),
         });
         setErrors({});
         setModalOpen(true);
